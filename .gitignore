@@ -1,2 +1,3 @@
 .precomp/
 node_modules/
+*.swp

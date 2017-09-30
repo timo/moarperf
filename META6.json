@@ -14,7 +14,8 @@
   "auth": "Write me!",
   "depends": [
     "Cro::HTTP",
-    "Cro::WebSocket"
+    "Cro::WebSocket",
+    "OO::Monitors"
   ],
   "tags": [
     ""

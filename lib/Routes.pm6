@@ -1,7 +1,8 @@
 use Cro::HTTP::Router;
 use Cro::HTTP::Router::WebSocket;
+use Tipsy;
 
-sub routes() is export {
+sub routes(Tipsy $tipsy) is export {
     route {
         get -> {
             static 'static/index.html'
