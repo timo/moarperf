@@ -1,0 +1,15 @@
+{
+  "name": "tipsy",
+  "version": "1.0.0",
+  "description": "Tipsy gives you tips at festivals",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "webpack": "^3.6.0"
+  }
+}
