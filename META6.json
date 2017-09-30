@@ -1,0 +1,35 @@
+{
+  "name": "tipsy",
+  "source-url": "Write me!",
+  "support": {
+    "source": "Write me!"
+  },
+  "perl": "6.*",
+  "resources": [
+    
+  ],
+  "build-depends": [
+    
+  ],
+  "auth": "Write me!",
+  "depends": [
+    "Cro::HTTP",
+    "Cro::WebSocket"
+  ],
+  "tags": [
+    ""
+  ],
+  "license": "Write me!",
+  "test-depends": [
+    
+  ],
+  "provides": {
+    "Routes.pm6": "lib/Routes.pm6"
+  },
+  "version": "0.0.1",
+  "authors": [
+    ""
+  ],
+  "description": "Write me!",
+  "meta6": "0"
+}

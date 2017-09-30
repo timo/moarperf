@@ -1,0 +1,15 @@
+---
+name: tipsy
+cro: 1
+id: tipsy
+env:  []
+links:  []
+entrypoint: service.p6
+endpoints: 
+  - 
+    port-env: TIPSY_PORT
+    name: HTTP
+    protocol: http
+    host-env: TIPSY_HOST
+    id: http
+...
