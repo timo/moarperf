@@ -2,7 +2,8 @@ import * as ActionTypes from './actions';
 
 const initialState = {
     tipText: '',
-    latestTips: []
+    latestTips: [],
+    topTips: []
 };
 export function tipsyReducer(state = initialState, action) {
     switch (action.type) {
@@ -17,6 +18,11 @@ export function tipsyReducer(state = initialState, action) {
                 latestTips: [tip, ...state.latestTips]
             };
         }
+        case ActionTypes.UPDATE_TOP_TIPS:
+            return {
+                ...state,
+                topTips: action.tips
+            };
         default:
             return state;
     }

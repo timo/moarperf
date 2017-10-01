@@ -19,13 +19,20 @@ var SubmitTip = props => (
     </div>
 );
 
-var LatestTips = props => (
+var TipList = props => (
     <div>
-        <h2>Latest Tips</h2>
+        <h2>{props.heading}</h2>
         <ul>
-        {props.tips.map(t => <li key={t.id}>{t.text}</li>)}
+        {props.tips.map(t => <Tip key={t.id} {...props} {...t} />)}
         </ul>
     </div>
+);
+
+var Tip = props => (
+    <li>
+        {props.text} [<a href="#" onClick={() => props.onAgree(props.id)}>Agree</a>]
+        [<a href="#" onClick={() => props.onDisagree(props.id)}>Disagree</a>]
+    </li>
 );
 
 var App = props => (
@@ -33,7 +40,10 @@ var App = props => (
         <SubmitTip tipText={props.tipText}
             onChangeTipText={props.onChangeTipText}
             onAddTip={props.onAddTip} />
-        <LatestTips tips={props.latestTips} />
+        <TipList heading="Latest Tips" tips={props.latestTips}
+            onAgree={props.onAgree} onDisagree={props.onDisagree} />
+        <TipList heading="Top Tips" tips={props.topTips}
+            onAgree={props.onAgree} onDisagree={props.onDisagree} />
     </div>
 );
 
@@ -43,18 +53,22 @@ function mapProps(state) {
 function mapDispatch(dispatch) {
     return {
         onChangeTipText: text => dispatch(Actions.changeTipText(text)),
-        onAddTip: text => dispatch(Actions.addTip())
+        onAddTip: text => dispatch(Actions.addTip()),
+        onAgree: id => dispatch(Actions.agree(id)),
+        onDisagree: id => dispatch(Actions.disagree(id)),
     };
 }
 
 let store = createStore(tipsyReducer, applyMiddleware(thunkMiddleware));
 
-let host = window.location.host;
-let wsAction = new WSAction(store, 'ws://' + host + '/latest-tips', {
-    retryCount:3,
-    reconnectInterval: 3
+['latest-tips', 'top-tips'].forEach(endpoint => {
+    let host = window.location.host;
+    let wsAction = new WSAction(store, 'ws://' + host + '/' + endpoint, {
+        retryCount:3,
+        reconnectInterval: 3
+    });
+    wsAction.start();
 });
-wsAction.start();
 
 let ConnectedApp = connect(mapProps, mapDispatch)(App);
 render(
