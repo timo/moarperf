@@ -1,5 +1,6 @@
 use Cro::HTTP::Router;
 use Cro::HTTP::Router::WebSocket;
+use JSON::Fast;
 use Tipsy;
 
 sub routes(Tipsy $tipsy) is export {
@@ -12,16 +13,24 @@ sub routes(Tipsy $tipsy) is export {
             static 'static/js', @path
         }
 
-        my $chat = Supplier.new;
-        get -> 'chat' {
+        post -> 'tips' {
+            request-body -> (:$text) {
+                $tipsy.add-tip($text);
+                response.status = 204;
+            }
+        }
+
+        get -> 'latest-tips' {
             web-socket -> $incoming {
-                supply {
-                    whenever $incoming -> $message {
-                        $chat.emit(await $message.body-text);
-                    }
-                    whenever $chat -> $text {
-                        emit $text;
-                    }
+                supply whenever $tipsy.latest-tips -> $tip {
+                    emit to-json {
+                        WS_ACTION => True,
+                        action => {
+                            type => 'LATEST_TIP',
+                            id => $tip.id,
+                            text => $tip.tip
+                        }
+                    } 
                 }
             }
         }
