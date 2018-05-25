@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="PERL6_MODULE_TYPE" version="4">
+  <component name="NewModuleRootManager" inherit-compiler-output="true">
+    <exclude-output />
+    <content url="file://$MODULE_DIR$/../moar-heapanalyzer">
+      <sourceFolder url="file://$MODULE_DIR$/../moar-heapanalyzer/lib" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/../moar-heapanalyzer/t" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/../moar-heapanalyzer/.precomp" />
+      <excludeFolder url="file://$MODULE_DIR$/../moar-heapanalyzer/lib/.precomp" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+  </component>
+</module>

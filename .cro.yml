@@ -1,15 +1,15 @@
 ---
-name: tipsy
+name: moarperf
 cro: 1
-id: tipsy
+id: moarperf
 env:  []
 links:  []
 entrypoint: service.p6
-endpoints: 
-  - 
-    port-env: TIPSY_PORT
+endpoints:
+  -
+    port-env: MOARPERF_PORT
     name: HTTP
     protocol: http
-    host-env: TIPSY_HOST
+    host-env: MOARPERF_HOST
     id: http
 ...
