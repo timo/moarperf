@@ -1,4 +1,5 @@
 import React from 'react';
+import { Button, CardDeck, Card, CardTitle, CardText, Row, Col } from 'reactstrap';
 import CodeEditor from './CodeEditor';
 
 export default class GreetingsPage extends React.Component {
@@ -28,7 +29,6 @@ export default class GreetingsPage extends React.Component {
     const
       iconStyle = {
         display: 'block',
-        paddingBottom: '0.5em',
       };
     const
       greetingsPanelStyle = {
@@ -60,7 +60,7 @@ export default class GreetingsPage extends React.Component {
           style={{ ...(isSelected ? currentButtonStyle : buttonStyle), ...buttonProps.buttonStyle }}
           onClick={() => this.setState({ profileKind: buttonProps.selectionValue })}
         >
-          <i style={iconStyle} className={`fas fa-${4 + isSelected}x fa-${buttonProps.name}`} />
+          <i style={iconStyle} className={`fas fa-2x fa-${buttonProps.name}`} />
           {buttonProps.children}
         </button>);
       };
@@ -68,37 +68,46 @@ export default class GreetingsPage extends React.Component {
     const isIntentShown = () => this.state.step === 'start';
 
     const
-      leftPanel = isIntentShown() ?
-        (<div id="intentPanel" style={intentPanelStyle}><h1 style={{ gridArea: 'auto / span 3' }}>I would like to
-                    ...
-        </h1>
-          <IconButton
-            name="hourglass-half"
-            buttonStyle={{ gridArea: '1 / 0' }}
-            selectionValue="measurePerformance"
-          >
-                        Run a program and measure performance
-          </IconButton>
-          <IconButton name="microchip" buttonStyle={{ gridArea: '2 / 0' }} selectionValue="measureMemory">
-                        Run a program and measure memory usage
-          </IconButton>
-          <IconButton name="file-alt" buttonStyle={{ gridArea: '3 / 0' }} selectionValue="loadProfile">
-                        Analyze the results of a profiler run
-          </IconButton>
-        </div>)
-        : <div>Nope</div>;
+      LeftPanel = (props) => {
+          return isIntentShown() ?
+              (<Col xs={9}><h1>I would like to
+                  ...
+              </h1>
+                  <CardDeck>
+                          <Card body>
+                              <CardTitle>Measure performance</CardTitle>
+                              <CardText>Run Perl 6 code and measure performance.</CardText>
+                              <IconButton
+    name="hourglass-half"
+    buttonStyle={{gridArea: '1 / 0'}}
+    selectionValue="measurePerformance"
+    />
+                          </Card>
+                          <Card body>
+                              <CardTitle>Measure memory usage</CardTitle>
+                              <CardText>Run Perl 6 code and measure memory usage.</CardText>
+                              <IconButton name="microchip" buttonStyle={{gridArea: '2 / 0'}} selectionValue="measureMemory"></IconButton>
+                          </Card>
+                        <Card body>
+                            <CardTitle>Analyze results</CardTitle>
+                            <CardText>Open the result file from an earlier run for inspection</CardText>
+                            <IconButton name="file-alt" buttonStyle={{gridArea: '3 / 0'}} selectionValue="loadProfile"></IconButton>
+                        </Card>
+                  </CardDeck>
+              </Col>)
+              : (<Col>Nope</Col>);
+      };
     const handleRadioClick = event => this.setState({ interest: event.target.value });
-    return (
-      <div style={greetingsPanelStyle}>
-        {leftPanel}
-        <div style={interestPanelStyle}><h1>I am interested in ...</h1>
-          <div><input type="radio" value="usercode" checked={this.state.interest == 'usercode'} onChange={handleRadioClick} />the performance of my program</div>
-          <div><input type="radio" value="corecode" checked={this.state.interest == 'corecode'} onChange={handleRadioClick} />the performance of rakudo</div>
-          <div><input type="radio" value="everything" checked={this.state.interest == 'everything'} onChange={handleRadioClick} />all available data</div>
-        </div>
-        <div style={{ gridArea: 'bottomPanel' }}>
+    return [
+        <Row key={0}>
+            <LeftPanel />
+        <Col xs={3}><h2>I am interested in ...</h2>
+          <div><input type="radio" value="usercode" checked={this.state.interest === 'usercode'} onChange={handleRadioClick} />the performance of my program</div>
+          <div><input type="radio" value="corecode" checked={this.state.interest === 'corecode'} onChange={handleRadioClick} />the performance of rakudo</div>
+          <div><input type="radio" value="everything" checked={this.state.interest === 'everything'} onChange={handleRadioClick} />all available data</div>
+        </Col></Row>,
+        <Row key={1}><Col>
           <CodeEditor />
-        </div>
-      </div>);
+        </Col></Row>];
   }
 }

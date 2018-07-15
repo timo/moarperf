@@ -11,28 +11,38 @@ monitor HeapAnalyzerWeb {
 
     method load-file($file is copy) {
         $file = $file.IO;
+        die "$file does not exist" unless $file.e;
+        die "$file does not a file" unless $file.f;
+        die "$file does not readable" unless $file.r;
         note "trying to open a model file";
+        my $resolve = Promise.new;
         start {
             note "started!";
             with $.model {
                 die "Switching models NYI";
             }
+            note "sending pre-load message";
             $!status-updates.emit({ model_state => "pre-load" });
             note "building the model now";
             $!model .= new(:$file);
+            note "going to resolve";
+            $resolve.keep;
             if $.model.num-snapshots == 1 {
                 self.request-snapshot(0);
             }
             note "done, yay";
             $!status-updates.emit({ model_state => "post-load", |self.model-overview });
             CATCH {
+                note "error loading heap snapshot";
                 $!status-updates.emit(
                     %(model_state => "error-load",
                       error_type => $_.^name,
                       error_message => $_.message));
+                $resolve.break($_);
             }
         }
-        Nil;
+        note "waiting for resolve to happen";
+        await $resolve;
     }
 
     method announce-date {

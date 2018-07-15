@@ -1,12 +1,20 @@
 {
     "license": "Choose me!",
     "source-url": "Write me!",
-    "depends": [],
+    "depends": [
+        "JSON::Fast",
+        "OO::Monitors",
+        "Cro::HTTP",
+        "Cro::WebSocket",
+        "App::MoarVM::HeapAnalyzer"
+    ],
     "provides": {
-        "App::MoarVM::HeapAnalyzer": "lib/App/MoarVM/HeapAnalyzer.pm6",
-        "CodeRunner": "lib/CodeRunner.pm6"
+        "HeapAnalyzerWeb": "lib/HeapAnalyzerWeb.pm6",
+        "ProfilerWeb": "lib/ProfilerWeb.pm6",
+        "CodeRunner": "lib/CodeRunner.pm6",
+        "Routes": "lib/Routes.pm6"
     },
-    "name": "App::MoarVM::HeapAnalyzer",
+    "name": "MoarPerf",
     "description": "Write me!",
     "resources": [],
     "perl": "6.*",

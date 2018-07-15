@@ -6,7 +6,7 @@ import $ from 'jquery';
 export const STATUS_UPDATE = 'STATUS_UPDATE';
 export const MODEL_OVERVIEW = 'MODEL_OVERVIEW';
 
-type StatusUpdateAction = { type : "STATUS_UPDATE", body: any };
+type StatusUpdateAction = { type : "HEAP_STATUS_UPDATE", body: any };
 type ModelOverviewAction = { type : "MODEL_OVERVIEW", suggested_filename: string };
 
 export type HeapSnapshotAction =

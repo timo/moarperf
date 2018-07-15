@@ -12,4 +12,7 @@ endpoints:
     protocol: http
     host-env: MOARPERF_HOST
     id: http
-...
+ignore:
+  - .git
+  - frontend
+  - static

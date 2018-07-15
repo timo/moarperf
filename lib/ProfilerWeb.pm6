@@ -22,12 +22,12 @@ sub create-database($databasefile where all(*.ends-with('sql'), *.IO.f, *.IO.e))
 }
 
 sub concise-name($name) {
-    $name eq "" ?? "<anon>" !! $name
+    $name || "<anon>"
 }
 sub concise-file($file is copy) {
     if $file.starts-with("SETTING::src/core/") {
         $file.=subst("SETTING::src/core/", "CORE::");
-        $file.=subst(".pm", "");
+        $file.=subst(".pm6", "");
     }
     $file
 }
@@ -39,6 +39,7 @@ monitor ProfilerWeb {
     has Supplier $!status-updates = Supplier::Preserving.new;
 
     has @.routine_overview;
+    has %.all_routines;
 
     method status-messages() {
         note "status messages subscribed";
@@ -58,6 +59,14 @@ monitor ProfilerWeb {
         $!dbh = DBIish.connect("SQLite", :database($databasefile));
 
         start {
+            note "getting all routines";
+            my %all_routines = self.all_routines;
+            note "sending all routines";
+            $!status-updates.emit(%(
+                data => "all_routines",
+                body => %all_routines
+            ));
+
             note "getting routine overview";
             my @overview = self.routine_overview;
             note "sending routine overview";
@@ -65,6 +74,7 @@ monitor ProfilerWeb {
                 data => "routine_overview",
                 body => @overview
             ));
+
             note "done";
             CATCH {
                 note "when trying to get routine overview:";
@@ -85,15 +95,42 @@ monitor ProfilerWeb {
         }
     }
 
+    method all_routines() {
+        %!all_routines ||= do {
+            my $query = $!dbh.prepare(q:to/STMT/);
+                select
+
+                  r.id as id,
+                  r.name as name,
+                  r.file as file,
+                  r.line as line
+
+                from routines r
+                order by id asc;
+              STMT
+
+            $query.execute();
+            my @results = $query.allrows(:array-of-hash);
+            $query.finish;
+
+            my %results{Int};
+
+            for @results {
+                .<name> .= &concise-name;
+                .<file> .= &concise-file;
+                %results{.<id>.Int} = $_;
+            }
+
+            %results;
+        }
+    }
+
     method routine_overview() {
         @!routine_overview ||= do {
             note "building routine overview";
             my $query = $!dbh.prepare(q:to/STMT/);
                 select
-                    r.name as name,
-                    r.file as file,
-                    r.line as line,
-                    r.id as id,
+                    c.routine_id as id,
 
                     total(entries) as entries,
                     total(case when rec_depth = 0 then inclusive_time else 0 end) as inclusive_time,
@@ -105,8 +142,7 @@ monitor ProfilerWeb {
 
                     count(c.id) as sitecount
 
-                    from calls c, routines r
-                    where c.routine_id = r.id
+                    from calls c
 
                     group by c.routine_id
                     order by inclusive_time desc;
@@ -116,56 +152,179 @@ monitor ProfilerWeb {
             my @results = $query.allrows(:array-of-hash);
             $query.finish;
 
-            for @results {
-                .<name> .= &concise-name;
-                .<file> .= &concise-file;
-            }
-
             note "routine overview in " ~ (now - ENTER now);
 
             @results;
         }
     }
 
-    method !routine_and_children($id) {
+    method all-children-of-routine($routine-id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
-                routines.name as name,
-                routines.line as line,
-                routines.file as file,
+                c.routine_id     as id,
+                c.parent_id      as parent_id,
 
-                calls.id as id,
-                calls.parent_id      as parent_id,
-                calls.entries        as entries,
-                calls.exclusive_time as exclusive,
-                calls.inclusive_time as inclusive
+                    total(c.entries) as entries,
+                    total(case when c.rec_depth = 0 then c.inclusive_time else 0 end) as inclusive_time,
+                    total(c.exclusive_time) as exclusive_time,
 
-                from calls inner join routines on calls.routine_id = routines.id
+                    total(c.spesh_entries) as spesh_entries,
+                    total(c.jit_entries) as jit_entries,
+                    total(c.inlined_entries) as inlined_entries,
 
-                where calls.parent_id = ? or calls.id = ?
+                    count(c.id) as sitecount
 
-                order by calls.id asc
+                from calls c
+                    left outer join calls pc
+                    on pc.id == c.parent_id
+
+                where pc.routine_id = ?
+                group by c.routine_id
+
+                order by c.id asc
                 ;
             STMT
 
-        my $childcount = $!dbh.prepare(q:to/STMT/);
-            select count(*) from calls where parent_id = ?
+        $query.execute($routine-id);
+        my @results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        note "all-children-of-routine $routine-id in " ~ (now - ENTER now);
+
+        @results;
+
+    }
+
+    method routine-and-children-of-call($id) {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                c.id as id,
+                c.parent_id      as parent_id,
+                c.entries        as entries,
+                c.exclusive_time as exclusive,
+                c.inclusive_time as inclusive,
+                count(pc.id)     as childcount,
+
+                c.routine_id     as routine_id
+
+                from calls c
+                    left outer join calls pc
+                    on pc.id == c.parent_id
+
+                where c.parent_id = ? or c.id = ?
+                group by c.id
+
+                order by calls.id asc
+                ;
             STMT
 
         $query.execute($id, $id);
         my @results;
         for $query.allrows(:array-of-hash) -> $/ {
             @results.push: $/;
-            $<name> = concise-name($<name>);
-            $<file> = concise-file($<file>);
             $<depth> = +($<id> != $id);
-            $childcount.execute($<id>);
-            $<childcount> = $childcount.row.first;
         }
 
         $query.finish;
-        $childcount.finish;
 
         @results;
+    }
+
+    sub val-from-query($query, $field) {
+        $query.execute();
+        LEAVE $query.finish;
+
+        for $query.allrows(:array-of-hash) -> $/ {
+            return $_ with $/{$field}
+        }
+    }
+
+    method gc-summary() {
+        my $fullcount = val-from-query($!dbh.prepare(q:to/STMT/), "full_count");
+            select
+                count(sequence_num) as full_count
+
+            from gcs
+
+            where full = 1
+            group by sequence_num
+            ;
+            STMT
+
+        my $allcount = val-from-query($!dbh.prepare(q:to/STMT/), "all_count");
+            select
+                count(sequence_num) as all_count
+
+            from gcs
+
+            group by sequence_num
+            ;
+            STMT
+
+        my $stats-per-thread-q = $!dbh.prepare(q:to/STMT/);
+            select
+                thread_id,
+                count(
+                    case responsible when 1 then 1 end) as responsible_count,
+                count(
+                    case full when 1 then 1 end)        as major_count,
+                total(time)          as time_sum,
+                avg(
+                    case full when 1 then time end
+                )
+                    as major_time_avg,
+                avg(
+                    case full when 0 then time end
+                )
+                    as minor_time_avg,
+                case when profile.root_node is null then 0 else 1 end as is_code_thread
+
+            from gcs
+                inner join profile
+                    on profile.thread_id = gcs.thread_id
+
+            group by thread_id
+            ;
+            STMT
+
+        $stats-per-thread-q.execute();
+        my @stats-per-thread;
+        for $stats-per-thread-q.allrows(:array-of-hash) -> $/ {
+            @stats-per-thread[$<thread_id>] = $/;
+        }
+        $stats-per-thread-q.finish();
+
+        my $stats-per-sequence-q = $!dbh.prepare(q:to/STMT/);
+            select
+                min(time) as min_time,
+                max(time) as max_time,
+                min(start_time) as earliest_start_time,
+                max(start_time) as latest_start_time,
+                min(start_time + time) as earliest_end_time,
+                max(start_time + time) as latest_end_time,
+                latest_end_time - earliest_start_time as total_wallclock,
+                group_concat(thread_id, ",") as participants,
+                sequence_num
+
+            from gcs
+
+            group by sequence_num
+            ;
+            STMT
+
+        $stats-per-sequence-q.execute();
+        my @stats-per-sequence;
+        for $stats-per-sequence-q.allrows(:array-of-hash) -> $/ {
+            # $<participants> = from-json($<participants>);
+            @stats-per-sequence[$<sequence_num>] = $/;
+        }
+        $stats-per-sequence-q.finish();
+
+        return %(
+                :$fullcount,
+                :$allcount,
+                :@stats-per-thread,
+                :@stats-per-sequence,
+                );
     }
 }

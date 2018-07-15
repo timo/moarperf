@@ -15,6 +15,17 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
             static 'static/js', @path;
         }
 
+        get -> 'js', 'bootstrap.bundle.js' { static 'node_modules/bootstrap/dist/js/bootstrap.bundle.js' }
+        get -> 'js', 'bootstrap.bundle.js.map' { static 'node_modules/bootstrap/dist/js/bootstrap.bundle.js.map' }
+
+        get -> 'css', *@path {
+            static 'static/css', @path;
+        }
+
+        get -> 'css', 'bootstrap.css' { static 'node_modules/bootstrap/dist/css/bootstrap.css' }
+        get -> 'css', 'bootstrap-grid.css' { static 'node_modules/bootstrap/dist/css/bootstrap-grid.css' }
+        get -> 'css', 'bootstrap-reboot.css' { static 'node_modules/bootstrap/dist/css/bootstrap-reboot.css' }
+
         get -> 'imagery', *@path {
             static 'static/imagery', @path;
         }
@@ -31,7 +42,7 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
                     note "opening a heap thing";
                     $model.load-file($path);
                     note "done";
-                    content "application/json", {filetype => "memory"};
+                    content "application/json", {filetype => "heapsnapshot"};
                 }
             }
         }
@@ -40,6 +51,18 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
             request-body -> (Str :$type = "script") {
                 content "application/json", {filenames => CodeRunner.get-interesting-local-files(:$type)};
             }
+        }
+
+        get -> 'routine-and-children', Int $call-id {
+            content "application/json", $profiler.routine-and-children($call-id);
+        }
+
+        get -> 'routine-children', Int $routine-id {
+            content "application/json", to-json($profiler.all-children-of-routine($routine-id));
+        }
+
+        get -> 'gc-overview' {
+            content "application/json", $profiler.gc-summary();
         }
 
         get -> 'model-overview' {
@@ -59,10 +82,8 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
                     emit to-json {
                         WS_ACTION => True,
                         action => {
-                            heapsnapshot => {
-                                type => "STATUS_UPDATE",
-                                body => $message
-                            }
+                              type => "HEAP_STATUS_UPDATE",
+                              body => $message
                         }
                     }
                 }
@@ -75,14 +96,11 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
                 supply {
                     whenever $profiler.status-messages -> $message {
                         note "got a status message";
-                        note to-json($message, :pretty).indent(4);
                         emit to-json {
                             WS_ACTION => True,
                             action => {
-                                profiler => {
-                                    type => "STATUS_UPDATE",
-                                    body => $message
-                                }
+                                type => "PROFILE_STATUS_UPDATE",
+                                body => $message
                             }
                         }
                         note "  success!";
