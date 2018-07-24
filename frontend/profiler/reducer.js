@@ -1,5 +1,5 @@
 import type { ActionTypes } from './actions';
-import {EXPAND_ROUTINE, ROUTINE_CHILDREN_GET} from "./actions";
+import {EXPAND_ROUTINE, ROUTINE_CHILDREN_GET, EXPAND_GC_SEQ, GC_SEQ_DETAILS_GET} from "./actions";
 
 export type ProfilerState = {
     +modelState: string,
@@ -10,6 +10,10 @@ const initialState = {
   modelState: 'pre-load',
   routines: [],
   routineOverview: [],
+  gc: {
+      overview: {},
+      expanded: {}
+  },
   expanded: {},
   allRoutineChildren: {},
   filePath: '',
@@ -32,6 +36,10 @@ export default function profilerReducer(
         newstate.routines = action.body.body;
         console.log('all routines stored');
       }
+      if (action.body.data === 'gc_overview') {
+        newstate.gc.overview = action.body.body;
+        console.log('GC overview stored');
+      }
 
       return newstate;
     }
@@ -47,11 +55,31 @@ export default function profilerReducer(
       console.log("switched expanded of " + action.id + " ")
       return newstate;
     }
+      case EXPAND_GC_SEQ: {
+          const newstate = { ...state };
+          newstate.gc = { ...newstate.gc };
+          newstate.gc.expanded = { ...newstate.gc.expanded };
+          if (newstate.gc.expanded[action.seq_num]) {
+              newstate.gc.expanded[action.seq_num] = undefined;
+          }
+          else {
+              newstate.gc.expanded[action.seq_num] = 1;
+          }
+          console.log("switched expanded of gc " + action.seq_num + " ")
+          return newstate;
+      }
     case ROUTINE_CHILDREN_GET: {
         const newstate = { ...state };
         newstate.allRoutineChildren[action.id] = action.entries;
         return newstate;
     }
+      case GC_SEQ_DETAILS_GET: {
+          const newstate = { ...state };
+          newstate.gc = { ...state.gc };
+          newstate.gc.seq_details = { ...state.gc.seq_details };
+          newstate.gc.seq_details[action.seq_num] = action.data.stats_of_sequence;
+          return newstate;
+      }
     default: {
       return { ...state };
     }

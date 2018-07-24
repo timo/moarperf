@@ -62,7 +62,11 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
         }
 
         get -> 'gc-overview' {
-            content "application/json", $profiler.gc-summary();
+            content "application/json", to-json($profiler.gc-summary);
+        }
+
+        get -> 'gc-details', Int $sequence-num {
+            content "application/json", to-json($profiler.gc-details($sequence-num));
         }
 
         get -> 'model-overview' {

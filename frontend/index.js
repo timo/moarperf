@@ -3,14 +3,15 @@ import React from 'react';
 import { render } from 'react-dom';
 import { combineReducers, createStore, applyMiddleware } from 'redux';
 import { Provider, connect } from 'react-redux';
-import { HashRouter, Route, Switch, Link, Redirect } from 'react-router-dom';
+import { HashRouter, Route, Switch, Link, Redirect, withRouter } from 'react-router-dom';
 import thunkMiddleware from 'redux-thunk';
 import WSAction from 'redux-websocket-action';
 import Loadable from 'react-loadable';
 
 import {
   InputGroupAddon, InputGroup, Input, Button,
-  Container, Row, Col
+  Container, Row, Col, Nav, NavItem, NavLink,
+    Table
 } from 'reactstrap';
 
 import * as HeapAnalyzerActions from './heapanalyzer/actions';
@@ -25,6 +26,7 @@ import * as WelcomeActions from './welcome/actions';
 import welcomeReducer from './welcome/reducer';
 
 import GreetingsPage from './welcome/GreetingsPage';
+import { getGCOverview, getGCDetails } from "./profiler/actions";
 
 const RoutineList = Loadable({
   loader: () => import(/* webpackChunkName: "routinelist" */ './profiler/components/RoutineList'),
@@ -34,6 +36,11 @@ const RoutineList = Loadable({
 const SnapshotList = Loadable({
   loader: () => import(/* webpackChunkName: "snapshotlist" */ './heapanalyzer/components/SnapshotList'),
   loading: () => <div>Hold on ...</div>,
+});
+
+const GCOverview = Loadable({
+    loader: () => import(/* webpackChunkName: "gcoverview" */ './profiler/components/GCOverview'),
+    loading: () => <div>Hold on ...</div>,
 });
 
 type SelectFileProps = {
@@ -60,24 +67,54 @@ const SelectFile = (props : SelectFileProps) => (
   </div>
 );
 
-const ProfilerApp = props => (
-    <Switch>
-        <Route path={props.match.url + "routines"}>
-            <RoutineList
-                routines={props.profilerState.routineOverview}
-                metadata={props.profilerState.routines}
-                expanded={props.profilerState.expanded}
-                allRoutineChildren={props.profilerState.allRoutineChildren}
+const path = (match, extra) => ((match.url.endsWith("/") ? match.url : match.url + "/") + extra);
 
-                onExpandButtonClicked={props.onRoutineExpanded}
-            />
-        </Route>
-        <Route exact path={props.match.url}>
-            <Link to={props.match.url + "routines"}>Routines</Link>
-        </Route>
-        <Route><div>oh no.</div></Route>
-    </Switch>
-);
+const ProfilerApp = props => {
+    console.log("profiler app match prop:", props.match);
+    console.log("profiler app location prop:", props.location);
+    return (
+        <React.Fragment>
+            <Nav tabs>
+                <NavItem>
+                    <NavLink tag={Link} to={props.match.url}>Overview</NavLink>
+                </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} to={path(props.match, "routines")}>Routines</NavLink>
+                </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} to={path(props.match, "gc")}>GC</NavLink>
+                </NavItem>
+            </Nav>
+            <Switch>
+            <Route exact path={props.match.url + '/'}>
+                <div>This is the overview page.</div>
+            </Route>
+            <Route path={props.match.url + "/routines"}>
+                <RoutineList
+                    routines={props.profilerState.routineOverview}
+                    metadata={props.profilerState.routines}
+                    expanded={props.profilerState.expanded}
+                    allRoutineChildren={props.profilerState.allRoutineChildren}
+
+                    onExpandButtonClicked={props.onRoutineExpanded}
+                />
+            </Route>
+            <Route path={props.match.url + "/gc"}>
+                <GCOverview
+                    onRequestGCOverview={props.onRequestGCOverview}
+                    onGCExpandButtonClicked={props.onGCExpandButtonClicked}
+                    {...props.profilerState.gc} />
+            </Route>
+            <Route exact path={props.match.url}>
+                <div>This is the overview page.</div>
+            </Route>
+            <Route>
+                <div>oh no.</div>
+            </Route>
+        </Switch>
+        </React.Fragment>
+    );
+};
 
 type HeapSnapshotAppProps = {
   tipText: string,
@@ -112,8 +149,14 @@ const App = (props : HeapSnapshotAppProps) => (
                   onRequestSnapshot={props.heapanalyzer.onRequestSnapshot}
               />
           </Route>
-          <Route path="/prof" render={({ match }) => (
-              <ProfilerApp profilerState={props.profiler} onRoutineExpanded={props.onRoutineExpanded} match={match} />
+          <Route path="/prof" render={({ match, location }) => (
+              <ProfilerApp
+                  profilerState={props.profiler}
+                  onRoutineExpanded={props.onRoutineExpanded}
+                  onRequestGCOverview={props.onRequestGCOverview}
+                  onGCExpandButtonClicked={props.onGCExpandButtonClicked}
+                  match={match}
+                  location={location} />
               )} />
           <Route>
               <Row><Col>There is nothing at this URL. <Link to="/">Return</Link></Col></Row>
@@ -130,7 +173,9 @@ function mapDispatch(dispatch) {
     onChangeFilePath: text => dispatch(WelcomeActions.changeFilePath(text)),
     onLoadFile: () => dispatch(WelcomeActions.requestFile()),
     onRequestSnapshot: index => dispatch(HeapAnalyzerActions.requestSnapshot(index)),
-    onRoutineExpanded: id => dispatch(ProfilerActions.expandRoutine(id))
+    onRoutineExpanded: id => dispatch(ProfilerActions.expandRoutine(id)),
+    onRequestGCOverview: () => dispatch(ProfilerActions.getGCOverview()),
+    onGCExpandButtonClicked: (seq_nr) => dispatch(ProfilerActions.getGCDetails(seq_nr))
   };
 }
 
@@ -162,7 +207,7 @@ wsActionProfile.start();
 //   success: body => store.dispatch({ ...body, type: Actions.MODEL_OVERVIEW }),
 // });
 
-const ConnectedApp = connect(mapProps, mapDispatch)(App);
+const ConnectedApp = withRouter(connect(mapProps, mapDispatch)(App));
 render(
   <Provider store={store}>
     <HashRouter>

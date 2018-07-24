@@ -2,8 +2,29 @@ import React from 'react';
 import { Container, Button, Table } from 'reactstrap';
 import RoutineList from "./RoutineList";
 
-function timeToHuman(time) {
-    return (<span>{(time / 1000).toFixed(3)}ms</span>);
+export function numberFormatter(number, fractionDigits = 0, thousandSeperator = ',', fractionSeperator = '.') {
+    if (number!==0 && !number || !Number.isFinite(number)) return number
+    const frDigits = Number.isFinite(fractionDigits)? Math.min(Math.max(fractionDigits, 0), 7) : 0
+    const num = number.toFixed(frDigits).toString()
+
+    const parts = num.split('.')
+    let digits = parts[0].split('').reverse()
+    let sign = ''
+    if (num < 0) {sign = digits.pop()}
+    let final = []
+    let pos = 0
+
+    while (digits.length > 1) {
+        final.push(digits.shift())
+        pos++
+        if (pos % 3 === 0) {final.push(thousandSeperator)}
+    }
+    final.push(digits.shift())
+    return `${sign}${final.reverse().join('')}${frDigits > 0 ? fractionSeperator : ''}${frDigits > 0 && parts[1] ? parts[1] : ''}`
+}
+
+export function timeToHuman(time, suffix = 'ms') {
+    return (<span>{numberFormatter(time / 1000, 2)}<small>{suffix}</small></span>);
 }
 
 export default function Routine({ routine, metadata, columns, expanded, allRoutineChildren, onExpandButtonClicked }) {

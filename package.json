@@ -24,7 +24,7 @@
     "eslint-plugin-import": "^2.13.0",
     "eslint-plugin-jsx-a11y": "^6.1.1",
     "eslint-plugin-react": "^7.10.0",
-    "flow-bin": "^0.59.0",
+    "flow-bin": "^0.76.0",
     "html-webpack-plugin": "^2.30.1",
     "react-cosmos": "^3.7.1",
     "webpack": "^3.12.0"
@@ -38,12 +38,14 @@
     "eslint-plugin-flow": "^2.29.1",
     "eslint-plugin-flowtype": "^2.50.0",
     "jquery": "^3.3.1",
+    "memoize-state": "^1.5.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
     "react-loadable": "^5.4.0",
     "react-redux": "^5.0.7",
     "react-router-dom": "^4.3.1",
     "reactstrap": "^6.3.0",
+    "recharts": "^1.1.0",
     "redux": "^3.7.2",
     "redux-thunk": "^2.3.0",
     "redux-websocket-action": "^1.0.5"

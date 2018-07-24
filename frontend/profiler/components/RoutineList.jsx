@@ -16,14 +16,20 @@ export default function RoutineList({ routines, metadata, expanded = [], allRout
       inlineInfo: "Inlined",
   };
 
+  const styleMapping = {
+      expand: {width: "10%"},
+      sitecount: {width: "10%"},
+      entriesInfo: {width: "15%"}
+  };
+
   const sortedRoutines = Array.from(routines).sort((a, b) => b.exclusive_time - a.exclusive_time);
 
   return [
     <h2 key={0}>Routines</h2>,
-    <Table key={1} responsive striped>
+    <Table key={1} striped style={{tableLayout: "fixed"}}>
       <thead>
         <tr>
-            {columns.map((txt) => (<td key={txt}>{nameMapping[txt]}</td>))}
+            {columns.map((txt) => (<td key={txt} style={styleMapping[txt]}>{nameMapping[txt]}</td>))}
         </tr>
       </thead>
       <tbody>

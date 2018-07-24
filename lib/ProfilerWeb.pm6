@@ -263,18 +263,18 @@ monitor ProfilerWeb {
 
         my $stats-per-thread-q = $!dbh.prepare(q:to/STMT/);
             select
-                thread_id,
+                gcs.thread_id,
                 count(
-                    case responsible when 1 then 1 end) as responsible_count,
+                    case gcs.responsible when 1 then 1 end) as responsible_count,
                 count(
-                    case full when 1 then 1 end)        as major_count,
-                total(time)          as time_sum,
+                    case gcs.full when 1 then 1 end)        as major_count,
+                total(gcs.time)          as time_sum,
                 avg(
-                    case full when 1 then time end
+                    case gcs.full when 1 then time end
                 )
                     as major_time_avg,
                 avg(
-                    case full when 0 then time end
+                    case gcs.full when 0 then time end
                 )
                     as minor_time_avg,
                 case when profile.root_node is null then 0 else 1 end as is_code_thread
@@ -283,14 +283,14 @@ monitor ProfilerWeb {
                 inner join profile
                     on profile.thread_id = gcs.thread_id
 
-            group by thread_id
+            group by gcs.thread_id
             ;
             STMT
 
         $stats-per-thread-q.execute();
-        my @stats-per-thread;
+        my @stats_per_thread;
         for $stats-per-thread-q.allrows(:array-of-hash) -> $/ {
-            @stats-per-thread[$<thread_id>] = $/;
+            @stats_per_thread[$<thread_id>] = $/;
         }
         $stats-per-thread-q.finish();
 
@@ -302,9 +302,10 @@ monitor ProfilerWeb {
                 max(start_time) as latest_start_time,
                 min(start_time + time) as earliest_end_time,
                 max(start_time + time) as latest_end_time,
-                latest_end_time - earliest_start_time as total_wallclock,
+                max(start_time + time) - min(start_time) as total_wallclock,
                 group_concat(thread_id, ",") as participants,
-                sequence_num
+                sequence_num,
+                full
 
             from gcs
 
@@ -313,18 +314,51 @@ monitor ProfilerWeb {
             STMT
 
         $stats-per-sequence-q.execute();
-        my @stats-per-sequence;
+        my @stats_per_sequence;
         for $stats-per-sequence-q.allrows(:array-of-hash) -> $/ {
             # $<participants> = from-json($<participants>);
-            @stats-per-sequence[$<sequence_num>] = $/;
+            @stats_per_sequence[$<sequence_num>] = $/;
         }
         $stats-per-sequence-q.finish();
 
         return %(
                 :$fullcount,
                 :$allcount,
-                :@stats-per-thread,
-                :@stats-per-sequence,
+                :@stats_per_thread,
+                :@stats_per_sequence,
+                );
+    }
+
+    method gc-details(Int $sequence-num) {
+        my $stats-of-sequence-q = $!dbh.prepare(q:to/STMT/);
+            select
+                time,
+                start_time,
+                thread_id,
+                sequence_num,
+                full,
+
+                gen2_roots,
+                promoted_bytes,
+                retained_bytes,
+                cleared_bytes,
+                responsible
+
+            from gcs
+
+            where sequence_num = ?
+            ;
+            STMT
+
+        $stats-of-sequence-q.execute($sequence-num);
+        my @stats_of_sequence;
+        for $stats-of-sequence-q.allrows(:array-of-hash) -> $/ {
+            @stats_of_sequence[$<thread_id>] = $/;
+        }
+        $stats-of-sequence-q.finish();
+
+        return %(
+                :@stats_of_sequence
                 );
     }
 }
