@@ -54,7 +54,7 @@ export default function Routine({ routine, metadata, columns, expanded, allRouti
           return (<td key={"exclusiveInclusiveTime"}>{timeToHuman(routine.exclusive_time)} / {timeToHuman(routine.inclusive_time)}</td>)
       },
       inlineInfo() {
-          return (<td key={"inlineInfo"}>{(routine.jit_entries * 100 / routine.entries).toPrecision(3)}% inlined</td>)
+          return (<td key={"inlineInfo"}>{(routine.inlined_entries * 100 / routine.entries).toPrecision(3)}% inlined</td>)
       }
   };
   return [
