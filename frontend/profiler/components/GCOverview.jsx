@@ -55,61 +55,51 @@ const makeSpans = input => {
             });
     };
 
-export default function GCOverview(props) {
-    const GcTable = () => {
-        if (typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined")
-            return (<tr key={0}>
-                <td>nothing</td>
-            </tr>);
-        let seen = -1;
-        return props.overview.stats_per_sequence.map((data) => {
-            if (data === null)
-                return null;
-            seen++;
-            return (
-                <React.Fragment>
-                <tr key={data.sequence_num}>
-                    <td><Button onClick={() => props.onGCExpandButtonClicked(data.sequence_num)}><i className="fas fa-folder-open"></i></Button></td>
-                    <td>{data.sequence_num} {data.full ? <i className="fas fa-square-full"></i>
-                        : ""}
-                        {
-                            seen == 0 && data.sequence_num != 0
-                                ? <span>Why?</span>
-                                : ""
-                        }
-                    </td>
-                    <td>{data.participants}</td>
-                    <td>{timeToHuman(data.earliest_start_time)}</td>
-                    <td>{timeToHuman(data.max_time, "ms spent")}</td>
-                </tr>
-                {
-                    props.expanded[data.sequence_num] && props.seq_details && props.seq_details[data.sequence_num] ?
-                        <tr>
-                            <td colSpan={5}>
-                                <Container>
-                                    <Row>
+const GcTableRow = ({ data, expanded, seq_details, onGCExpandButtonClicked }) => {
+    return (
+        <React.Fragment>
+            <tr key={data.sequence_num}>
+                <td><Button size={"sm"} onClick={() => onGCExpandButtonClicked(data.sequence_num)}><i className="fas fa-folder-open"></i></Button></td>
+                <td>{data.sequence_num} {data.full ? <i className="fas fa-square-full"></i>
+                    : ""}
+                    {
+                        data.isFirst== 0 && data.sequence_num != 0
+                            ? <span>Why?</span>
+                            : ""
+                    }
+                </td>
+                <td>{data.participants}</td>
+                <td>{timeToHuman(data.earliest_start_time)}</td>
+                <td>{timeToHuman(data.max_time, "ms spent")}</td>
+            </tr>
+            {
+                expanded[data.sequence_num] && seq_details && seq_details[data.sequence_num] ?
+                    <tr>
+                        <td colSpan={5}>
+                            <Container>
+                                <Row>
                                     <Col xs={4}>
-                                    <ResponsiveContainer width={"100%"} height={200}>
-                                        <BarChart data={makeSpans(ignoreNulls(props.seq_details[data.sequence_num]))} height={200}>
-                                            <Bar dataKey={"range"} fill={"#1c6"} isAnimationActive={false}/>
-                                            <XAxis dataKey={"xAxis"} />
-                                            <YAxis />
-                                        </BarChart>
-                                    </ResponsiveContainer>
+                                        <ResponsiveContainer width={"100%"} height={200}>
+                                            <BarChart data={makeSpans(ignoreNulls(seq_details[data.sequence_num]))} height={200}>
+                                                <Bar dataKey={"range"} fill={"#1c6"} isAnimationActive={false}/>
+                                                <XAxis dataKey={"xAxis"} />
+                                                <YAxis />
+                                            </BarChart>
+                                        </ResponsiveContainer>
                                     </Col>
                                     <Col xs={8}>
                                         <Table striped>
                                             <thead>
-                                                <tr>
-                                                    <th>Thread</th>
-                                                    <th>Amounts</th>
-                                                    <th>Inter-Gen Roots</th>
-                                                </tr>
+                                            <tr>
+                                                <th>Thread</th>
+                                                <th>Amounts</th>
+                                                <th>Inter-Gen Roots</th>
+                                            </tr>
                                             </thead>
                                             <tbody>
                                             {
-                                                ignoreNulls(props.seq_details[data.sequence_num]).map(data =>
-                                                    <tr>
+                                                ignoreNulls(seq_details[data.sequence_num]).map(data =>
+                                                    <tr key={data.thread_id}>
                                                         <td>
                                                             { data.thread_id }
                                                         </td>
@@ -125,16 +115,28 @@ export default function GCOverview(props) {
                                             </tbody>
                                         </Table>
                                     </Col>
-                                    </Row>
-                                </Container>
-                            </td>
-                        </tr>
-                        : null
-                }
-                </React.Fragment>
-            );
-        })
-    }
+                                </Row>
+                            </Container>
+                        </td>
+                    </tr>
+                    : null
+            }
+        </React.Fragment>
+    );
+}
+
+const GcTable = ({ overview, expanded, seq_details, onGCExpandButtonClicked }) => {
+    if (typeof overview === "undefined" || typeof overview.stats_per_sequence === "undefined")
+        return (<tr key={0}>
+            <td>nothing</td>
+        </tr>);
+    let seen = -1;
+    return ignoreNulls(overview.stats_per_sequence).map(data =>
+        <GcTableRow data={data} expanded={expanded} seq_details={seq_details} onGCExpandButtonClicked={onGCExpandButtonClicked} />
+    )
+}
+
+export default function GCOverview(props) {
     return (
         <Container>
             <Row>
@@ -146,14 +148,14 @@ export default function GCOverview(props) {
                             <React.Fragment>
                                 <h2>Time spent per GC run</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
-                                    <BarChart height={100} data={only_minor(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
+                                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
                                         <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
                                         <Tooltip content={<div></div>}/>
                                     </BarChart>
                                 </ResponsiveContainer>
                                 <h2>Time between GC runs</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
-                                    <BarChart height={100} data={time_diffs(only_minor(props.overview.stats_per_sequence))} syncId={"gcoverview"}>
+                                    <BarChart height={100} data={time_diffs(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
                                         <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
                                         <Tooltip content={(stuff) => {
                                             const outer = stuff.payload;
@@ -186,7 +188,12 @@ export default function GCOverview(props) {
                 </tr>
                 </thead>
                 <tbody>
-                <GcTable />
+                    <GcTable
+                        overview={props.overview}
+                        expanded={props.expanded}
+                        seq_details={props.seq_details}
+                        onGCExpandButtonClicked={props.onGCExpandButtonClicked}
+                    />
                 </tbody>
             </Table>
             <Table striped>
