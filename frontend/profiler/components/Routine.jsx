@@ -23,8 +23,15 @@ export function numberFormatter(number, fractionDigits = 0, thousandSeperator = 
     return `${sign}${final.reverse().join('')}${frDigits > 0 ? fractionSeperator : ''}${frDigits > 0 && parts[1] ? parts[1] : ''}`
 }
 
-export function timeToHuman(time, suffix = 'ms') {
-    return (<span>{numberFormatter(time / 1000, 2)}<small>{suffix}</small></span>);
+export function timeToHuman(time, suffix = 'ms', smaller) {
+    if (time / 1000 >= 0.01 || typeof smaller === "undefined") {
+        return (<span>{numberFormatter(time / 1000, 2)}
+            <small>{suffix}</small></span>);
+    }
+    else {
+        return (<span><u>{numberFormatter(time, 2)}
+            <small>{smaller}</small></u></span>);
+    }
 }
 
 export default function Routine({ routine, metadata, columns, expanded, allRoutineChildren, onExpandButtonClicked }) {
