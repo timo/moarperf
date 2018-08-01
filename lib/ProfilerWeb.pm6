@@ -195,7 +195,7 @@ monitor ProfilerWeb {
 
     }
 
-    method routine-and-children-of-call($id) {
+    method children-of-call($id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
                 c.id              as id,
