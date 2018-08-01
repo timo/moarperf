@@ -198,14 +198,17 @@ monitor ProfilerWeb {
     method routine-and-children-of-call($id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
-                c.id as id,
-                c.parent_id      as parent_id,
-                c.entries        as entries,
-                c.exclusive_time as exclusive,
-                c.inclusive_time as inclusive,
-                count(pc.id)     as childcount,
+                c.id              as id,
+                c.parent_id       as parent_id,
+                c.entries         as entries,
+                c.exclusive_time  as exclusive,
+                c.inclusive_time  as inclusive,
+                count(pc.id)      as childcount,
+                c.inlined_entries as inlined_entries,
+                c.spesh_entries   as spesh_entries,
+                c.jit_entries     as jit_entries,
 
-                c.routine_id     as routine_id
+                c.routine_id      as routine_id
 
                 from calls c
                     left outer join calls pc
@@ -221,7 +224,13 @@ monitor ProfilerWeb {
         $query.execute($id, $id);
         my @results;
         for $query.allrows(:array-of-hash) -> $/ {
-            @results.push: $/;
+            # Put requested routine first, for convenience.
+            if $<id> == $id {
+                @results.unshift: $/
+            }
+            else {
+                @results.push: $/;
+            }
             $<depth> = +($<id> != $id);
         }
 
