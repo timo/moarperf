@@ -34,7 +34,7 @@ export function timeToHuman(time, suffix = 'ms', smaller) {
     }
 }
 
-export default function Routine({ routine, metadata, columns, expanded, allRoutineChildren, onExpandButtonClicked }) {
+export default function Routine({ routine, metadata, columns, expanded, allRoutineChildren, onExpandButtonClicked, maxTime }) {
   if (typeof columns === "string") {
       columns = columns.split(" ");
   }

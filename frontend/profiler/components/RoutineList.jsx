@@ -24,6 +24,8 @@ export default function RoutineList({ routines, metadata, expanded = [], allRout
 
   const sortedRoutines = Array.from(routines).sort((a, b) => b.exclusive_time - a.exclusive_time);
 
+  const maxTime = Array.from(routines).map(r => r.inclusive_time).sort().pop();
+
   return [
     <h2 key={0}>Routines</h2>,
     <Table key={1} striped style={{tableLayout: "fixed"}}>
@@ -40,6 +42,7 @@ export default function RoutineList({ routines, metadata, expanded = [], allRout
                   routine={routine}
                   metadata={metadata}
                   columns={columns}
+                  maxTime={maxTime}
                   onExpandButtonClicked={onExpandButtonClicked}
                   expanded={expanded[routine.id]}
                   allRoutineChildren={allRoutineChildren}
