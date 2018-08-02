@@ -53,8 +53,13 @@ export default function Routine({ routine, metadata, columns, expanded, allRouti
           </td>)
       },
       entriesInfo() {
-          return (<td key={"entriesInfo"}>{routine.entries} {" "}
-              <small>{(routine.jit_entries * 100 / routine.entries).toPrecision(3)}% jit</small>
+          const jitText = (routine.jit_entries * 100 / routine.entries).toPrecision(3)
+          return (<td key={"entriesInfo"}>{numberFormatter(routine.entries)}
+              <div style={{float: "right"}}><small>
+                  {
+                      jitText != "0.00" ? jitText : "0"
+                  }% jit
+              </small></div>
           </td>)
       },
       exclusiveInclusiveTime() {
