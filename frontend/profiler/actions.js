@@ -65,6 +65,27 @@ export function getGCOverview() {
     }
 }
 
+export function getRoutineOverview() {
+    return (dispatch : DispatchType, getState : GetStateType) => {
+        if (typeof getState().profiler.routineOverview === "undefined" || getState().profiler.routineOverview.length == 0) {
+            $.ajax({
+                url: '/routine-overview',
+                type: 'GET',
+                contentType: 'application/json',
+                success: (data) => dispatch({type: 'PROFILE_STATUS_UPDATE', body: {data: "routine_overview", body: data}}),
+            });
+        }
+        if (typeof getState().profiler.routines === "undefined" || getState().profiler.routines.length == 0) {
+            $.ajax({
+                url: '/all-routines',
+                type: 'GET',
+                contentType: 'application/json',
+                success: (data) => dispatch({type: 'PROFILE_STATUS_UPDATE', body: {data: "all_routines", body: data}}),
+            });
+        }
+    }
+}
+
 export function getGCDetails(seq_num : number) {
     return (dispatch : DispatchType, getState : GetStateType) => {
         dispatch({

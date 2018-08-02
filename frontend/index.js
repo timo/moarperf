@@ -90,6 +90,12 @@ const ProfilerApp = props => {
                 <div>This is the overview page.</div>
             </Route>
             <Route path={props.match.url + "/routines"}>
+              <React.Fragment>
+                {
+                props.profilerState.routineOverview.length == 0
+                ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
+                : null
+                }
                 <RoutineList
                     routines={props.profilerState.routineOverview}
                     metadata={props.profilerState.routines}
@@ -98,6 +104,7 @@ const ProfilerApp = props => {
 
                     onExpandButtonClicked={props.onRoutineExpanded}
                 />
+              </React.Fragment>
             </Route>
             <Route path={props.match.url + "/gc"}>
                 <GCOverview
@@ -154,6 +161,7 @@ const App = (props : HeapSnapshotAppProps) => (
                   profilerState={props.profiler}
                   onRoutineExpanded={props.onRoutineExpanded}
                   onRequestGCOverview={props.onRequestGCOverview}
+                  onRequestRoutineOverview={props.onRequestRoutineOverview}
                   onGCExpandButtonClicked={props.onGCExpandButtonClicked}
                   match={match}
                   location={location} />
@@ -175,6 +183,7 @@ function mapDispatch(dispatch) {
     onRequestSnapshot: index => dispatch(HeapAnalyzerActions.requestSnapshot(index)),
     onRoutineExpanded: id => dispatch(ProfilerActions.expandRoutine(id)),
     onRequestGCOverview: () => dispatch(ProfilerActions.getGCOverview()),
+    onRequestRoutineOverview: () => dispatch(ProfilerActions.getRoutineOverview()),
     onGCExpandButtonClicked: (seq_nr) => dispatch(ProfilerActions.getGCDetails(seq_nr))
   };
 }

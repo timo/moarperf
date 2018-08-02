@@ -60,7 +60,7 @@ monitor ProfilerWeb {
 
         start {
             note "getting all routines";
-            my %all_routines = self.all_routines;
+            my %all_routines = self.all-routines;
             note "sending all routines";
             $!status-updates.emit(%(
                 data => "all_routines",
@@ -68,7 +68,7 @@ monitor ProfilerWeb {
             ));
 
             note "getting routine overview";
-            my @overview = self.routine_overview;
+            my @overview = self.routine-overview;
             note "sending routine overview";
             $!status-updates.emit(%(
                 data => "routine_overview",
@@ -95,7 +95,7 @@ monitor ProfilerWeb {
         }
     }
 
-    method all_routines() {
+    method all-routines() {
         %!all_routines ||= do {
             my $query = $!dbh.prepare(q:to/STMT/);
                 select
@@ -125,7 +125,7 @@ monitor ProfilerWeb {
         }
     }
 
-    method routine_overview() {
+    method routine-overview() {
         @!routine_overview ||= do {
             note "building routine overview";
             my $query = $!dbh.prepare(q:to/STMT/);
