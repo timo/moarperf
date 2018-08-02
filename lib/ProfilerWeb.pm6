@@ -58,6 +58,9 @@ monitor ProfilerWeb {
 
         $!dbh = DBIish.connect("SQLite", :database($databasefile));
 
+        @!routine_overview = Empty;
+        %!all_routines = Empty;
+
         start {
             note "getting all routines";
             my %all_routines = self.all-routines;
