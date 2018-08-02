@@ -48,7 +48,7 @@ export default function Routine({ routine, metadata, columns, expanded, allRouti
       },
       nameInfo() {
           return (<td key={"nameInfo"}>
-              <span className="routineName">{myMetadata.name}</span><br />
+              <span className="routineName"><strong>{myMetadata.name}</strong></span><br />
               <span className="routineFileInfo">{myMetadata.file}:{myMetadata.line}</span>
           </td>)
       },
