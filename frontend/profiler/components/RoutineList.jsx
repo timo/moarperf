@@ -2,7 +2,15 @@ import React from 'react';
 import { Table } from 'reactstrap';
 import Routine from './Routine';
 
-export default function RoutineList({ routines, metadata, expanded = [], allRoutineChildren, columns = "expand sitecount nameInfo entriesInfo exclusiveInclusiveTime", onExpandButtonClicked }) {
+export default function RoutineList(
+    {
+        routines,
+        metadata,
+        expanded = [],
+        allRoutineChildren,
+        columns = "expand sitecount nameInfo entriesInfo exclusiveInclusiveTime",
+        maxTime,
+        onExpandButtonClicked }) {
     if (typeof columns === "string") {
         columns = columns.split(" ");
     }
@@ -24,7 +32,10 @@ export default function RoutineList({ routines, metadata, expanded = [], allRout
 
   const sortedRoutines = Array.from(routines).sort((a, b) => b.exclusive_time - a.exclusive_time);
 
-  const maxTime = Array.from(routines).map(r => r.inclusive_time).sort().pop();
+  const byInclusiveTime = typeof maxTime === "undefined" ? Array.from(routines).map(r => r.inclusive_time).sort((a, b) => a - b) : [];
+  const myMaxTime = typeof maxTime === "undefined" ? byInclusiveTime.pop() : maxTime;
+
+  console.log(maxTime, "is the max time.");
 
   return [
     <h2 key={0}>Routines</h2>,

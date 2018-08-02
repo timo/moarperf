@@ -63,7 +63,44 @@ export default function Routine({ routine, metadata, columns, expanded, allRouti
           </td>)
       },
       exclusiveInclusiveTime() {
-          return (<td key={"exclusiveInclusiveTime"}>{timeToHuman(routine.exclusive_time)} / {timeToHuman(routine.inclusive_time)}</td>)
+          var barWidthFirst, barWidthSecond, barWidthRest;
+          let willShowBar = typeof maxTime !== "undefined" && routine.exclusive_time <= routine.inclusive_time;
+          if (typeof maxTime !== "undefined") {
+              barWidthFirst  = (routine.exclusive_time / maxTime) * 100;
+              barWidthSecond = ((routine.inclusive_time - routine.exclusive_time) / maxTime) * 100;
+              barWidthRest   = (1 - routine.inclusive_time / maxTime) * 100;
+          }
+          const barStyle = {
+              height: "0.4em",
+              padding: "0px",
+              margin: "0px",
+              display: "inline-block"
+          }
+          return (
+              <td key={"exclusiveInclusiveTime"}>
+                  {timeToHuman(routine.exclusive_time, "ms", "ns")} / {timeToHuman(routine.inclusive_time, "ms", "ns")}<br />
+                  {
+                      routine.entries > 1 &&
+                      <small>
+                          {timeToHuman(routine.exclusive_time / routine.entries, "ms", "ns")} /
+                          {timeToHuman(routine.inclusive_time / routine.entries, "ms", "ns")}
+                          {" "}per entry
+                      </small>
+                  }
+                  {
+                      willShowBar && (
+                          <React.Fragment>
+                              <br />
+                              <div style={{position: "relative", width: "100%", bottom: "-0.3em", borderBottom: "1px solid grey"}}>
+                                <span style={{width: barWidthFirst + "%",  background: "darkblue", ...barStyle }}></span>
+                                <span style={{width: barWidthSecond + "%", background: "blue", ...barStyle}}></span>
+                                <span style={{width: barWidthRest + "%",   background: "lightgrey", ...barStyle}}></span>
+                              </div>
+                          </React.Fragment>
+
+                      )
+                  }
+              </td>)
       },
       inlineInfo() {
           const inlineText = (routine.inlined_entries * 100 / routine.entries).toPrecision(3)
@@ -93,6 +130,7 @@ export default function Routine({ routine, metadata, columns, expanded, allRouti
                       && <RoutineList routines={allRoutineChildren[routine.id]}
                                       metadata={metadata}
                                       columns={"sitecount nameInfo entriesInfo inlineInfo exclusiveInclusiveTime"}
+                                      maxTime={routine.inclusive_time}
                       />
                   }
               </Container>
