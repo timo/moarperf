@@ -189,9 +189,7 @@ monitor ProfilerWeb {
         my %children-of;
         my %parent-of;
         my %routine-id;
-        note "parents of given call";
         for $query.allrows(:array-of-hash) {
-            dd $_;
             %children-of{.<parent_id>}.push: .<call_id>;
             %active-calls{.<parent_id>} = 1 unless %parent-of{.<parent_id>}:exists;
             %parent-of{.<call_id>} = .<parent_id>;
@@ -212,7 +210,6 @@ monitor ProfilerWeb {
             STMT
 
 
-        note "following parents chain";
         while %active-calls {
             my $call-id = %active-calls.grab;
             dd $call-id;
@@ -226,17 +223,10 @@ monitor ProfilerWeb {
             }
         }
 
-        dd %children-of;
-        dd %parent-of;
-
         my @result-tree;
-        note "building result tree";
         for %thread-nodes {
-            dd $_;
             if %children-of{.key} > 0 {
                 sub push-call($call-id) {
-                    note "pushing call $call-id";
-                    dd %children-of{$call-id}.list;
                     %(
                         routine  => %routine-id{$call-id},
                         call     => $call-id,
