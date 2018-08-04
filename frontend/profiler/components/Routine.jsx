@@ -1,6 +1,9 @@
 import React, {Component} from 'react';
-import { Container, Button, Table } from 'reactstrap';
+import { Container, Button, Nav, NavItem, NavLink } from 'reactstrap';
+import classnames from 'classnames';
+
 import RoutineList from "./RoutineList";
+import RoutinePaths from "./RoutinePaths";
 
 export function numberFormatter(number, fractionDigits = 0, thousandSeperator = ',', fractionSeperator = '.') {
     if (number!==0 && !number || !Number.isFinite(number)) return number
@@ -163,19 +166,15 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                                         columns={"sitecount nameInfo entriesInfo inlineInfo exclusiveInclusiveTime"}
                                         maxTime={routine.inclusive_time}
                                         parentEntries={routine.entries}
+                                        headerComponent={null}
                         />
                     }
                 </Container>);
             }
             else if (this.state.tab === "paths") {
-                if (this.state.paths.loading) {
-                    expandedComponent = (<Container>
-                        <div>Hold on ...</div>
+                expandedComponent = (<Container>
+                        <RoutinePaths routineId={routine.id} allRoutines={metadata}/>
                     </Container>);
-                }
-                else {
-
-                }
             }
         }
         return [
@@ -187,6 +186,14 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
             expanded &&
             <tr key={routine.id + "expanded"}>
                 <td colSpan={columns.length}>
+                    <Nav tabs>
+                        <NavItem>
+                            <NavLink className={classnames({active: this.state.tab === "callees"})} onClick={() => this.setState(state => state.tab = "callees")}>Callees</NavLink>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink className={classnames({active: this.state.tab === "paths"})} onClick={() => this.setState(state => state.tab = "paths")}>Paths</NavLink>
+                        </NavItem>
+                    </Nav>
                     { expandedComponent }
                 </td>
             </tr>

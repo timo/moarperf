@@ -11,7 +11,9 @@ export default function RoutineList(
         columns = "expand sitecount nameInfo entriesInfo exclusiveInclusiveTime",
         maxTime,
         parentEntries,
-        onExpandButtonClicked }) {
+        onExpandButtonClicked,
+        headerComponent = <h2 key={0}>Routines</h2>,
+    }) {
     if (typeof columns === "string") {
         columns = columns.split(" ");
     }
@@ -39,7 +41,7 @@ export default function RoutineList(
   console.log(maxTime, "is the max time.");
 
   return [
-    <h2 key={0}>Routines</h2>,
+    headerComponent,
     <Table key={1} striped style={{tableLayout: "fixed"}}>
       <thead>
         <tr>
