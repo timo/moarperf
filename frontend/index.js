@@ -137,6 +137,7 @@ type HeapSnapshotAppProps = {
 
 const App = (props : HeapSnapshotAppProps) => (
   <Container>
+      <h1><Button tag={Link} to={"/"}><i className="fas fa-home"></i></Button> MoarVM Performance Tool</h1>
       <Switch>
           <Route exact path="/">
             <React.Fragment>
