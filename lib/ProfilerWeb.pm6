@@ -161,6 +161,98 @@ monitor ProfilerWeb {
         }
     }
 
+    method routine-paths($routine-id) {
+        my $threads-query = $!dbh.prepare(q:to/STMT/);
+            select
+                thread_id,
+                root_node
+
+            from profile;
+            STMT
+
+        $threads-query.execute;
+        my %thread-nodes = $threads-query.allrows(:array-of-hash).map({$^r<root_node> => $^r<thread_id>});
+        $threads-query.finish;
+
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                c.id             as call_id,
+                c.parent_id      as parent_id
+
+            from calls c
+
+            where c.routine_id = ?;
+            STMT
+        $query.execute($routine-id);
+
+        my %active-calls is SetHash;
+        my %children-of;
+        my %parent-of;
+        my %routine-id;
+        note "parents of given call";
+        for $query.allrows(:array-of-hash) {
+            dd $_;
+            %children-of{.<parent_id>}.push: .<call_id>;
+            %active-calls{.<parent_id>} = 1 unless %parent-of{.<parent_id>}:exists;
+            %parent-of{.<call_id>} = .<parent_id>;
+            %routine-id{.<call_id>} = $routine-id;
+        }
+
+        $query.finish;
+
+        my $parent-of-call-q = $!dbh.prepare(q:to/STMT/);
+            select
+                c.id         as call_id,
+                c.parent_id  as parent_id,
+                c.routine_id as routine_id
+
+            from calls c
+
+            where c.id = ?;
+            STMT
+
+
+        note "following parents chain";
+        while %active-calls {
+            my $call-id = %active-calls.grab;
+            dd $call-id;
+            $parent-of-call-q.execute($call-id);
+            if $parent-of-call-q.row(:hash) -> $_ {
+                next unless .<call_id>;
+                %children-of{.<parent_id>}.push: .<call_id>;
+                %active-calls{.<parent_id>} = 1 unless %parent-of{.<parent_id>}:exists;
+                %parent-of{.<call_id>} = .<parent_id>;
+                %routine-id{.<call_id>} = .<routine_id>;
+            }
+        }
+
+        dd %children-of;
+        dd %parent-of;
+
+        my @result-tree;
+        note "building result tree";
+        for %thread-nodes {
+            dd $_;
+            if %children-of{.key} > 0 {
+                sub push-call($call-id) {
+                    note "pushing call $call-id";
+                    dd %children-of{$call-id}.list;
+                    %(
+                        routine  => %routine-id{$call-id},
+                        call     => $call-id,
+                        children =>
+                            %children-of{$call-id}:exists
+                                ?? [push-call($_) for %children-of{$call-id}.unique.grep(none($call-id))]
+                                !! []
+                    )
+                }
+                @result-tree.push(push-call(.key));
+            }
+        }
+
+        @result-tree;
+    }
+
     method all-children-of-routine($routine-id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select

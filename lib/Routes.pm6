@@ -65,6 +65,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
             content 'application/json', to-json($profiler.all-routines)
         }
 
+        get -> 'routine-paths', Int $routine-id {
+            content 'application/json', to-json($profiler.routine-paths($routine-id));
+        }
+
         get -> 'gc-overview' {
             content "application/json", to-json($profiler.gc-summary);
         }
