@@ -212,7 +212,6 @@ monitor ProfilerWeb {
 
         while %active-calls {
             my $call-id = %active-calls.grab;
-            dd $call-id;
             $parent-of-call-q.execute($call-id);
             if $parent-of-call-q.row(:hash) -> $_ {
                 next unless .<call_id>;
