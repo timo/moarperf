@@ -93,7 +93,7 @@ const ProfilerApp = props => {
             <Route path={props.match.url + "/routines"}>
               <ErrorBoundary>
                 {
-                props.profilerState.routineOverview.length == 0
+                props.profilerState.routineOverview.length == 0 || props.profilerState.routines.length == 0
                 ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
                 : null
                 }
