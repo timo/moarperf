@@ -10,6 +10,7 @@ export default function RoutineList(
         allRoutineChildren,
         columns = "expand sitecount nameInfo entriesInfo exclusiveInclusiveTime",
         maxTime,
+        parentEntries,
         onExpandButtonClicked }) {
     if (typeof columns === "string") {
         columns = columns.split(" ");
@@ -54,6 +55,7 @@ export default function RoutineList(
                   metadata={metadata}
                   columns={columns}
                   maxTime={maxTime}
+                  parentEntries={parentEntries}
                   onExpandButtonClicked={onExpandButtonClicked}
                   expanded={expanded[routine.id]}
                   allRoutineChildren={allRoutineChildren}
