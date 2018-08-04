@@ -53,10 +53,6 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
             }
         }
 
-        get -> 'routine-and-children', Int $call-id {
-            content "application/json", $profiler.routine-and-children($call-id);
-        }
-
         get -> 'routine-children', Int $routine-id {
             content "application/json", to-json($profiler.all-children-of-routine($routine-id));
         }
