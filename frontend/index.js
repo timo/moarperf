@@ -7,6 +7,7 @@ import { HashRouter, Route, Switch, Link, Redirect, withRouter } from 'react-rou
 import thunkMiddleware from 'redux-thunk';
 import WSAction from 'redux-websocket-action';
 import Loadable from 'react-loadable';
+import ErrorBoundary from 'react-error-boundary';
 
 import {
   InputGroupAddon, InputGroup, Input, Button,
@@ -90,7 +91,7 @@ const ProfilerApp = props => {
                 <div>This is the overview page.</div>
             </Route>
             <Route path={props.match.url + "/routines"}>
-              <React.Fragment>
+              <ErrorBoundary>
                 {
                 props.profilerState.routineOverview.length == 0
                 ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
@@ -104,13 +105,15 @@ const ProfilerApp = props => {
 
                     onExpandButtonClicked={props.onRoutineExpanded}
                 />
-              </React.Fragment>
+              </ErrorBoundary>
             </Route>
             <Route path={props.match.url + "/gc"}>
+                <ErrorBoundary>
                 <GCOverview
                     onRequestGCOverview={props.onRequestGCOverview}
                     onGCExpandButtonClicked={props.onGCExpandButtonClicked}
                     {...props.profilerState.gc} />
+                </ErrorBoundary>
             </Route>
             <Route exact path={props.match.url}>
                 <div>This is the overview page.</div>

@@ -41,6 +41,7 @@
     "memoize-state": "^1.5.0",
     "react": "^16.4.1",
     "react-dom": "^16.4.1",
+    "react-error-boundary": "^1.2.3",
     "react-loadable": "^5.4.0",
     "react-redux": "^5.0.7",
     "react-router-dom": "^4.3.1",
