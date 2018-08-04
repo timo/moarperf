@@ -282,7 +282,6 @@ monitor ProfilerWeb {
         note "all-children-of-routine $routine-id in " ~ (now - ENTER now);
 
         @results;
-
     }
 
     method children-of-call($id) {
