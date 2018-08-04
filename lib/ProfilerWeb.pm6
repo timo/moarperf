@@ -226,7 +226,7 @@ monitor ProfilerWeb {
         my @result-tree;
         for %thread-nodes {
             if %children-of{.key} > 0 {
-                sub push-call($call-id) {
+                sub push-call(Int() $call-id) {
                     %(
                         routine  => %routine-id{$call-id},
                         call     => $call-id,
@@ -236,7 +236,12 @@ monitor ProfilerWeb {
                                 !! []
                     )
                 }
-                @result-tree.push(push-call(.key));
+                @result-tree.push(
+                    %(
+                        thread => .key.Int,
+                        children => push-call(.key)
+                    )
+                );
             }
         }
 
