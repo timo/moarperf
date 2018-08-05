@@ -44,6 +44,11 @@ const GCOverview = Loadable({
     loading: () => <div>Hold on ...</div>,
 });
 
+const CallGraph = Loadable({
+    loader: () => import(/* webpackChunkName: "callgraph" */ './profiler/components/CallGraph'),
+    loading: () => <div>Hold on ...</div>,
+})
+
 type SelectFileProps = {
   filePath: string,
   onChangeFilePath: (string) => void,
@@ -83,6 +88,9 @@ const ProfilerApp = props => {
                     <NavLink tag={Link} to={path(props.match, "routines")}>Routines</NavLink>
                 </NavItem>
                 <NavItem>
+                    <NavLink tag={Link} to={path(props.match, "callgraph")}>Explore Call Graph</NavLink>
+                </NavItem>
+                <NavItem>
                     <NavLink tag={Link} to={path(props.match, "gc")}>GC</NavLink>
                 </NavItem>
             </Nav>
@@ -115,6 +123,14 @@ const ProfilerApp = props => {
                     {...props.profilerState.gc} />
                 </ErrorBoundary>
             </Route>
+            <Route path={props.match.url + "/callgraph/:id"} render={({ match, location }) => (
+                <ErrorBoundary>
+                <CallGraph
+                    routines={props.profilerState.routines}
+                    callId={match.params.id}
+                    />
+                </ErrorBoundary>
+                )} />
             <Route exact path={props.match.url}>
                 <div>This is the overview page.</div>
             </Route>

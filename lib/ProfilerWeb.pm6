@@ -161,7 +161,7 @@ monitor ProfilerWeb {
         }
     }
 
-    method routine-paths($routine-id) {
+    method !thread-ids-and-root-nodes() {
         my $threads-query = $!dbh.prepare(q:to/STMT/);
             select
                 thread_id,
@@ -174,6 +174,42 @@ monitor ProfilerWeb {
         my @threads-result = $threads-query.allrows(:array-of-hash);
         my %thread-nodes = @threads-result.grep(*<root_node>.defined).map({$^r<root_node> => $r<thread_id>});
         $threads-query.finish;
+
+        %thread-nodes;
+    }
+
+    method call-path(Int $call-id) {
+        my %thread-nodes = self!thread-ids-and-root-nodes;
+
+        my Junction $any-threadnode = any(%thread-nodes.keys);
+
+        my $parent-of-call-q = $!dbh.prepare(q:to/STMT/);
+            select
+                c.id         as call_id,
+                c.parent_id  as parent_id,
+                c.routine_id as routine_id
+
+            from calls c
+
+            where c.id = ?;
+            STMT
+
+        my @nodes;
+        loop {
+            state $cursor = $call-id;
+            $parent-of-call-q.execute($cursor);
+            given $parent-of-call-q.row(:hash) {
+                @nodes.unshift($_);
+                $cursor = .<parent_id>;
+                last if $cursor == $any-threadnode;
+            }
+        }
+
+        @nodes;
+    }
+
+    method routine-paths(Int $routine-id) {
+        my %thread-nodes = self!thread-ids-and-root-nodes;
 
         my $query = $!dbh.prepare(q:to/STMT/);
             select
@@ -284,7 +320,7 @@ monitor ProfilerWeb {
         @results;
     }
 
-    method children-of-call($id) {
+    method children-of-call(Int $id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
                 c.id              as id,
@@ -306,7 +342,7 @@ monitor ProfilerWeb {
                 where c.parent_id = ? or c.id = ?
                 group by c.id
 
-                order by calls.id asc
+                order by c.id asc
                 ;
             STMT
 

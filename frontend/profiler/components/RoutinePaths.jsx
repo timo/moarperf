@@ -81,7 +81,7 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                     }
                     else {
                         row.push(<td key={key++} className="entrance" style={tdStyle}>
-                            {self.props.allRoutines[child.routine].name}
+                            <Link to={"callgraph/" + child.call}>{self.props.allRoutines[child.routine].name}</Link>
                         </td>);
                     }
                     digestNode(child.children, child, depth + 1);
