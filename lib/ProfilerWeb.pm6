@@ -171,7 +171,8 @@ monitor ProfilerWeb {
             STMT
 
         $threads-query.execute;
-        my %thread-nodes = $threads-query.allrows(:array-of-hash).map({$^r<root_node> => $^r<thread_id>});
+        my @threads-result = $threads-query.allrows(:array-of-hash);
+        my %thread-nodes = @threads-result.grep(*<root_node>.defined).map({$^r<root_node> => $r<thread_id>});
         $threads-query.finish;
 
         my $query = $!dbh.prepare(q:to/STMT/);
@@ -224,7 +225,7 @@ monitor ProfilerWeb {
 
         my @result-tree;
         for %thread-nodes {
-            if %children-of{.key} > 0 {
+            if %children-of{.key}:exists && %children-of{.key} {
                 sub push-call(Int() $call-id) {
                     %(
                         routine  => %routine-id{$call-id},
