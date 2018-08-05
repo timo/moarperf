@@ -77,7 +77,7 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                         console.log(row);
                     }
                     if (node.routine === null) {
-                        row.push(<td key={key++} style={tdStyle}>Entry</td>);
+                        row.push(<td key={key++} className="entrance" style={tdStyle}>Entry</td>);
                     }
                     else {
                         row.push(<td key={key++} className="entrance" style={tdStyle}>
