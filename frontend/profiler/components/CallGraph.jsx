@@ -13,18 +13,18 @@ function AllocTableContent({allocations, parentSpeshJitEntries = 0, parentBareEn
                     {alloc.name}
                 </td>
                 <td>
-                    {numberFormatter(bareAllocs)} before spesh
-                    {parentBareEntries && <React.Fragment>
+                    {numberFormatter(bareAllocs)} <small>before spesh</small>
+                    {parentBareEntries > 0 && <React.Fragment>
                         <br/>
-                        <small>{numberFormatter(bareAllocs / parentBareEntries, 2)} per regular entry</small>
+                        <small>{numberFormatter(bareAllocs / (parentBareEntries - parentSpeshJitEntries), 2)} <small>per regular entry</small></small>
                     </React.Fragment>}
                 </td>
                 <td>
-                    {numberFormatter(alloc.spesh + alloc.jit)} after spesh/jit
-                    {parentSpeshJitEntries && <React.Fragment>
+                    {numberFormatter(alloc.spesh + alloc.jit)} <small>after spesh/jit</small>
+                    {parentSpeshJitEntries > 0 && <React.Fragment>
                         <br/>
-                        <small>{numberFormatter((alloc.spesh + alloc.jit) / parentSpeshJitEntries, 2)} per spesh/jit
-                            entry
+                        <small>{numberFormatter((alloc.spesh + alloc.jit) / parentSpeshJitEntries, 2)} <small>per spesh/jit
+                            entry</small>
                         </small>
                     </React.Fragment>
                     }
