@@ -64,6 +64,7 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                                         maxTime={routine.inclusive_time}
                                         parentEntries={routine.entries}
                                         headerComponent={null}
+                                        defaultSort={(a, b) => b.inclusive_time - a.inclusive_time}
                         />
                     }
                 </Container>);

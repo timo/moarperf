@@ -13,6 +13,7 @@ export default function RoutineList(
         parentEntries,
         onExpandButtonClicked,
         headerComponent = <h2 key={0}>Routines</h2>,
+        defaultSort = (a, b) => b.exclusive_time - a.exclusive_time
     }) {
     if (typeof columns === "string") {
         columns = columns.split(" ");
@@ -33,7 +34,7 @@ export default function RoutineList(
       entriesInfo: {width: "15%"}
   };
 
-  const sortedRoutines = Array.from(routines).sort((a, b) => b.exclusive_time - a.exclusive_time);
+  const sortedRoutines = Array.from(routines).sort(defaultSort);
 
   const byInclusiveTime = typeof maxTime === "undefined" ? Array.from(routines).map(r => r.inclusive_time).sort((a, b) => a - b) : [];
   const myMaxTime = typeof maxTime === "undefined" ? byInclusiveTime.pop() : maxTime;
