@@ -444,9 +444,9 @@ monitor ProfilerWeb {
     }
 
     method call-allocations-inclusive(Int $call) {
-        my @callnodes = flat self.recursive-children-of-call($call).values>>.Slip;
+        my @callnodes = flat self.recursive-children-of-call($call).values>>.Slip, $call.Slip;
 
-        my $calls-string = @callnodes.join(",") ~ "," ~ $call;
+        my $calls-string = @callnodes.join(",");
 
         my $query = $!dbh.prepare(qq:to/STMT/);
             select
