@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import $ from 'jquery';
 import {EntriesInfo, ExclusiveInclusiveTime, RoutineNameInfo, LinkButton, InlineInfo, numberFormatter} from "./RoutinePieces";
 
-function AllocTableContent({allocations, parentSpeshJitEntries = 0, parentBareEntries = 0}) {
+export function AllocTableContent({allocations, parentSpeshJitEntries = 0, parentBareEntries = 0}) {
     return allocations.map((alloc) => {
         const bareAllocs = alloc.count - alloc.jit - alloc.spesh;
         return (

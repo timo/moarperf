@@ -1,18 +1,40 @@
 import React, {Component} from 'react';
-import { Container, Button, Nav, NavItem, NavLink } from 'reactstrap';
+import { Container, Button, Table, Nav, NavItem, NavLink } from 'reactstrap';
 import classnames from 'classnames';
+import $ from 'jquery';
 
 import RoutineList from "./RoutineList";
 import RoutinePaths from "./RoutinePaths";
 
 import {ExclusiveInclusiveTime, EntriesInfo, InlineInfo} from "./RoutinePieces";
+import {AllocTableContent} from "./CallGraph";
 
 export default class Routine extends Component<{ routine: *, metadata: *, columns: *, expanded: *, allRoutineChildren: *, onExpandButtonClicked: *, maxTime: *, parentEntries: * }> {
     constructor(props) {
         super(props);
         this.state = {
             tab: "callees",
+            allocations: null,
+            allocsError: null,
         }
+    }
+
+    requestAllocations() {
+        const stateChangeForAlloc = (self, allocs) => {
+            self.setState((state) => ({
+                allocations: allocs,
+            }));
+        }
+
+        $.ajax({
+            url: '/routine-allocations/' + this.props.routine.id,
+            type: 'GET',
+            contentType: 'application/json',
+            success: (allocs) => stateChangeForAlloc(this, allocs),
+            error: (xhr, errorStatus, errorText) => {
+                this.setState(state => ({allocsError: errorStatus + errorText}))
+            }
+        });
     }
 
     render() {
@@ -74,6 +96,19 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                         <RoutinePaths routineId={routine.id} allRoutines={metadata}/>
                     </Container>);
             }
+            else if (this.state.tab === "allocations") {
+                if (this.state.allocations === null) {
+                    expandedComponent = (<Container><span>Loading, hold on...</span></Container>)
+                }
+                else {
+                    expandedComponent = (<Container>
+                            <Table striped><tbody>
+                            <AllocTableContent allocations={this.state.allocations}/>
+                            </tbody></Table>
+                        </Container>
+                    )
+                }
+            }
         }
         return [
             <tr key={routine.id + "_entry"}>
@@ -83,13 +118,20 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
             </tr>,
             expanded &&
             <tr key={routine.id + "expanded"}>
-                <td colSpan={columns.length}>
+                <td style={{paddingLeft: "5%", paddingRight: "5%"}} colSpan={columns.length}>
                     <Nav tabs>
                         <NavItem>
                             <NavLink className={classnames({active: this.state.tab === "callees"})} onClick={() => this.setState(state => state.tab = "callees")}>Callees</NavLink>
                         </NavItem>
                         <NavItem>
                             <NavLink className={classnames({active: this.state.tab === "paths"})} onClick={() => this.setState(state => state.tab = "paths")}>Paths</NavLink>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink
+                                className={classnames({active: this.state.tab === "allocations"})}
+                                onClick={() => { this.requestAllocations(); this.setState(state => state.tab = "allocations")}}>
+                                Allocations
+                            </NavLink>
                         </NavItem>
                     </Nav>
                     { expandedComponent }
