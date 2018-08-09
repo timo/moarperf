@@ -169,15 +169,21 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
 
     componentDidUpdate(prevProps) {
         if (prevProps.callId !== this.props.callId) {
-            this.requestPathAndChildren();
             this.setState((state) => ({
                 isLoading: {
-                    ...state.isLoading
+                    ...state.isLoading,
                     incAllocs: false,
                     childIncAllocs: false,
-
-                }
-            }))
+                },
+                call: {},
+                path: [],
+                error: null,
+                allocsError: null,
+                allocations: [],
+                inclusiveAllocations: [],
+                childInclusiveAllocations: [],
+            }));
+            this.requestPathAndChildren();
         }
     }
 
