@@ -8,7 +8,7 @@ use ProfilerWeb;
 
 my $heapanalyzer = HeapAnalyzerWeb.new;
 my $profiler = ProfilerWeb.new;
-my $application = routes($heapanalyzer, $profiler);
+my $application = routes($heapanalyzer, $profiler, @*ARGS[0]);
 
 my Cro::Service $http = Cro::HTTP::Server.new(
     http => <1.1>,

@@ -123,7 +123,7 @@ const ProfilerApp = props => {
                     {...props.profilerState.gc} />
                 </ErrorBoundary>
             </Route>
-            <Route path={props.match.url + "/callgraph/:id"} render={({ match, location }) => (
+            <Route path={props.match.url + "/callgraph/:id?"} render={({ match, location }) => (
                 <ErrorBoundary>
                 <CallGraph
                     routines={props.profilerState.routines}
@@ -230,11 +230,17 @@ const wsActionProfile = new WSAction(store, `ws://${host}/profile-status-message
 });
 wsActionProfile.start();
 
-// $.ajax({
-//   url: '/model-overview',
-//   type: 'GET',
-//   success: body => store.dispatch({ ...body, type: Actions.MODEL_OVERVIEW }),
-// });
+$.ajax({
+  url: '/whats-loaded',
+  type: 'GET',
+  success: body => {
+      if (body.filetype === "profile") {
+          if (window.location.hash === "#/") {
+              window.location.replace("#/prof/");
+          }
+      }
+  }
+});
 
 const ConnectedApp = withRouter(connect(mapProps, mapDispatch)(App));
 render(

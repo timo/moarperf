@@ -35,6 +35,7 @@ sub concise-file($file is copy) {
 
 monitor ProfilerWeb {
     has $.dbh;
+    has $.filename;
 
     has Supplier $!status-updates = Supplier::Preserving.new;
 
@@ -46,6 +47,10 @@ monitor ProfilerWeb {
         $!status-updates.Supply
     }
 
+    method is-loaded() {
+        return $!filename;
+    }
+
     method load-file(
         $databasefile is copy where all(
             *.ends-with('sqlite3' | 'sql'),
@@ -55,6 +60,8 @@ monitor ProfilerWeb {
         if $databasefile.ends-with('sql') {
             $databasefile = create-database($databasefile);
         }
+
+        $!filename = $databasefile;
 
         $!dbh = DBIish.connect("SQLite", :database($databasefile));
 

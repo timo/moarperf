@@ -16,7 +16,23 @@ sub json-content($route, &code) {
     content "application/json", $json-result;
 }
 
-sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
+sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, Str $filename?) is export {
+    sub load-file(Str $path) {
+        if $path.ends-with("sql" | "sqlite3") {
+            note "opening an sql thing";
+            $profiler.load-file($path);
+            note "done";
+            return { filetype => "profile" };
+        } else {
+            note "opening a heap thing";
+            $model.load-file($path);
+            note "done";
+            return { filetype => "heapsnapshot" };
+        }
+    }
+
+    load-file($_) with $filename;
+
     route {
         get -> {
             static 'static/index.html'
@@ -41,20 +57,20 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
             static 'static/imagery', @path;
         }
 
+        get -> 'whats-loaded' {
+            if $profiler.is-loaded -> $filename {
+                content 'application/json', { filetype => "profile", filename => $filename }
+            }
+            # XXX something for the heap analyzer
+            else {
+                content 'application/json', %( )
+            }
+        }
+
         post -> 'load-file' {
             request-body -> (Str :$path?) {
                 say $path.perl;
-                if $path.ends-with("sql" | "sqlite3") {
-                    note "opening an sql thing";
-                    $profiler.load-file($path);
-                    note "done";
-                    content "application/json", {filetype => "profile"};
-                } else {
-                    note "opening a heap thing";
-                    $model.load-file($path);
-                    note "done";
-                    content "application/json", {filetype => "heapsnapshot"};
-                }
+                content 'application/json', load-file($path);
             }
         }
 
