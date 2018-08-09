@@ -143,6 +143,10 @@ monitor ProfilerWeb {
                     total(jit_entries) as jit_entries,
                     total(inlined_entries) as inlined_entries,
 
+                    total(osr) as osr,
+                    total(deopt_one) as deopt_one,
+                    total(deopt_all) as deopt_all,
+
                     count(c.id) as sitecount
 
                     from calls c
@@ -284,6 +288,38 @@ monitor ProfilerWeb {
         @result-tree;
     }
 
+    method recursive-children-of-call(Int $call-id) {
+        sub with-children-of-multiple(@call, &code) {
+            my $call-list = @call.join(",");
+            my $query = $!dbh.prepare(qq:to/STMT/);
+                select
+                    id, parent_id
+
+                from calls
+                where
+                    parent_id in($call-list)
+                STMT
+
+            $query.execute();
+            code($_) for $query.allrows(:array-of-hash);
+            $query.finish;
+        }
+
+        my @looking-for = $call-id;
+        my %children;
+
+        while @looking-for {
+            my @old-looking-for = @looking-for;
+            @looking-for = Empty;
+            with-children-of-multiple @old-looking-for, {
+                %children{.<parent_id>}.push: .<id>;
+                @looking-for.push: .<id>;
+            }
+        }
+
+        %children;
+    }
+
     method all-children-of-routine($routine-id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
@@ -364,6 +400,76 @@ monitor ProfilerWeb {
         @results;
     }
 
+    method allocation-types() {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                id,
+                name
+
+                from types
+
+                order by id asc
+                ;
+            STMT
+
+        $query.execute();
+        my @q-results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        %(
+            do .<id> => .<name> for @q-results
+        )
+    }
+
+    method call-allocations(Int $call) {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                a.type_id as type_id, t.name as name,
+                a.jit as jit, a.spesh as spesh, a.count as count
+
+                from allocations a
+                    inner join types t on a.type_id = t.id
+
+                where call_id = ?
+
+                order by count asc
+                ;
+            STMT
+
+        $query.execute($call);
+        my @q-results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        @q-results
+    }
+
+    method call-allocations-inclusive(Int $call) {
+        my @callnodes = flat self.recursive-children-of-call($call).values>>.Slip;
+
+        my $calls-string = @callnodes.join(",") ~ "," ~ $call;
+
+        my $query = $!dbh.prepare(qq:to/STMT/);
+            select
+                a.type_id as type_id, t.name as name,
+                total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count,
+                count(call_id) as sites
+
+                from allocations a
+                    inner join types t on a.type_id = t.id
+
+                where call_id in($calls-string)
+
+                group by a.type_id
+                order by count desc
+                ;
+            STMT
+
+        $query.execute();
+        my @q-results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        @q-results
+    }
     sub val-from-query($query, $field) {
         $query.execute();
         LEAVE $query.finish;

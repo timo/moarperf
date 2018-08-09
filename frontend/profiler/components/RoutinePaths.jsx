@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import $ from 'jquery';
 import { Container, Button, Table } from 'reactstrap';
+import { Link } from 'react-router-dom';
+import classnames from 'classnames';
 import {ROUTINE_CHILDREN_GET} from "../actions";
 
 export default class RoutinePaths extends Component<{routineId: *, allRoutines: *}> {
@@ -58,7 +60,9 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
         let key = 0;
         let self = this;
         const tdStyle = {
-            borderLeft: "1px solid darkgrey"
+            borderLeft: "1px solid darkgrey",
+            padding: "0.3em !important",
+            paddingLeft: "12px !important",
         };
         function digestNode(children, node, depth = 1) {
             console.log("digesting children:", children, node);
@@ -72,15 +76,15 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                     else {
                         showLines[depth] = 0;
                     }
-                    if (row.length == 0 && depth > 1) {
-                        row = Array(depth - 1).fill(0).map((x, idx) => { return <td key={key++} style={showLines[idx + 1] ? tdStyle : {}}></td> });
+                    if (row.length === 0 && depth > 1) {
+                        row = Array(depth - 1).fill(0).map((x, idx) => { return <td key={key++} style={showLines[idx + 1] ? tdStyle : {}}/> });
                         console.log(row);
                     }
                     if (node.routine === null) {
-                        row.push(<td key={key++} className="entrance" style={tdStyle}>Entry</td>);
+                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={tdStyle}>Entry</td>);
                     }
                     else {
-                        row.push(<td key={key++} className="entrance" style={tdStyle}>
+                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={tdStyle}>
                             <Link to={"callgraph/" + child.call}>{self.props.allRoutines[child.routine].name}</Link>
                         </td>);
                     }
@@ -125,7 +129,9 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                 }`}
                 </style>
                 <Table responsive>
+                    <tbody>
                     { result }
+                    </tbody>
                 </Table>
             </React.Fragment>);
     }

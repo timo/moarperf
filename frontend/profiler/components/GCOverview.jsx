@@ -5,7 +5,7 @@ import {
     Button, Container, Row, Col, Table
 } from 'reactstrap';
 
-import { timeToHuman, numberFormatter } from './Routine';
+import { timeToHuman, numberFormatter } from './RoutinePieces';
 
 export function sizeToHuman(time) {
     return (<span>{numberFormatter(time / 1024, 2)}<small>kB</small></span>);

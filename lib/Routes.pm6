@@ -5,6 +5,17 @@ use HeapAnalyzerWeb;
 use ProfilerWeb;
 use CodeRunner;
 
+sub json-content($route, &code) {
+    say "json content";
+    my $start = now;
+    my $result = code();
+    note "$route in { now - $start }";
+    $start = now;
+    my $json-result = to-json($result);
+    note "$route json in { now - $start }: $json-result.chars() characters";
+    content "application/json", $json-result;
+}
+
 sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
     route {
         get -> {
@@ -53,36 +64,52 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler) is export {
             }
         }
 
+        get -> 'recursive-call-children', Int $call-id {
+            json-content "recursive-call-children", { $profiler.recursive-children-of-call($call-id) }
+        }
+
         get -> 'routine-children', Int $routine-id {
-            content "application/json", to-json($profiler.all-children-of-routine($routine-id));
+            json-content "routine-children", { $profiler.all-children-of-routine($routine-id) };
         }
 
         get -> 'routine-overview' {
-            content 'application/json', to-json($profiler.routine-overview)
+            json-content "routine-overview", { $profiler.routine-overview }
         }
 
         get -> 'all-routines' {
-            content 'application/json', to-json($profiler.all-routines)
+            json-content "all-routines", { $profiler.all-routines }
         }
 
         get -> 'routine-paths', Int $routine-id {
-            content 'application/json', to-json($profiler.routine-paths($routine-id));
+            json-content "routine-paths", { $profiler.routine-paths($routine-id) };
         }
 
         get -> 'call-path', Int $call-id {
-            content 'application/json', to-json($profiler.call-path($call-id));
+            json-content "call-path", { $profiler.call-path($call-id) };
         }
 
         get -> 'call-children', Int $call-id {
-            content "application/json", to-json($profiler.children-of-call($call-id));
+            json-content "call-children", { $profiler.children-of-call($call-id) };
         }
 
         get -> 'gc-overview' {
-            content "application/json", to-json($profiler.gc-summary);
+            json-content "gc-overview", { $profiler.gc-summary };
         }
 
         get -> 'gc-details', Int $sequence-num {
-            content "application/json", to-json($profiler.gc-details($sequence-num));
+            json-content "gc-details", { $profiler.gc-details($sequence-num) };
+        }
+
+        get -> 'allocation-types' {
+            json-content "types", { $profiler.allocation-types };
+        }
+
+        get -> 'call-allocations', Int $call {
+            json-content "call-allocations", { $profiler.call-allocations($call) }
+        }
+
+        get -> 'inclusive-call-allocations', Int $call {
+            json-content "inclusive-call-allocations", { $profiler.call-allocations-inclusive($call) }
         }
 
         get -> 'model-overview' {
