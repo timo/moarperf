@@ -300,8 +300,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                             </tr>
                             {
                                 childInclusiveAllocations.hasOwnProperty(child.id.toString()) && childInclusiveAllocations[child.id.toString()].length > 0 &&
-                                <tr><td colSpan={5}>
-                                    <Table striped><tbody>
+                                <tr><td style={{paddingTop: "0px", paddingLeft: "10%", paddingRight: "10%"}} colSpan={5}>
+                                    <Table striped style={{border: "1px solid black"}}><tbody>
                                     <AllocTableContent
                                         allocations={childInclusiveAllocations[child.id.toString()]}
                                         parentBareEntries={child.entries}
