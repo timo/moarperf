@@ -1,6 +1,6 @@
 import React, {Component} from 'react';
 import { Breadcrumb, BreadcrumbItem, Container, Row, Col, Table, Button } from 'reactstrap';
-import { Link } from 'react-router-dom';
+import { Link, Redirect } from 'react-router-dom';
 import $ from 'jquery';
 import {EntriesInfo, ExclusiveInclusiveTime, RoutineNameInfo, LinkButton, InlineInfo, numberFormatter} from "./RoutinePieces";
 
@@ -56,9 +56,9 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
     }
 
-    // TODO prevent success callbacks if the call id has changed in the mean time.
-
     requestPathAndChildren() {
+        if (typeof this.props.callId === "undefined")
+            return;
         this.setState((state) => ({
             isLoading: {
                 ...state.isLoading,
@@ -68,15 +68,23 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             }
         }));
 
+        const stateChangeForPath = (self, path, currentCallId) => {
+            if (currentCallId !== self.props.callId)
+                return;
+            this.setState(state => ({isLoading: { path: false }, path: path.slice(0, -1) }))
+        }
+
         $.ajax({
             url: '/call-path/' + this.props.callId,
             type: 'GET',
             contentType: 'application/json',
-            success: (path) => this.setState(state => ({isLoading: { path: false }, path: path.slice(0, -1) })),
+            success: (path) => stateChangeForPath(this, path, this.props.callId),
             error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { path: false }, error: errorStatus + errorText}))}
         });
 
-        const stateChangeForChildren = (self, children) => {
+        const stateChangeForChildren = (self, children, currentCallId) => {
+            if (currentCallId !== self.props.callId)
+                return;
             const childs = Array.from(children);
             const thisCall = childs.shift();
             self.setState((state) => ({
@@ -90,11 +98,13 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             url: '/call-children/' + this.props.callId,
             type: 'GET',
             contentType: 'application/json',
-            success: (children) => stateChangeForChildren(this, children),
+            success: (children) => stateChangeForChildren(this, children, this.props.callId),
             error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { children: false }, error: errorStatus + errorText}))}
         });
 
-        const stateChangeForAlloc = (self, allocs) => {
+        const stateChangeForAlloc = (self, allocs, currentCallId) => {
+            if (currentCallId !== self.props.callId)
+                return;
             self.setState((state) => ({
                 allocations: allocs,
                 isLoading: { allocs: false }
@@ -105,7 +115,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             url: '/call-allocations/' + this.props.callId,
             type: 'GET',
             contentType: 'application/json',
-            success: (allocs) => stateChangeForAlloc(this, allocs),
+            success: (allocs) => stateChangeForAlloc(this, allocs, this.props.callId),
             error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { allocs: false }, allocsError: errorStatus + errorText}))}
         });
     }
@@ -209,6 +219,12 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             inclusiveAllocations,
             childInclusiveAllocations,
         } = this.state;
+
+        if (typeof callId === "undefined") {
+            return (
+                <Redirect to={"/prof/callgraph/" + (call.id || "0")} />
+            )
+        }
 
         if (loadingPath || loadingChildren || typeof call === "undefined") {
             return (<Container><div>Hold on...</div></Container>)
