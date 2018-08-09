@@ -443,6 +443,31 @@ monitor ProfilerWeb {
         @q-results
     }
 
+    method routine-allocations(Int $routine) {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                a.type_id as type_id, t.name as name,
+                total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count
+
+                from allocations a
+                    inner join calls c on a.call_id = c.id
+                    inner join types t on a.type_id = t.id
+
+                where c.routine_id = ?
+
+                group by a.type_id
+
+                order by count asc
+                ;
+            STMT
+
+        $query.execute($routine);
+        my @q-results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        @q-results
+    }
+
     method call-allocations-inclusive(Int $call) {
         my @callnodes = flat self.recursive-children-of-call($call).values>>.Slip, $call.Slip;
 
