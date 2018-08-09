@@ -4,11 +4,17 @@ import { Link, Redirect } from 'react-router-dom';
 import $ from 'jquery';
 import {EntriesInfo, ExclusiveInclusiveTime, RoutineNameInfo, LinkButton, InlineInfo, numberFormatter} from "./RoutinePieces";
 
-export function AllocTableContent({allocations, parentSpeshJitEntries = 0, parentBareEntries = 0}) {
+export function AllocTableContent({allocations, parentSpeshJitEntries = 0, parentBareEntries = 0, parentSites = 0}) {
     return allocations.map((alloc) => {
         const bareAllocs = alloc.count - alloc.jit - alloc.spesh;
         return (
             <tr>
+                {
+                    parentSites !== 0 && typeof alloc.participants !== "undefined" &&
+                        <td>
+                            { alloc.participants.split(",").length } / <small>{ parentSites }</small> sites
+                        </td>
+                }
                 <td>
                     {alloc.name}
                 </td>

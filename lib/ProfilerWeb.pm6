@@ -454,7 +454,8 @@ monitor ProfilerWeb {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
                 a.type_id as type_id, t.name as name,
-                total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count
+                total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count,
+                group_concat(c.id, ",") as participants
 
                 from allocations a
                     inner join calls c on a.call_id = c.id

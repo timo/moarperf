@@ -103,7 +103,7 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                 else {
                     expandedComponent = (<Container>
                             <Table striped><tbody>
-                            <AllocTableContent allocations={this.state.allocations}/>
+                            <AllocTableContent allocations={this.state.allocations} parentSites={routine.sitecount}/>
                             </tbody></Table>
                         </Container>
                     )
