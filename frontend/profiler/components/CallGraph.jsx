@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import { Breadcrumb, BreadcrumbItem, Container, Row, Col, Table, Button } from 'reactstrap';
 import { Link, Redirect } from 'react-router-dom';
 import $ from 'jquery';
-import {EntriesInfo, ExclusiveInclusiveTime, RoutineNameInfo, LinkButton, InlineInfo, numberFormatter} from "./RoutinePieces";
+import {EntriesInfo, ExclusiveInclusiveTime, RoutineNameInfo, RoutineFileInfo, LinkButton, InlineInfo, numberFormatter} from "./RoutinePieces";
 
 export function AllocTableContent({allocations, parentSpeshJitEntries = 0, parentBareEntries = 0, parentSites = 0}) {
     return allocations.map((alloc) => {
@@ -278,7 +278,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 </Row>
                 <Row><Col>
                     <h2>{routine.name}</h2>
-                    <div>{routine.file}:{routine.line}</div>
+                    <div><RoutineFileInfo routine={routine} /></div>
                     <Table striped>
                         <tbody>
                         <tr>

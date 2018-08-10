@@ -112,10 +112,22 @@ export function ExclusiveInclusiveTime({routine, maxTime}) {
         </td>)
 }
 
+export function RoutineFileInfo({routine}) {
+    var link;
+    if (routine.file.startsWith("SETTING::")) {
+        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/master/src/core/" + routine.file.replace("SETTING::", "") + ".pm6#L" + routine.line}>
+            { routine.file }:{ routine.line }</a>
+    }
+    else {
+        link = <React.Fragment>{routine.file}:{routine.line}</React.Fragment>
+    }
+    return <span className="routineFileInfo">{ link }</span>
+}
+
 export function RoutineNameInfo({routine}) {
     return (<td key={"nameInfo"}>
         <span className="routineName"><strong>{routine.name}</strong></span><br/>
-        <span className="routineFileInfo">{routine.file}:{routine.line}</span>
+        <small><RoutineFileInfo routine={routine} /></small>
     </td>)
 }
 

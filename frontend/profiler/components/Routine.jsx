@@ -6,7 +6,7 @@ import $ from 'jquery';
 import RoutineList from "./RoutineList";
 import RoutinePaths from "./RoutinePaths";
 
-import {ExclusiveInclusiveTime, EntriesInfo, InlineInfo} from "./RoutinePieces";
+import {ExclusiveInclusiveTime, EntriesInfo, InlineInfo, RoutineNameInfo} from "./RoutinePieces";
 import {AllocTableContent} from "./CallGraph";
 
 export default class Routine extends Component<{ routine: *, metadata: *, columns: *, expanded: *, allRoutineChildren: *, onExpandButtonClicked: *, maxTime: *, parentEntries: * }> {
@@ -55,10 +55,7 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                 return (<td key={"sitecount"}>{routine.sitecount}</td>)
             },
             nameInfo() {
-                return (<td key={"nameInfo"}>
-                    <span className="routineName"><strong>{myMetadata.name}</strong></span><br/>
-                    <span className="routineFileInfo">{myMetadata.file}:{myMetadata.line}</span>
-                </td>)
+                return <RoutineNameInfo routine={myMetadata} />
             },
             entriesInfo() {
                 return <EntriesInfo routine={routine} parentEntries={parentEntries} />;
