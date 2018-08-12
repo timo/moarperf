@@ -26,8 +26,8 @@ import type { ProfilerState } from './profiler/reducer';
 import * as WelcomeActions from './welcome/actions';
 import welcomeReducer from './welcome/reducer';
 
-import GreetingsPage from './welcome/GreetingsPage';
-import { getGCOverview, getGCDetails } from "./profiler/actions";
+/* import GreetingsPage from './welcome/GreetingsPage';
+import { getGCOverview, getGCDetails } from "./profiler/actions"; */
 
 const RoutineList = Loadable({
   loader: () => import(/* webpackChunkName: "routinelist" */ './profiler/components/RoutineList'),
@@ -57,7 +57,7 @@ type SelectFileProps = {
 
 const SelectFile = (props : SelectFileProps) => (
   <div>
-    <h2>Load a file: heap snapshot or profiler data</h2>
+    <h2>Enter a local file path: heap snapshot or profiler data</h2>
     <form onSubmit={(e) => { props.onLoadFile(e); e.preventDefault(); }}>
       <InputGroup>
         <Input
@@ -65,7 +65,7 @@ const SelectFile = (props : SelectFileProps) => (
             onChange={e => props.onChangeFilePath(e.target.value)}
         />
         <InputGroupAddon addonType="append">
-          <Button onClick={props.onLoadFile}>Load File</Button>
+          <Button onClick={props.onLoadFile}>Open File</Button>
         </InputGroupAddon>
       </InputGroup>
 
@@ -157,7 +157,7 @@ const App = (props : HeapSnapshotAppProps) => (
       <Switch>
           <Route exact path="/">
             <React.Fragment>
-              <GreetingsPage interest="everything" step="start"/>
+              { /* <GreetingsPage interest="everything" step="start"/> */ }
               <SelectFile
                   filePath={props.tipText}
                   onChangeFilePath={props.onChangeFilePath}
