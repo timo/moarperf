@@ -66,7 +66,7 @@ export function ExclusiveInclusiveTime({routine, maxTime}) {
         barWidthRest = (1 - inclusive / maxTime) * 100;
     }
     const barStyle = {
-        height: "0.4em",
+        height: "0.5em",
         padding: "0px",
         margin: "0px",
         display: "inline-block"
@@ -89,16 +89,16 @@ export function ExclusiveInclusiveTime({routine, maxTime}) {
                         <div style={{
                             position: "relative",
                             width: "100%",
-                            bottom: "-0.3em",
-                            borderBottom: "1px solid grey"
+                            bottom: "-0.4em",
+                            borderBottom: "0px"
                         }}>
                             <span style={{
                                 width: barWidthFirst + "%",
-                                background: "darkblue", ...barStyle
+                                background: "green", ...barStyle
                             }}/>
                             <span style={{
                                 width: barWidthSecond + "%",
-                                background: "blue", ...barStyle
+                                background: "lime", ...barStyle
                             }}/>
                             <span style={{
                                 width: barWidthRest + "%",
