@@ -16,7 +16,7 @@ sub json-content($route, &code) {
     content "application/json", $json-result;
 }
 
-sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, Str $filename?) is export {
+sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export {
     sub load-file(Str $path) {
         if $path.ends-with("sql" | "sqlite3") {
             note "opening an sql thing";
