@@ -1,4 +1,4 @@
 {
-    "presets" : ["es2017","react"],
+    "presets" : ["es2017","react", "stage-0"],
     "plugins" : ["transform-object-rest-spread", "syntax-dynamic-import"]
 }
