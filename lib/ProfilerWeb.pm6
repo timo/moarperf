@@ -32,6 +32,15 @@ sub concise-file($file is copy) {
     elsif $file.starts-with($*HOME.Str) {
         $file.=subst($*HOME.Str, "~")
     }
+    if $file.contains(".precomp") {
+        $file ~~ /
+            (.*? "/.precomp/")
+            (<[A..Z 0..9 a..z]> ** 6) <[A..Z 0..9 a..z]>+
+            ("/" <[A..Z 0..9 a..z]>+)
+            ("/" <[A..Z 0..9 a..z]> ** 6) <[A..Z 0..9 a..z]>+
+            (.*)/;
+        $file = $/.list.join("");
+    }
     $file
 }
 
