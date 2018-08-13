@@ -29,6 +29,9 @@ sub concise-file($file is copy) {
         $file.=subst("SETTING::src/core/", "SETTING::");
         $file.=subst(".pm6", "");
     }
+    elsif $file.starts-with($*HOME.Str) {
+        $file.=subst($*HOME.Str, "~")
+    }
     $file
 }
 
