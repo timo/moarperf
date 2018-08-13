@@ -8,7 +8,7 @@ export function AllocTableContent({allocations, parentSpeshJitEntries = 0, paren
     return allocations.map((alloc) => {
         const bareAllocs = alloc.count - alloc.jit - alloc.spesh;
         return (
-            <tr>
+            <tr key={"alloc_" + alloc.name}>
                 {
                     parentSites !== 0 && typeof alloc.participants !== "undefined" &&
                         <td>
