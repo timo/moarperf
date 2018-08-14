@@ -143,6 +143,9 @@ const GcTable = ({ overview, expanded, seq_details, onGCExpandButtonClicked }) =
 }
 
 export default function GCOverview(props) {
+    const totalTime = typeof props.overview.stats_per_sequence === "undefined"
+        ? 0
+        : Array.from(props.overview.stats_per_sequence).map(d => d.max_time).reduce((a, b) => a + b, 0);
     return (
         <Container>
             <Row>
@@ -161,6 +164,7 @@ export default function GCOverview(props) {
                                     </BarChart>
                                     </ErrorBoundary>
                                 </ResponsiveContainer>
+                                <div>Total Time: { timeToHuman(totalTime) }</div>
                                 <h2>Time between GC runs</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
                                     <ErrorBoundary>
