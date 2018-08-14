@@ -1,23 +1,36 @@
 import React, {Component} from 'react';
-import { Table } from 'reactstrap';
+import { Table, Button } from 'reactstrap';
 import Routine from './Routine';
 
 export default class RoutineList extends Component {
     static defaultProps = {
         expanded: [],
         columns: "expand sitecount nameInfo entriesInfo exclusiveInclusiveTime",
-        headerComponent: <h2 key={0}>Routines</h2>,
-        headerFunction: null,
+        HeaderComponent: ({}) => (<h2 key={0}>Routines</h2>),
         defaultSort: ((a, b) => b.exclusive_time - a.exclusive_time),
     }
 
     constructor(props) {
         super(props);
         this.state = {
-            sortMode: "default",
+            sortTarget: "default",
             sortInvert: false,
             displayAmount: 100,
+            filter: {},
         }
+    }
+
+    changeFilter(filter) {
+        this.setState((state) => {filter: filter})
+    }
+
+    changeSorting(sortTarget) {
+        this.setState(
+            (state) => ({
+                sortTarget: sortTarget,
+                sortInvert: sortTarget === state.sortTarget ? !state.sortInvert : false
+            })
+        )
     }
 
     render() {
@@ -30,8 +43,9 @@ export default class RoutineList extends Component {
             maxTime,
             parentEntries,
             onExpandButtonClicked,
-            headerComponent,
-            defaultSort
+            HeaderComponent,
+            defaultSort,
+            filterFunction,
         } = this.props;
 
         if (typeof columns === "string") {
@@ -51,7 +65,8 @@ export default class RoutineList extends Component {
             entriesInfo: {width: "15%"}
         };
         const sortFunc = defaultSort;
-        const preSortedRoutines = Array.from(routines).sort(
+        const filtered = filterFunction === null || typeof filterFunction === "undefined" ? Array.from(routines) : routines.filter(filterFunction);
+        const preSortedRoutines = filtered.sort(
             this.state.sortInvert ? (a, b) => sortFunc(b, a) : sortFunc
         );
 
@@ -60,8 +75,18 @@ export default class RoutineList extends Component {
         const byInclusiveTime = typeof maxTime === "undefined" ? Array.from(routines).map(r => r.inclusive_time).sort((a, b) => a - b) : [];
         const myMaxTime = typeof maxTime === "undefined" ? byInclusiveTime.pop() : maxTime;
         console.log(maxTime, "is the max time.");
-        return [
-            headerComponent,
+        const loadMoreRoutines = () => self.setState(state => ({displayAmount: state.displayAmount + 100 }));
+        return <React.Fragment>
+            <HeaderComponent
+                columns={columns}
+
+                onChangeFilter={this.changeFilter}
+                onChangeSorting={this.changeSorting}
+
+                filter={this.state.filter}
+                sortTarget={this.state.sortTarget}
+                sortInvert={this.state.sortInvert}
+            />
             <Table key={1} striped style={{tableLayout: "fixed"}}>
                 <thead>
                 <tr>
@@ -85,12 +110,12 @@ export default class RoutineList extends Component {
                 }
                 {
                     sortedRoutines.length < preSortedRoutines.length &&
-                        <tr>
-                            <td colSpan={columns.length}>Showing {sortedRoutines.length } of { preSortedRoutines.length } routines</td>
-                        </tr>
+                        <ErrorBoundary><tr>
+                            <td colSpan={columns.length}>Showing {sortedRoutines.length } of { preSortedRoutines.length } routines. <Button onClick={loadMoreRoutines}>Show more...</Button></td>
+                        </tr></ErrorBoundary>
                 }
                 </tbody>
-            </Table>,
-        ];
+            </Table>
+        </React.Fragment>;
     }
 }
