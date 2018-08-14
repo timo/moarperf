@@ -144,7 +144,7 @@ export function InlineInfo({routine}) {
     const inlineText = (routine.inlined_entries * 100 / routine.entries).toPrecision(3);
     return (
         inlineText === "0.00"
-            ? <td key={"inlineInfo"}>-</td>
-            : <td key={"inlineInfo"}>{inlineText}% inlined</td>
+            ? <td style={{width: "10%"}} key={"inlineInfo"}>-</td>
+            : <td style={{width: "10%"}} key={"inlineInfo"}>{inlineText}% inlined</td>
     )
 }
