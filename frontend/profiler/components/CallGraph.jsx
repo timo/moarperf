@@ -2,7 +2,10 @@ import React, {Component} from 'react';
 import { Breadcrumb, BreadcrumbItem, Container, Row, Col, Table, Button } from 'reactstrap';
 import { Link, Redirect } from 'react-router-dom';
 import $ from 'jquery';
+import ErrorBoundary from 'react-error-boundary'
+
 import {EntriesInfo, ExclusiveInclusiveTime, RoutineNameInfo, RoutineFileInfo, LinkButton, InlineInfo, numberFormatter} from "./RoutinePieces";
+
 
 export function AllocTableContent({allocations, parentSpeshJitEntries = 0, parentBareEntries = 0, parentSites = 0}) {
     return allocations.map((alloc) => {
@@ -248,7 +251,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             return (
                 <Container>
                     <div>
-                        Error: routine with ID { call.routine_id } apparently doesn't exist?!
+                        Error: maybe routine { call.routine_id } doesn't exist, or this page hasn't finished loading yet ...<br/>
+                        Give it a second, or maybe you have to switch to the routine tab and click "get routine overview".
                     </div>
                 </Container>
             )
@@ -282,8 +286,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     <Table striped>
                         <tbody>
                         <tr>
-                            <td>Entries</td>
-                            <td>{numberFormatter(call.entries)}</td>
+                            <td width="50%">Entries</td>
+                            <td width="50%">{numberFormatter(call.entries)}</td>
                         </tr>
                         <tr>
                             <td>Fully Jitted / Only Specialized</td>
@@ -324,10 +328,11 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                                 childInclusiveAllocations.hasOwnProperty(child.id.toString()) && childInclusiveAllocations[child.id.toString()].length > 0 &&
                                 <tr><td style={{paddingTop: "0px", paddingLeft: "10%", paddingRight: "10%"}} colSpan={5}>
                                     <Table striped style={{border: "1px solid black"}}><tbody>
-                                    <AllocTableContent
+                                    <ErrorBoundary><AllocTableContent
                                         allocations={childInclusiveAllocations[child.id.toString()]}
                                         parentBareEntries={child.entries}
                                         parentSpeshJitEntries={child.jit_entries + child.spesh_entries} />
+                                    </ErrorBoundary>
                                     </tbody></Table>
                                 </td></tr>
                             }
@@ -338,12 +343,16 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 <Row><Col>
                         <h2>Allocations</h2>
                         <Table striped><tbody>
+                        <ErrorBoundary>
                         <AllocTableContent allocations={allocations} parentBareEntries={call.entries} parentSpeshJitEntries={call.spesh_entries + call.jit_entries} />
+                        </ErrorBoundary>
                         { loadingAllocations && <th><td colSpan={3}><span>Loading allocations...</span></td></th> }
                         { inclusiveAllocations.length === 0 && <Button onClick={() => this.requestInclusiveAllocations()}>Load inclusive allocations</Button> }
                         { loadingInclusiveAllocations && <th><td colSpan={3}><span>Loading inclusive allocations...</span></td></th> }
                         { inclusiveAllocations.length !== 0 && <th><td colSpan={3}>Inclusive Allocations</td></th>}
+                        <ErrorBoundary>
                         <AllocTableContent allocations={inclusiveAllocations} parentBareEntries={call.entries} parentSpeshJitEntries={call.spesh_entries + call.jit_entries} />
+                        </ErrorBoundary>
                         </tbody></Table>
                 </Col></Row>
             </Container>
