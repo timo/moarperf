@@ -62,9 +62,10 @@ export default class RoutineList extends Component {
             inlineInfo: "Inlined",
         };
         const styleMapping = {
-            expand: {width: "10%"},
+            expand: {width: "7%"},
             sitecount: {width: "10%"},
-            entriesInfo: {width: "15%"}
+            entriesInfo: {width: "15%"},
+            inlineInfo: {width: "10%"},
         };
         const sortFunc = defaultSort;
         const filtered = filterFunction === null || typeof filterFunction === "undefined" ? Array.from(routines) : routines.filter(filterFunction);
