@@ -57,7 +57,7 @@ type SelectFileProps = {
 
 const SelectFile = (props : SelectFileProps) => (
   <div>
-    <h2>Enter a local file path: heap snapshot or profiler data</h2>
+    <h2>Enter a local file path: profiler data in sql format or sqlite3 database file</h2>
     <form onSubmit={(e) => { props.onLoadFile(e); e.preventDefault(); }}>
       <InputGroup>
         <Input
@@ -68,8 +68,19 @@ const SelectFile = (props : SelectFileProps) => (
           <Button onClick={props.onLoadFile}>Open File</Button>
         </InputGroupAddon>
       </InputGroup>
-
     </form>
+      <h3>How to obtain a profile</h3>
+      <p>All you have to do is run your script from the commandline the same way you would otherwise call it,
+          but also pass these arguments directly to perl6, in other words before the script name or -e part:</p>
+      <p><kbd>perl6 --profile --profile-filename=<var>/tmp/results.sql</var> <var>myScript.p6</var></kbd></p>
+      <p>When you open the resulting <kbd>.sql</kbd> file in this tool, a <samp>.sqlite3</samp> file of the
+          same name will be put next to it. If it already exists, a random name will be put between the filename
+          and the extension, so any changes to the <samp>.sqlite3</samp> file you may have made will not be
+          clobbered. However, this tool will not make changes to the file. It is safe to pass the <samp>.sqlite3</samp>
+          filename on the second invocation.
+      </p>
+      <p>You can also invoke this tool's <kbd>service.p6</kbd> with a path as the argument. It will load the
+          given file and immediately redirect you to the profiler when you open the app.</p>
   </div>
 );
 
@@ -96,7 +107,11 @@ const ProfilerApp = props => {
             </Nav>
             <Switch>
             <Route exact path={props.match.url + '/'}>
+                <React.Fragment>
                 <div>This is the overview page.</div>
+                <div>Sadly, it has nothing in it.</div>
+                <div>Please use the tabs up above to switch to different pages.</div>
+                </React.Fragment>
             </Route>
             <Route path={props.match.url + "/routines"}>
               <ErrorBoundary>
@@ -105,6 +120,7 @@ const ProfilerApp = props => {
                 ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
                 : null
                 }
+                <ErrorBoundary>
                 <RoutineList
                     routines={props.profilerState.routineOverview}
                     metadata={props.profilerState.routines}
@@ -113,6 +129,7 @@ const ProfilerApp = props => {
 
                     onExpandButtonClicked={props.onRoutineExpanded}
                 />
+                </ErrorBoundary>
               </ErrorBoundary>
             </Route>
             <Route path={props.match.url + "/gc"}>
@@ -132,7 +149,11 @@ const ProfilerApp = props => {
                 </ErrorBoundary>
                 )} />
             <Route exact path={props.match.url}>
-                <div>This is the overview page.</div>
+                <React.Fragment>
+                    <div>This is the overview page.</div>
+                    <div>Sadly, it has nothing in it.</div>
+                    <div>Please use the tabs up above to switch to different pages.</div>
+                </React.Fragment>
             </Route>
             <Route>
                 <div>oh no.</div>
