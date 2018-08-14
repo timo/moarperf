@@ -4,6 +4,7 @@ import memoize from 'memoize-state';
 import {
     Button, Container, Row, Col, Table
 } from 'reactstrap';
+import ErrorBoundary from 'react-error-boundary';
 
 import { timeToHuman, numberFormatter } from './RoutinePieces';
 
@@ -80,11 +81,13 @@ const GcTableRow = ({ data, expanded, seq_details, onGCExpandButtonClicked }) =>
                                 <Row>
                                     <Col xs={4}>
                                         <ResponsiveContainer width={"100%"} height={200}>
+                                            <ErrorBoundary>
                                             <BarChart data={makeSpans(ignoreNulls(seq_details[data.sequence_num]))} height={200}>
                                                 <Bar dataKey={"range"} fill={"#1c6"} isAnimationActive={false}/>
                                                 <XAxis dataKey={"xAxis"} />
                                                 <YAxis />
                                             </BarChart>
+                                            </ErrorBoundary>
                                         </ResponsiveContainer>
                                     </Col>
                                     <Col xs={8}>
@@ -128,11 +131,14 @@ const GcTableRow = ({ data, expanded, seq_details, onGCExpandButtonClicked }) =>
 const GcTable = ({ overview, expanded, seq_details, onGCExpandButtonClicked }) => {
     if (typeof overview === "undefined" || typeof overview.stats_per_sequence === "undefined")
         return (<tr key={0}>
-            <td>nothing</td>
+            <td colSpan={5}>nothing</td>
         </tr>);
+    if (overview.stats_per_sequence.length === 0) {
+        return (<tr><td colSpan={5} key={0}>There were no GC runs during the recording.</td></tr>);
+    }
     let seen = -1;
-    return ignoreNulls(overview.stats_per_sequence).map(data =>
-        <GcTableRow data={data} expanded={expanded} seq_details={seq_details} onGCExpandButtonClicked={onGCExpandButtonClicked} />
+    return ignoreNulls(overview.stats_per_sequence).map((data, index) =>
+        <GcTableRow key={"gcTableRow_" + index} data={data} expanded={expanded} seq_details={seq_details} onGCExpandButtonClicked={onGCExpandButtonClicked} />
     )
 }
 
@@ -148,13 +154,16 @@ export default function GCOverview(props) {
                             <React.Fragment>
                                 <h2>Time spent per GC run</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
+                                    <ErrorBoundary>
                                     <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
                                         <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
                                         <Tooltip content={<div></div>}/>
                                     </BarChart>
+                                    </ErrorBoundary>
                                 </ResponsiveContainer>
                                 <h2>Time between GC runs</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
+                                    <ErrorBoundary>
                                     <BarChart height={100} data={time_diffs(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
                                         <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
                                         <Tooltip content={(stuff) => {
@@ -172,6 +181,7 @@ export default function GCOverview(props) {
                                         }
                                         } />
                                     </BarChart>
+                                    </ErrorBoundary>
                                 </ResponsiveContainer>
                             </React.Fragment>
                     }
@@ -188,12 +198,14 @@ export default function GCOverview(props) {
                 </tr>
                 </thead>
                 <tbody>
+                    <ErrorBoundary>
                     <GcTable
                         overview={props.overview}
                         expanded={props.expanded}
                         seq_details={props.seq_details}
                         onGCExpandButtonClicked={props.onGCExpandButtonClicked}
                     />
+                    </ErrorBoundary>
                 </tbody>
             </Table>
             <Table striped>
