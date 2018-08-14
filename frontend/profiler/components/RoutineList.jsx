@@ -1,6 +1,8 @@
 import React, {Component} from 'react';
 import { Table, Button } from 'reactstrap';
 import Routine from './Routine';
+import ErrorBoundary from 'react-error-boundary';
+
 
 export default class RoutineList extends Component {
     static defaultProps = {
@@ -96,7 +98,7 @@ export default class RoutineList extends Component {
                 <tbody>
                 {
                     sortedRoutines.map((routine) =>
-                        (<Routine
+                        (<ErrorBoundary><Routine
                             key={routine.id}
                             routine={routine}
                             metadata={metadata}
@@ -106,7 +108,7 @@ export default class RoutineList extends Component {
                             onExpandButtonClicked={onExpandButtonClicked}
                             expanded={expanded[routine.id]}
                             allRoutineChildren={allRoutineChildren}
-                        />))
+                        /></ErrorBoundary>))
                 }
                 {
                     sortedRoutines.length < preSortedRoutines.length &&
