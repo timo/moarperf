@@ -12,8 +12,8 @@ export function sizeToHuman(time) {
     return (<span>{numberFormatter(time / 1024, 2)}<small>kB</small></span>);
 }
 
-const only_major = memoize(stats_per_sequence => stats_per_sequence.filter(entry => entry && entry.full == 1));
-const only_minor = memoize(stats_per_sequence => stats_per_sequence.filter(entry => entry && entry.full == 0));
+const only_major = memoize(stats_per_sequence => stats_per_sequence.filter(entry => entry && entry.full === 1));
+const only_minor = memoize(stats_per_sequence => stats_per_sequence.filter(entry => entry && entry.full === 0));
 const time_diffs = memoize(stats_per_sequence => {
     let result = [];
     let previous = {latest_end_time: 0};
@@ -38,7 +38,7 @@ const time_diffs = memoize(stats_per_sequence => {
     return result;
 });
 const ignoreNulls = memoize(input => input.filter(a => a !== null));
-const minimumStartTime = memoize(input => input.map(data => data.start_time).reduce((acc, cur) => acc < cur ? acc : cur));
+const minimumStartTime = memoize(input => input.map(data => data.start_time).reduce((acc, cur) => acc < cur ? acc : cur, 0));
 const makeSpans = input => {
         const minStartTime = minimumStartTime(input);
         console.log(input);
@@ -64,9 +64,9 @@ const GcTableRow = ({ data, expanded, seq_details, onGCExpandButtonClicked }) =>
                 <td>{data.sequence_num} {data.full ? <i className="fas fa-square-full"></i>
                     : ""}
                     {
-                        data.isFirst== 0 && data.sequence_num != 0
+                        /*data.isFirst === 0 && data.sequence_num !== 0
                             ? <span>Why?</span>
-                            : ""
+                            : ""*/
                     }
                 </td>
                 <td>{data.participants}</td>
