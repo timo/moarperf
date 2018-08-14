@@ -116,7 +116,7 @@ const ProfilerApp = props => {
             <Route path={props.match.url + "/routines"}>
               <ErrorBoundary>
                 {
-                props.profilerState.routineOverview.length == 0 || props.profilerState.routines.length == 0
+                props.profilerState.routineOverview.length === 0 || props.profilerState.routines.length === 0
                 ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
                 : null
                 }
@@ -174,7 +174,7 @@ type HeapSnapshotAppProps = {
 
 const App = (props : HeapSnapshotAppProps) => (
   <Container>
-      <h1><Button tag={Link} to={"/"}><i className="fas fa-home"></i></Button> MoarVM Performance Tool</h1>
+      <h1><Button tag={Link} to={"/"}><i className="fas fa-home"/></Button> MoarVM Performance Tool</h1>
       <Switch>
           <Route exact path="/">
             <React.Fragment>
