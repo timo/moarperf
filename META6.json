@@ -1,6 +1,6 @@
 {
-    "license": "Choose me!",
-    "source-url": "Write me!",
+    "license": "Artistic-2.0",
+    "source-url": "https://github.com/timo/moarperf",
     "depends": [
         "JSON::Fast",
         "OO::Monitors",
@@ -15,9 +15,9 @@
         "Routes": "lib/Routes.pm6"
     },
     "name": "MoarPerf",
-    "description": "Write me!",
+    "description": "Web App to analyze perl6 program performance",
     "resources": [],
     "perl": "6.*",
     "version": "0.1",
-    "authors": []
+    "authors": [ "Timo Paulssen" ]
 }
