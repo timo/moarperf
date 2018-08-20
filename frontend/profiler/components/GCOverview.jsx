@@ -81,13 +81,11 @@ const GcTableRow = ({ data, expanded, seq_details, onGCExpandButtonClicked }) =>
                                 <Row>
                                     <Col xs={4}>
                                         <ResponsiveContainer width={"100%"} height={200}>
-                                            <ErrorBoundary>
                                             <BarChart data={makeSpans(ignoreNulls(seq_details[data.sequence_num]))} height={200}>
                                                 <Bar dataKey={"range"} fill={"#1c6"} isAnimationActive={false}/>
                                                 <XAxis dataKey={"xAxis"} />
                                                 <YAxis />
                                             </BarChart>
-                                            </ErrorBoundary>
                                         </ResponsiveContainer>
                                     </Col>
                                     <Col xs={8}>
@@ -157,17 +155,14 @@ export default function GCOverview(props) {
                             <React.Fragment>
                                 <h2>Time spent per GC run</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
-                                    <ErrorBoundary>
                                     <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
                                         <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
                                         <Tooltip content={<div></div>}/>
                                     </BarChart>
-                                    </ErrorBoundary>
                                 </ResponsiveContainer>
                                 <div>Total Time: { timeToHuman(totalTime) }</div>
                                 <h2>Time between GC runs</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
-                                    <ErrorBoundary>
                                     <BarChart height={100} data={time_diffs(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
                                         <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
                                         <Tooltip content={(stuff) => {
@@ -185,7 +180,6 @@ export default function GCOverview(props) {
                                         }
                                         } />
                                     </BarChart>
-                                    </ErrorBoundary>
                                 </ResponsiveContainer>
                             </React.Fragment>
                     }
