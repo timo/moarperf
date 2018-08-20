@@ -38,7 +38,7 @@ const time_diffs = memoize(stats_per_sequence => {
     return result;
 });
 const ignoreNulls = memoize(input => input.filter(a => a !== null));
-const minimumStartTime = memoize(input => input.map(data => data.start_time).reduce((acc, cur) => acc < cur ? acc : cur, 0));
+const minimumStartTime = memoize(input => input.map(data => data.start_time).reduce((acc, cur) => acc < cur ? acc : cur, Infinity));
 const makeSpans = input => {
         const minStartTime = minimumStartTime(input);
         console.log(input);
