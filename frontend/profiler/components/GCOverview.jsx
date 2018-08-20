@@ -143,7 +143,7 @@ const GcTable = ({ overview, expanded, seq_details, onGCExpandButtonClicked }) =
 export default function GCOverview(props) {
     const totalTime = typeof props.overview.stats_per_sequence === "undefined"
         ? 0
-        : Array.from(props.overview.stats_per_sequence).map(d => d.max_time).reduce((a, b) => a + b, 0);
+        : Array.from(props.overview.stats_per_sequence).filter(d => d !== null).map(d => d.max_time).reduce((a, b) => a + b, 0);
     return (
         <Container>
             <Row>
