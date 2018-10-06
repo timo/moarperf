@@ -6,7 +6,8 @@
         "OO::Monitors",
         "Cro::HTTP",
         "Cro::WebSocket",
-        "App::MoarVM::HeapAnalyzer"
+        "App::MoarVM::HeapAnalyzer",
+        "Digest::SHA1::Native"
     ],
     "provides": {
         "HeapAnalyzerWeb": "lib/HeapAnalyzerWeb.pm6",

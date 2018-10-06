@@ -83,19 +83,31 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                         showLines[depth] = 0;
                     }
                     if (row.length === 0 && depth > 1) {
-                        row = Array(depth - 1).fill(0).map((x, idx) => { return <td key={key++} style={showLines[idx + 1] ? tdStyle : {}}/> });
+                        row = Array(depth - 1).fill(0).map((x, idx) => { return <td key={key++} style={showLines[idx + 1] ? {...tdStyle} : {}}/> });
                         console.log(row);
                     }
                     if (node.routine === null) {
-                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={tdStyle}>
+                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={{...tdStyle}}>
                             { self.state.minimalView ? "»" : "Entry" }
                         </td>);
                     }
                     else {
-                        const linkStyle = self.state.minimalView ? {display: "block"} : {};
-                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={tdStyle}>
-                            <Link style={linkStyle} to={"callgraph/" + child.call}><NameDisplay routine={child.routine} /></Link>
+                        const childRoutine = self.props.allRoutines[child.routine];
+                        const linkStyle = self.state.minimalView
+                            ? {display: "block", backgroundColor: childRoutine.color}
+                            : {};
+                        if (!self.state.minimalView) {
+                            tdStyle.borderBottom = "4px solid " + childRoutine.color;
+                        }
+                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={{...tdStyle}}>
+                            <Link style={linkStyle}
+                                  to={"callgraph/" + child.call}
+                                  title={childRoutine.name + " - " + childRoutine.file + ":" + childRoutine.line}>
+                                <NameDisplay routine={child.routine} /></Link>
                         </td>);
+                        if (!self.state.minimalView) {
+                            tdStyle.borderBottom = undefined;
+                        }
                     }
                     digestNode(child.children, child, depth + 1);
                     if (first-- <= 0 && row.length > 0) {

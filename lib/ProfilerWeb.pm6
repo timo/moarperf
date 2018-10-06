@@ -1,5 +1,6 @@
 use OO::Monitors;
 use DBIish;
+use Digest::SHA1::Native;
 
 sub targetfile($filename, $extension, --> Str) {
     my $basename = $filename.IO.extension: '';
@@ -131,6 +132,24 @@ monitor ProfilerWeb {
                 order by id asc;
               STMT
 
+            my Channel $hashchan .= new;
+            my $hasher = start {
+                note "hasher started";
+                sub map-to-range(uint8 $num, Range $range) {
+                    ceiling ($num / 255) * $range.elems + $range.min;
+                }
+                for $hashchan.list {
+                    my $bytes = sha1(.<file>);
+                    if .<file>.starts-with("SETTING::") {
+                        .<color> = "hsl($bytes[0], &map-to-range($bytes[1], 25..60)%, &map-to-range($bytes[2], 65..100)%)";
+                    }
+                    else {
+                        .<color> = "hsl($bytes[0], &map-to-range($bytes[1], 50..80)%, &map-to-range($bytes[2], 65..100)%)";
+                    }
+                }
+                note "hasher finished";
+            }
+
             $query.execute();
             my @results = $query.allrows(:array-of-hash);
             $query.finish;
@@ -141,7 +160,11 @@ monitor ProfilerWeb {
                 .<name> .= &concise-name;
                 .<file> .= &concise-file;
                 %results{.<id>.Int} = $_;
+                $hashchan.send($_);
             }
+
+            $hashchan.close;
+            await $hasher;
 
             %results;
         }
