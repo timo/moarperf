@@ -7,7 +7,7 @@ import RoutineList from "./RoutineList";
 import RoutinePaths from "./RoutinePaths";
 
 import {ExclusiveInclusiveTime, EntriesInfo, InlineInfo, RoutineNameInfo} from "./RoutinePieces";
-import {AllocTableContent} from "./CallGraph";
+import {AllocTableContent} from "./AllocationParts";
 
 export default class Routine extends Component<{ routine: *, metadata: *, columns: *, expanded: *, allRoutineChildren: *, onExpandButtonClicked: *, maxTime: *, parentEntries: * }> {
     constructor(props) {
@@ -39,6 +39,9 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
 
     render() {
         let {routine, metadata, columns, expanded, allRoutineChildren, onExpandButtonClicked, maxTime, parentEntries} = this.props;
+        if (routine === null) {
+            return "";
+        }
         if (typeof columns === "string") {
             columns = columns.split(" ");
         }

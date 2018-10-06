@@ -1,12 +1,14 @@
 import React from 'react';
 import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis, Label } from 'recharts';
-import memoize from 'memoize-state';
+//import memoize from 'memoize-state';
 import {
     Button, Container, Row, Col, Table
 } from 'reactstrap';
 import ErrorBoundary from 'react-error-boundary';
 
 import { timeToHuman, numberFormatter } from './RoutinePieces';
+
+const memoize = a => a;
 
 export function sizeToHuman(time) {
     return (<span>{numberFormatter(time / 1024, 2)}<small>kB</small></span>);
@@ -144,6 +146,9 @@ export default function GCOverview(props) {
     const totalTime = typeof props.overview.stats_per_sequence === "undefined"
         ? 0
         : Array.from(props.overview.stats_per_sequence).filter(d => d !== null).map(d => d.max_time).reduce((a, b) => a + b, 0);
+    if (typeof props.overview.stats_per_sequence !== "undefined") {
+        ignoreNulls(props.overview.stats_per_sequence).forEach((d) => console.log(d.cleared_bytes + d.promoted_bytes + d.retained_bytes));
+    }
     return (
         <Container>
             <Row>
@@ -163,11 +168,11 @@ export default function GCOverview(props) {
                                 <div>Total Time: { timeToHuman(totalTime) }</div>
                                 <h2>Time between GC runs</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
-                                    <BarChart height={100} data={time_diffs(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
+                                    <BarChart height={100} data={time_diffs(ignoreNulls(props.overview.stats_per_sequence))} syncId={"gcoverview"}>
                                         <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
                                         <Tooltip content={(stuff) => {
                                             const outer = stuff.payload;
-                                            if (typeof outer !== "undefined" && outer.length > 0) {
+                                            if (typeof outer !== "undefined" && outer !== null && outer.length > 0) {
                                                 const payload = outer[0].payload;
                                                 return (
                                                     <div style={{background: "#aaa"}}>
@@ -179,6 +184,14 @@ export default function GCOverview(props) {
                                             }
                                         }
                                         } />
+                                    </BarChart>
+                                </ResponsiveContainer>
+                                <h2>Amounts of Data</h2>
+                                <ResponsiveContainer width={"100%"} height={100}>
+                                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
+                                        <Bar dataKey={"promoted_bytes"} fill={"#f32"} stackId={"nursery_bytes"} isAnimationActive={false}/>
+                                        <Bar dataKey={"retained_bytes"} fill={"#fa5"} stackId={"nursery_bytes"} isAnimationActive={false}/>
+                                        <Bar dataKey={"cleared_bytes"}  fill={"#3f3"} stackId={"nursery_bytes"} isAnimationActive={false}/>
                                     </BarChart>
                                 </ResponsiveContainer>
                             </React.Fragment>

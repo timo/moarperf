@@ -49,6 +49,11 @@ const CallGraph = Loadable({
     loading: () => <div>Hold on ...</div>,
 })
 
+const AllocationViewer = Loadable({
+    loader: () => import(/* webpackChunkName: "allocationviewer" */ './profiler/components/AllocationViewer'),
+    loading: () => <div>Hold on ...</div>,
+})
+
 type SelectFileProps = {
   filePath: string,
   onChangeFilePath: (string) => void,
@@ -102,6 +107,9 @@ const ProfilerApp = props => {
                     <NavLink tag={Link} to={path(props.match, "callgraph")}>Explore Call Graph</NavLink>
                 </NavItem>
                 <NavItem>
+                    <NavLink tag={Link} to={path(props.match, "allocations")}>Allocations</NavLink>
+                </NavItem>
+                <NavItem>
                     <NavLink tag={Link} to={path(props.match, "gc")}>GC</NavLink>
                 </NavItem>
             </Nav>
@@ -148,6 +156,15 @@ const ProfilerApp = props => {
                     />
                 </ErrorBoundary>
                 )} />
+            <Route path={props.match.url + "/allocations/:id?"} render={({ match, location }) => (
+                <ErrorBoundary>
+                    <AllocationViewer
+                        typeId={match.params.id}
+                        metadata={props.profilerState.routines}
+                        allRoutineChildren={props.profilerState.allRoutineChildren}
+                    />
+                </ErrorBoundary>
+            )} />
             <Route exact path={props.match.url}>
                 <React.Fragment>
                     <div>This is the overview page.</div>

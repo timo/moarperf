@@ -112,6 +112,10 @@ export function ExclusiveInclusiveTime({routine, maxTime}) {
         </td>)
 }
 
+export function allocationInfo({routine}) {
+
+}
+
 export function RoutineFileInfo({routine}) {
     var link;
     if (routine.file.startsWith("SETTING::")) {

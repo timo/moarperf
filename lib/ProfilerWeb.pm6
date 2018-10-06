@@ -419,31 +419,63 @@ monitor ProfilerWeb {
         @results;
     }
 
-    method allocation-types() {
-        my $query = $!dbh.prepare(q:to/STMT/);
+    sub alloc-props(*@props, Bool :$total-size) {
+        my $result =
+            @props.map({
+                "json_extract(t.extra_info, '\$.{$_}') as {$_},"
+            }).join("\n")
+            ~ ($total-size
+                    ?? "json_extract(t.extra_info, '\$.managed_size') * total(a.count) as total_size,"
+                    !! "");
+        dd $result;
+        $result;
+    }
+
+    method all-allocs() {
+        my @q-results;
+        my $query;
+        $query = $!dbh.prepare(q:c:to/STMT/);
             select
-                id,
-                name
+                t.id,
+                t.name,
+                {
+                    alloc-props(<managed_size has_unmanaged_data repr scdesc>, :total-size)
+                }
 
-                from types
+                total(a.jit) as jit,
+                total(a.spesh) as spesh,
+                total(a.count) as count,
 
-                order by id asc
+                count(call_id) as sites,
+
+                count(case when a.count > a.jit + a.spesh then call_id else NULL end) as speshed_sites
+
+                from allocations a
+                    inner join types t on a.type_id = t.id
+
+                group by t.id
+                order by json_extract(t.extra_info, '$.managed_size') * total(a.count) desc
                 ;
             STMT
-
         $query.execute();
-        my @q-results = $query.allrows(:array-of-hash);
+
+        @q-results = $query.allrows(:array-of-hash);
+
         $query.finish;
 
-        %(
-            do .<id> => .<name> for @q-results
-        )
+        @q-results
     }
 
     method call-allocations(Int $call) {
-        my $query = $!dbh.prepare(q:to/STMT/);
+    # TODO fallback for pre-extra-info profiles
+        my $query = $!dbh.prepare(q:c:to/STMT/);
             select
                 a.type_id as type_id, t.name as name,
+
+                {
+                    alloc-props(<managed_size has_unmanaged_data repr scdesc>, :total-size)
+                }
+
                 a.jit as jit, a.spesh as spesh, a.count as count
 
                 from allocations a
@@ -463,9 +495,17 @@ monitor ProfilerWeb {
     }
 
     method routine-allocations(Int $routine) {
-        my $query = $!dbh.prepare(q:to/STMT/);
+        # TODO fallback for pre-extra-info profiles
+        my $query = $!dbh.prepare(q:c:to/STMT/);
             select
-                a.type_id as type_id, t.name as name,
+                a.type_id as type_id,
+                t.name as name,
+
+                {
+                    alloc-props(<managed_size has_unmanaged_data repr scdesc>, :total-size)
+                }
+
+
                 total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count,
                 group_concat(c.id, ",") as participants
 
@@ -493,10 +533,18 @@ monitor ProfilerWeb {
 
         my $calls-string = @callnodes.join(",");
 
-        my $query = $!dbh.prepare(qq:to/STMT/);
+        my $qstring = qq:to/STMT/;
             select
-                a.type_id as type_id, t.name as name,
-                total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count,
+                a.type_id as type_id,
+                t.name as name,
+
+                {
+                    alloc-props(<managed_size has_unmanaged_data repr scdesc>, :total-size)
+                }
+                total(a.jit) as jit,
+                total(a.spesh) as spesh,
+                total(a.count) as count,
+
                 count(call_id) as sites
 
                 from allocations a
@@ -509,12 +557,112 @@ monitor ProfilerWeb {
                 ;
             STMT
 
+        my $query = $!dbh.prepare($qstring);
+
         $query.execute();
         my @q-results = $query.allrows(:array-of-hash);
         $query.finish;
 
+        CATCH {
+            note $qstring;
+        }
+
         @q-results
     }
+
+    method allocations-per-type() {
+        my $qstring = q:c:to/STMT/;
+            select
+                a.type_id as type_id,
+                t.name as name,
+
+                {
+                    alloc-props(<managed_size has_unmanaged_data repr scdesc>, :total-size)
+                }
+
+                total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count,
+                count(call_id) as sites
+
+                from allocations a
+                    inner join types t on a.type_id = t.id
+
+                group by a.type_id
+                order by count desc
+                ;
+            STMT
+
+        my $query = $!dbh.prepare($qstring);
+
+        $query.execute();
+        my @q-results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        @q-results;
+    }
+
+    method allocating-routines-per-type(Int $type-id) {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                routines.id as id,
+                total(allocations.jit) as jit, total(allocations.spesh) as spesh, total(allocations.count) as count,
+
+                count(calls.id) as sitecount
+
+                from routines
+                    inner join allocations on allocations.call_id == calls.id
+                    inner join calls on calls.routine_id == routines.id
+                    inner join types on types.id == allocations.type_id
+
+                where allocations.type_id == ?
+
+                group by routines.id, allocations.type_id
+                order by allocations.type_id asc
+
+            STMT
+
+        $query.execute($type-id);
+
+        LEAVE $query.finish;
+
+        $query.allrows(:array-of-hash).eager;
+    }
+
+    method data-for-flamegraph(Int $thread-id) {
+        my $thread-q = $!dbh.prepare(q:to/STMT/);
+            select
+                root_node,
+                total_time
+            from profile
+            where thread_id = ?
+        STMT
+
+        $thread-q.execute($thread-id);
+        my ($call-id, $total-time) = $thread-q.row;
+        $thread-q.finish;
+
+        sub children-with-width-of(Int $call-id, $parent-total, $global-width = 1e0) {
+            my $query = $!dbh.prepare(q:to/STMT/);
+                select
+                    c.id as id,
+                    c.inclusive_time as inclusive,
+                    c.routine_id     as routine_id
+
+                from calls c
+
+                where c.parent_id = ?
+
+                order by calls.id asc
+                ;
+            STMT
+
+            [
+                $call-id, $parent-total
+            ]
+        }
+
+
+    }
+
     sub val-from-query($query, $field) {
         $query.execute();
         LEAVE $query.finish;
@@ -588,6 +736,9 @@ monitor ProfilerWeb {
                 min(start_time + time) as earliest_end_time,
                 max(start_time + time) as latest_end_time,
                 max(start_time + time) - min(start_time) as total_wallclock,
+                total(retained_bytes) as retained_bytes,
+                total(cleared_bytes) as cleared_bytes,
+                total(promoted_bytes) as promoted_bytes,
                 group_concat(thread_id, ",") as participants,
                 sequence_num,
                 full
