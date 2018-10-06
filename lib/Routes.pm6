@@ -116,8 +116,8 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "gc-details", { $profiler.gc-details($sequence-num) };
         }
 
-        get -> 'allocation-types' {
-            json-content "types", { $profiler.allocation-types };
+        get -> 'all-allocations' {
+            json-content "all-allocs", { $profiler.all-allocs };
         }
 
         get -> 'call-allocations', Int $call {
@@ -130,6 +130,14 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
 
         get -> 'inclusive-call-allocations', Int $call {
             json-content "inclusive-call-allocations", { $profiler.call-allocations-inclusive($call) }
+        }
+
+        get -> 'allocations-per-type' {
+            json-content "allocations-per-type", { $profiler.allocations-per-type }
+        }
+
+        get -> 'allocating-routines-per-type', Int $type {
+            json-content "allocating-routines-per-type", { $profiler.allocating-routines-per-type($type) }
         }
 
         get -> 'model-overview' {
