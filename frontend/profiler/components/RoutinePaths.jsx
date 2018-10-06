@@ -12,7 +12,8 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
             isLoading: false,
             error: null,
             paths: [],
-            pathDepth: 0
+            pathDepth: 0,
+            minimalView: false,
         }
     }
 
@@ -47,6 +48,10 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
         });
     }
 
+    toggleMinimalView() {
+        this.setState((state) => ({ minimalView: !state.minimalView }));
+    }
+
     render() {
         if (this.state.isLoading) {
             return (<div>Hold on ...</div>)
@@ -70,6 +75,7 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                 let first = 1;
                 let last = children.length;
                 for (const child of children) {
+                    const NameDisplay = ({ routine }) => self.state.minimalView ? "X" : self.props.allRoutines[routine].name;
                     if (children.length > 1 && last-- > 1) {
                         showLines[depth] = 1;
                     }
@@ -81,16 +87,19 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                         console.log(row);
                     }
                     if (node.routine === null) {
-                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={tdStyle}>Entry</td>);
+                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={tdStyle}>
+                            { self.state.minimalView ? "»" : "Entry" }
+                        </td>);
                     }
                     else {
+                        const linkStyle = self.state.minimalView ? {display: "block"} : {};
                         row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={tdStyle}>
-                            <Link to={"callgraph/" + child.call}>{self.props.allRoutines[child.routine].name}</Link>
+                            <Link style={linkStyle} to={"callgraph/" + child.call}><NameDisplay routine={child.routine} /></Link>
                         </td>);
                     }
                     digestNode(child.children, child, depth + 1);
                     if (first-- <= 0 && row.length > 0) {
-                        result.push(<tr key={key++}>{row}</tr>);
+                        result.push(<tr className={"routinePathLine"} key={key++}>{row}</tr>);
                         row = [];
                     }
                 }
@@ -100,7 +109,7 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                     row.push(<td key={key++} style={tdStyle}>{self.props.allRoutines[node.routine].name} {node.call}</td>);
                 else
                     row.push(<td key={key++} style={tdStyle}>What?</td>);*/
-                result.push(<tr key={key++}>{row}</tr>);
+                result.push(<tr className={"routinePathLine"} key={key++}>{row}</tr>);
                 row = [];
             }
         }
@@ -128,7 +137,23 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
                     border-left: 5px solid darkgrey;
                 }`}
                 </style>
-                <Table responsive>
+                { this.state.minimalView
+                    ? <style>{`
+                        tr.routinePathLine td {
+                            padding: 2px;
+                            width: 2em;
+                            text-align: center;
+                            overflow: hidden;
+                        }
+                        table.routinePathTable {
+                            table-layout: fixed;
+                            width: auto;
+                        }
+                    `}</style>
+                    : ""
+                }
+                <Button onClick={() => this.toggleMinimalView()} active={this.state.minimalView}>Minimal</Button>
+                <Table responsive className="routinePathTable">
                     <tbody>
                     { result }
                     </tbody>
