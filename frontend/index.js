@@ -190,7 +190,23 @@ type HeapSnapshotAppProps = {
 };
 
 const App = (props : HeapSnapshotAppProps) => (
-  <Container style={props.profiler.fullscreen ? {maxWidth: "unset"} : {}}>
+  <React.Fragment>
+      {
+          props.profiler.fullscreen && <style>
+              {
+                  `
+                  .container {
+                    max-width: unset;
+                  }
+
+                  .container .container {
+                    max-width: 90%;
+                  }
+                  `
+              }
+          </style>
+      }
+  <Container>
       <h1>
           <Button onClick={props.onAppFullscreenClicked}><i className="fas fa-arrows-alt-h"></i></Button>
           {" "}
@@ -234,6 +250,7 @@ const App = (props : HeapSnapshotAppProps) => (
           </Route>
       </Switch>
   </Container>
+  </React.Fragment>
 );
 
 function mapProps(state) {
