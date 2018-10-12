@@ -78,6 +78,7 @@ export default class RoutineList extends Component {
         const byInclusiveTime = typeof maxTime === "undefined" ? Array.from(routines).map(r => r.inclusive_time).sort((a, b) => a - b) : [];
         const myMaxTime = typeof maxTime === "undefined" ? byInclusiveTime.pop() : maxTime;
         console.log(maxTime, "is the max time.");
+        const self = this;
         const loadMoreRoutines = () => self.setState(state => ({displayAmount: state.displayAmount + 100 }));
         return <React.Fragment>
             <HeaderComponent
