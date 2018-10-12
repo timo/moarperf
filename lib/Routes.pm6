@@ -11,7 +11,7 @@ sub json-content($route, &code) {
     my $result = code();
     note "$route in { now - $start }";
     $start = now;
-    my $json-result = to-json($result);
+    my $json-result = to-json($result, :!pretty);
     note "$route json in { now - $start }: $json-result.chars() characters";
     content "application/json", $json-result;
 }
