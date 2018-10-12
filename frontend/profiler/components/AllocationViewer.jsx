@@ -2,7 +2,7 @@ import React, {Component} from 'react';
 import {Container, Row, Table, Button} from 'reactstrap';
 import $ from 'jquery';
 
-import {numberFormatter} from './RoutinePieces';
+import {EntriesInfo, numberFormatter, RoutineFileInfo, RoutineNameInfo} from './RoutinePieces';
 import {AllocNameAndRepr} from "./AllocationParts";
 import RoutineList from './RoutineList';
 
@@ -30,15 +30,40 @@ export class AllocRoutineList extends Component {
     state = {};
 
     render() {
-        const HeaderComponent = self.props.HeaderComponent;
+        // const HeaderComponent = this.props.HeaderComponent;
+
+        const routines = this.props.routines;
+        const metadata = this.props.metadata;
 
         return (
             <div>
-                <HeaderComponent />
+                { /*<HeaderComponent /> */ }
                 <Table striped>
-                    <tr>
-
-                    </tr>
+                    <thead>
+                        <tr>
+                            <th>Sites</th>
+                            <th>Name</th>
+                            <th>Entries</th>
+                            <th>Size</th>
+                            <th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {
+                        routines.map((routine) => (
+                        <tr>
+                            <td key={"sitecount"}>{routine.sitecount}</td>
+                            <RoutineNameInfo routine={metadata[routine.id]}/>
+                            <EntriesInfo routine={routine}/>
+                            <td>
+                                <Bytes extraData={routine.alloc.has_unmanaged_data} size={routine.alloc.managed_size}
+                                       totalCount={routine.allocs}/>
+                            </td>
+                            <td>{numberFormatter(routine.allocs)}</td>
+                        </tr>
+                        ))
+                    }
+                    </tbody>
                 </Table>
             </div>
         );
