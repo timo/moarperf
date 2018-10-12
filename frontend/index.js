@@ -190,8 +190,13 @@ type HeapSnapshotAppProps = {
 };
 
 const App = (props : HeapSnapshotAppProps) => (
-  <Container>
-      <h1><Button tag={Link} to={"/"}><i className="fas fa-home"/></Button> MoarVM Performance Tool</h1>
+  <Container style={props.profiler.fullscreen ? {maxWidth: "unset"} : {}}>
+      <h1>
+          <Button onClick={props.onAppFullscreenClicked}><i className="fas fa-arrows-alt-h"></i></Button>
+          {" "}
+          <Button tag={Link} to={"/"}><i className="fas fa-home"/></Button>
+          {" "} MoarVM Performance Tool
+      </h1>
       <Switch>
           <Route exact path="/">
             <React.Fragment>
@@ -242,7 +247,8 @@ function mapDispatch(dispatch) {
     onRoutineExpanded: id => dispatch(ProfilerActions.expandRoutine(id)),
     onRequestGCOverview: () => dispatch(ProfilerActions.getGCOverview()),
     onRequestRoutineOverview: () => dispatch(ProfilerActions.getRoutineOverview()),
-    onGCExpandButtonClicked: (seq_nr) => dispatch(ProfilerActions.getGCDetails(seq_nr))
+    onGCExpandButtonClicked: (seq_nr) => dispatch(ProfilerActions.getGCDetails(seq_nr)),
+    onAppFullscreenClicked: () => dispatch(ProfilerActions.toggleFullscreen())
   };
 }
 

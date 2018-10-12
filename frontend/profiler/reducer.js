@@ -1,5 +1,5 @@
 import type { ActionTypes } from './actions';
-import {EXPAND_ROUTINE, ROUTINE_CHILDREN_GET, EXPAND_GC_SEQ, GC_SEQ_DETAILS_GET} from "./actions";
+import {EXPAND_ROUTINE, ROUTINE_CHILDREN_GET, EXPAND_GC_SEQ, GC_SEQ_DETAILS_GET, APP_SET_FULLSCREEN} from "./actions";
 
 export type ProfilerState = {
     +modelState: string,
@@ -17,6 +17,7 @@ const initialState = {
   expanded: {},
   allRoutineChildren: {},
   filePath: '',
+  fullscreen: false,
 };
 export default function profilerReducer(
   state : ProfilerState = initialState,
@@ -73,12 +74,15 @@ export default function profilerReducer(
         newstate.allRoutineChildren[action.id] = action.entries;
         return newstate;
     }
-      case GC_SEQ_DETAILS_GET: {
-          const newstate = { ...state };
-          newstate.gc = { ...state.gc };
-          newstate.gc.seq_details = { ...state.gc.seq_details };
-          newstate.gc.seq_details[action.seq_num] = action.data.stats_of_sequence;
-          return newstate;
+    case GC_SEQ_DETAILS_GET: {
+        const newstate = { ...state };
+        newstate.gc = { ...state.gc };
+        newstate.gc.seq_details = { ...state.gc.seq_details };
+        newstate.gc.seq_details[action.seq_num] = action.data.stats_of_sequence;
+        return newstate;
+    }
+      case APP_SET_FULLSCREEN: {
+          return { ...state, fullscreen: action.fullscreen };
       }
     default: {
       return { ...state };
