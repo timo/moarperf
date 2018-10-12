@@ -141,10 +141,10 @@ monitor ProfilerWeb {
                 for $hashchan.list {
                     my $bytes = sha1(.<file>);
                     if .<file>.starts-with("SETTING::") {
-                        .<color> = "hsl($bytes[0], &map-to-range($bytes[1], 25..60)%, &map-to-range($bytes[2], 65..100)%)";
+                        .<color> = "hsl($bytes[0], &map-to-range($bytes[1], 25..60)%, &map-to-range($bytes[2], 75..100)%)";
                     }
                     else {
-                        .<color> = "hsl($bytes[0], &map-to-range($bytes[1], 50..80)%, &map-to-range($bytes[2], 65..100)%)";
+                        .<color> = "hsl($bytes[0], &map-to-range($bytes[1], 50..75)%, &map-to-range($bytes[2], 65..100)%)";
                     }
                 }
                 note "hasher finished";
