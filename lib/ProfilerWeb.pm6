@@ -627,7 +627,8 @@ monitor ProfilerWeb {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
                 routines.id as id,
-                total(allocations.jit) as jit, total(allocations.spesh) as spesh, total(allocations.count) as count,
+                total(allocations.jit) as jit_allocs, total(allocations.spesh) as spesh_allocs, total(allocations.count) as allocs,
+                total(calls.jit_entries) as jit_entries, total(calls.spesh_entries) as spesh_entries, total(calls.entries) as entries,
 
                 count(calls.id) as sitecount
 
@@ -639,7 +640,7 @@ monitor ProfilerWeb {
                 where allocations.type_id == ?
 
                 group by routines.id, allocations.type_id
-                order by allocations.type_id asc
+                order by allocs desc
 
             STMT
 
