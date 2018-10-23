@@ -80,6 +80,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             }
         }
 
+        get -> 'overview-data' {
+            json-content "overview-data", { $profiler.overview-data() }
+        }
+
         get -> 'recursive-call-children', Int $call-id {
             json-content "recursive-call-children", { $profiler.recursive-children-of-call($call-id) }
         }

@@ -118,6 +118,63 @@ monitor ProfilerWeb {
         }
     }
 
+    method overview-data() {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                total_time,
+                first_entry_time,
+                root_node,
+                thread_id,
+                parent_thread_id
+
+              from profile
+              order by thread_id asc;
+            STMT
+
+        $query.execute;
+        my @threads = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        $query = self!gc-stats-per-sequence;
+
+        my @gcstats = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        $query = $!dbh.prepare(q:to/STMT/);
+            select
+                avg(case when full == 0 then latest_end - earliest end) as avg_minor_time,
+                min(case when full == 0 then latest_end - earliest end) as min_minor_time,
+                max(case when full == 0 then latest_end - earliest end) as max_minor_time,
+
+                avg(case when full == 1 then latest_end - earliest end) as avg_major_time,
+                min(case when full == 1 then latest_end - earliest end) as min_major_time,
+                max(case when full == 1 then latest_end - earliest end) as max_major_time,
+
+                total(case when full == 0 then latest_end - earliest end) as total_minor,
+                total(case when full == 1 then latest_end - earliest end) as total_major,
+                total(latest_end - earliest) as total
+
+                from (select
+                        min(start_time) as earliest,
+                        max(start_time + time) as latest_end,
+                        full
+
+                    from gcs
+                        group by sequence_num
+                        order by sequence_num asc)
+            STMT
+
+        $query.execute;
+        my %allgcstats = $query.allrows(:array-of-hash).head;
+        $query.finish;
+
+        return %(
+                :@threads,
+                :@gcstats,
+                :%allgcstats,
+                );
+    }
+
     method all-routines() {
         %!all_routines ||= do {
             my $query = $!dbh.prepare(q:to/STMT/);
@@ -696,6 +753,33 @@ monitor ProfilerWeb {
         }
     }
 
+    method !gc-stats-per-sequence() {
+        my $stats-per-sequence-q = $!dbh.prepare(q:to/STMT/);
+                    select
+                min(time) as min_time,
+                max(time) as max_time,
+                min(start_time) as earliest_start_time,
+                max(start_time) as latest_start_time,
+                min(start_time + time) as earliest_end_time,
+                max(start_time + time) as latest_end_time,
+                max(start_time + time) - min(start_time) as total_wallclock,
+                total(retained_bytes) as retained_bytes,
+                total(cleared_bytes) as cleared_bytes,
+                total(promoted_bytes) as promoted_bytes,
+                group_concat(thread_id, ",") as participants,
+                sequence_num,
+                full
+
+            from gcs
+
+            group by sequence_num
+            ;
+            STMT
+
+        $stats-per-sequence-q.execute();
+        $stats-per-sequence-q;
+    }
+
     method gc-summary() {
         my $fullcount = val-from-query($!dbh.prepare(q:to/STMT/), "full_count");
             select
@@ -751,29 +835,8 @@ monitor ProfilerWeb {
         }
         $stats-per-thread-q.finish();
 
-        my $stats-per-sequence-q = $!dbh.prepare(q:to/STMT/);
-            select
-                min(time) as min_time,
-                max(time) as max_time,
-                min(start_time) as earliest_start_time,
-                max(start_time) as latest_start_time,
-                min(start_time + time) as earliest_end_time,
-                max(start_time + time) as latest_end_time,
-                max(start_time + time) - min(start_time) as total_wallclock,
-                total(retained_bytes) as retained_bytes,
-                total(cleared_bytes) as cleared_bytes,
-                total(promoted_bytes) as promoted_bytes,
-                group_concat(thread_id, ",") as participants,
-                sequence_num,
-                full
+        my $stats-per-sequence-q = self!gc-stats-per-sequence;
 
-            from gcs
-
-            group by sequence_num
-            ;
-            STMT
-
-        $stats-per-sequence-q.execute();
         my @stats_per_sequence;
         for $stats-per-sequence-q.allrows(:array-of-hash) -> $/ {
             # $<participants> = from-json($<participants>);

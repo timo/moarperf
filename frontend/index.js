@@ -9,11 +9,7 @@ import WSAction from 'redux-websocket-action';
 import Loadable from 'react-loadable';
 import ErrorBoundary from 'react-error-boundary';
 
-import {
-  InputGroupAddon, InputGroup, Input, Button,
-  Container, Row, Col, Nav, NavItem, NavLink,
-    Table
-} from 'reactstrap';
+import {Button, Col, Container, Input, InputGroup, InputGroupAddon, Nav, NavItem, NavLink, Row} from 'reactstrap';
 
 import * as HeapAnalyzerActions from './heapanalyzer/actions';
 import heapAnalyzerReducer from './heapanalyzer/reducer';
@@ -51,6 +47,11 @@ const CallGraph = Loadable({
 
 const AllocationViewer = Loadable({
     loader: () => import(/* webpackChunkName: "allocationviewer" */ './profiler/components/AllocationViewer'),
+    loading: () => <div>Hold on ...</div>,
+})
+
+const OverviewPage = Loadable({
+    loader: () => import(/* webpackChunkName: "overviewPage" */ './profiler/components/OverviewPage'),
     loading: () => <div>Hold on ...</div>,
 })
 
@@ -115,11 +116,7 @@ const ProfilerApp = props => {
             </Nav>
             <Switch>
             <Route exact path={props.match.url + '/'}>
-                <React.Fragment>
-                <div>This is the overview page.</div>
-                <div>Sadly, it has nothing in it.</div>
-                <div>Please use the tabs up above to switch to different pages.</div>
-                </React.Fragment>
+                <OverviewPage />
             </Route>
             <Route path={props.match.url + "/routines"}>
               <ErrorBoundary>
@@ -166,11 +163,7 @@ const ProfilerApp = props => {
                 </ErrorBoundary>
             )} />
             <Route exact path={props.match.url}>
-                <React.Fragment>
-                    <div>This is the overview page.</div>
-                    <div>Sadly, it has nothing in it.</div>
-                    <div>Please use the tabs up above to switch to different pages.</div>
-                </React.Fragment>
+                <OverviewPage />
             </Route>
             <Route>
                 <div>oh no.</div>
