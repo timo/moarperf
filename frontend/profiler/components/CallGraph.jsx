@@ -53,7 +53,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         const stateChangeForPath = (self, path, currentCallId) => {
             if (currentCallId !== self.props.callId)
                 return;
-            this.setState(state => ({isLoading: { path: false }, path: path.slice(0, -1) }))
+            self.setState(state => ({isLoading: { path: false }, path: path.slice(0, -1) }))
         }
 
         $.ajax({
@@ -61,7 +61,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             type: 'GET',
             contentType: 'application/json',
             success: (path) => stateChangeForPath(this, path, this.props.callId),
-            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { path: false }, error: errorStatus + errorText}))}
+            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { ...state.isLoading, path: false }, error: errorStatus + errorText}))}
         });
 
         const stateChangeForChildren = (self, children, currentCallId) => {
