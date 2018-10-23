@@ -8,6 +8,7 @@ import RoutinePaths from "./RoutinePaths";
 
 import {ExclusiveInclusiveTime, EntriesInfo, InlineInfo, RoutineNameInfo} from "./RoutinePieces";
 import {AllocTableContent} from "./AllocationParts";
+import CallersList from "./CallersList";
 
 export default class Routine extends Component<{ routine: *, metadata: *, columns: *, expanded: *, allRoutineChildren: *, onExpandButtonClicked: *, maxTime: *, parentEntries: * }> {
     constructor(props) {
@@ -91,6 +92,12 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                     }
                 </Container>);
             }
+            else if (this.state.tab === "callers") {
+                expandedComponent = (<Container>
+                    <CallersList metadata={metadata}
+                                 routineId={routine.id}/>
+                </Container>);
+            }
             else if (this.state.tab === "paths") {
                 expandedComponent = (<Container>
                         <RoutinePaths routineId={routine.id} allRoutines={metadata}/>
@@ -122,6 +129,9 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                     <Nav tabs>
                         <NavItem>
                             <NavLink className={classnames({active: this.state.tab === "callees"})} onClick={() => this.setState(state => state.tab = "callees")}>Callees</NavLink>
+                        </NavItem>
+                        <NavItem>
+                            <NavLink className={classnames({active: this.state.tab === "callers"})} onClick={() => this.setState(state => state.tab = "callers")}>Callers</NavLink>
                         </NavItem>
                         <NavItem>
                             <NavLink className={classnames({active: this.state.tab === "paths"})} onClick={() => this.setState(state => state.tab = "paths")}>Paths</NavLink>

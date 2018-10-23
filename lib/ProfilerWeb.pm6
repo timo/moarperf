@@ -419,6 +419,40 @@ monitor ProfilerWeb {
         %children;
     }
 
+    method callers-of-routine($routine-id) {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                pc.routine_id as id,
+                pc.id         as call_id,
+
+                    total(c.entries) as entries,
+
+                    total(c.spesh_entries) as spesh_entries,
+                    total(c.jit_entries) as jit_entries,
+                    total(c.inlined_entries) as inlined_entries,
+
+                    count(c.id) as sitecount
+
+                from calls c
+                    left outer join calls pc
+                    on pc.id == c.parent_id
+
+                where c.routine_id = ?
+                group by pc.routine_id
+
+                order by pc.id asc
+                ;
+            STMT
+
+        $query.execute($routine-id);
+        my @results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        note "callers-of-routine $routine-id in " ~ (now - ENTER now);
+
+        @results;
+    }
+
     method all-children-of-routine($routine-id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select

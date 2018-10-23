@@ -92,6 +92,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "routine-children", { $profiler.all-children-of-routine($routine-id) };
         }
 
+        get -> 'routine-callers', Int $routine-id {
+            json-content "routine-callers", { $profiler.callers-of-routine($routine-id) };
+        }
+
         get -> 'routine-overview' {
             json-content "routine-overview", { $profiler.routine-overview }
         }
