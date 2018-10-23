@@ -1,9 +1,9 @@
 import $ from 'jquery';
 import React from 'react';
-import { render } from 'react-dom';
-import { combineReducers, createStore, applyMiddleware } from 'redux';
-import { Provider, connect } from 'react-redux';
-import { HashRouter, Route, Switch, Link, Redirect, withRouter } from 'react-router-dom';
+import {render} from 'react-dom';
+import {applyMiddleware, combineReducers, createStore} from 'redux';
+import {connect, Provider} from 'react-redux';
+import {HashRouter, Link, Redirect, Route, Switch, withRouter} from 'react-router-dom';
 import thunkMiddleware from 'redux-thunk';
 import WSAction from 'redux-websocket-action';
 import Loadable from 'react-loadable';
@@ -12,12 +12,11 @@ import ErrorBoundary from 'react-error-boundary';
 import {Button, Col, Container, Input, InputGroup, InputGroupAddon, Nav, NavItem, NavLink, Row} from 'reactstrap';
 
 import * as HeapAnalyzerActions from './heapanalyzer/actions';
+import type {HeapSnapshotState} from './heapanalyzer/reducer';
 import heapAnalyzerReducer from './heapanalyzer/reducer';
-import type { HeapSnapshotState } from './heapanalyzer/reducer';
 
 import * as ProfilerActions from './profiler/actions';
 import profilerReducer from './profiler/reducer';
-import type { ProfilerState } from './profiler/reducer';
 
 import * as WelcomeActions from './welcome/actions';
 import welcomeReducer from './welcome/reducer';
