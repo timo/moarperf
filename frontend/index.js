@@ -24,8 +24,8 @@ import welcomeReducer from './welcome/reducer';
 /* import GreetingsPage from './welcome/GreetingsPage';
 import { getGCOverview, getGCDetails } from "./profiler/actions"; */
 
-const RoutineList = Loadable({
-  loader: () => import(/* webpackChunkName: "routinelist" */ './profiler/components/RoutineList'),
+const RoutineOverviewPage = Loadable({
+  loader: () => import(/* webpackChunkName: "routinelist" */ './profiler/components/RoutineOverviewPage'),
   loading: () => <div>Hold on ...</div>,
 });
 
@@ -114,60 +114,45 @@ const ProfilerApp = props => {
                 </NavItem>
             </Nav>
             <Switch>
-            <Route exact path={props.match.url + '/'}>
-                <OverviewPage />
-            </Route>
-            <Route path={props.match.url + "/routines"}>
-              <ErrorBoundary>
-                {
-                props.profilerState.routineOverview.length === 0 || props.profilerState.routines.length === 0
-                ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
-                : null
-                }
-                <ErrorBoundary>
-                <RoutineList
-                    routines={props.profilerState.routineOverview}
-                    metadata={props.profilerState.routines}
-                    expanded={props.profilerState.expanded}
-                    allRoutineChildren={props.profilerState.allRoutineChildren}
-
-                    onExpandButtonClicked={props.onRoutineExpanded}
-                />
-                </ErrorBoundary>
-              </ErrorBoundary>
-            </Route>
-            <Route path={props.match.url + "/gc"}>
-                <ErrorBoundary>
-                <GCOverview
-                    onRequestGCOverview={props.onRequestGCOverview}
-                    onGCExpandButtonClicked={props.onGCExpandButtonClicked}
-                    {...props.profilerState.gc} />
-                </ErrorBoundary>
-            </Route>
-            <Route path={props.match.url + "/callgraph/:id?"} render={({ match, location }) => (
-                <ErrorBoundary>
-                <CallGraph
-                    routines={props.profilerState.routines}
-                    callId={match.params.id}
-                    />
-                </ErrorBoundary>
-                )} />
-            <Route path={props.match.url + "/allocations/:id?"} render={({ match, location }) => (
-                <ErrorBoundary>
-                    <AllocationViewer
-                        typeId={match.params.id}
-                        metadata={props.profilerState.routines}
-                        allRoutineChildren={props.profilerState.allRoutineChildren}
-                    />
-                </ErrorBoundary>
-            )} />
-            <Route exact path={props.match.url}>
-                <OverviewPage />
-            </Route>
-            <Route>
-                <div>oh no.</div>
-            </Route>
-        </Switch>
+                <Route exact path={props.match.url + '/'}>
+                    <OverviewPage/>
+                </Route>
+                <Route path={props.match.url + "/routines"}>
+                    <RoutineOverviewPage profilerState={props.profilerState} onClick={props.onRequestRoutineOverview}
+                                         onExpandButtonClicked={props.onRoutineExpanded}/>
+                </Route>
+                <Route path={props.match.url + "/gc"}>
+                    <ErrorBoundary>
+                        <GCOverview
+                            onRequestGCOverview={props.onRequestGCOverview}
+                            onGCExpandButtonClicked={props.onGCExpandButtonClicked}
+                            {...props.profilerState.gc} />
+                    </ErrorBoundary>
+                </Route>
+                <Route path={props.match.url + "/callgraph/:id?"} render={({match, location}) => (
+                    <ErrorBoundary>
+                        <CallGraph
+                            routines={props.profilerState.routines}
+                            callId={match.params.id}
+                        />
+                    </ErrorBoundary>
+                )}/>
+                <Route path={props.match.url + "/allocations/:id?"} render={({match, location}) => (
+                    <ErrorBoundary>
+                        <AllocationViewer
+                            typeId={match.params.id}
+                            metadata={props.profilerState.routines}
+                            allRoutineChildren={props.profilerState.allRoutineChildren}
+                        />
+                    </ErrorBoundary>
+                )}/>
+                <Route exact path={props.match.url}>
+                    <OverviewPage/>
+                </Route>
+                <Route>
+                    <div>oh no.</div>
+                </Route>
+            </Switch>
         </React.Fragment>
     );
 };
