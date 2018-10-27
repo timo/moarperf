@@ -118,8 +118,7 @@ export default class RoutineList extends Component {
                 <tbody>
                 {
                     sortedRoutines.map((routine) =>
-                        (<ErrorBoundary><Routine
-                            key={routine.id}
+                        (<ErrorBoundary key={routine.id}><Routine
                             routine={routine}
                             metadata={metadata}
                             columns={columns}
