@@ -125,7 +125,7 @@ export function RoutineFileInfo({routine}) {
     else {
         link = <React.Fragment>{routine.file}:{routine.line}</React.Fragment>
     }
-    return <span className="routineFileInfo">{ link }</span>
+    return <span className="routineFileInfo" style={{overflowWrap: "break-word"}}>{ link }</span>
 }
 
 export function RoutineNameInfo({routine}) {
