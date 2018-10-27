@@ -9,17 +9,19 @@ export default class RoutineList extends Component {
         expanded: [],
         columns: "expand sitecount nameInfo entriesInfo exclusiveInclusiveTime",
         HeaderComponent: ({}) => (<h2 key={0}>Routines</h2>),
-        defaultSort: ((a, b) => b.exclusive_time - a.exclusive_time),
+        defaultSort: "exclusive_time",
     }
 
     constructor(props) {
         super(props);
         this.state = {
-            sortTarget: "default",
+            sortTarget: props.defaultSort,
             sortInvert: false,
             displayAmount: 100,
             filter: {},
         }
+        this.changeFilter = this.changeFilter.bind(this);
+        this.changeSorting = this.changeSorting.bind(this);
     }
 
     changeFilter(filter) {
@@ -50,6 +52,8 @@ export default class RoutineList extends Component {
             filterFunction,
         } = this.props;
 
+        const self = this;
+
         if (typeof columns === "string") {
             columns = columns.split(" ");
         }
@@ -67,7 +71,22 @@ export default class RoutineList extends Component {
             entriesInfo: {width: "15%"},
             inlineInfo: {width: "10%"},
         };
-        const sortFunc = defaultSort;
+
+        const attrOfEither = (attr, a, b) => {
+            var toUse = a;
+            if (a !== undefined)
+                if (a.hasOwnProperty(attr))
+                    return a[attr]
+            if (b !== undefined)
+                if (b.hasOwnProperty(attr))
+                    return b[attr]
+            return 0;
+        }
+
+        const sortFunc =
+            (a, b) =>
+                attrOfEither(self.state.sortTarget, b, metadata[b.id]).toString().localeCompare(
+                    (attrOfEither(self.state.sortTarget, a, metadata[a.id])).toString());
         const filtered = filterFunction === null || typeof filterFunction === "undefined" ? Array.from(routines) : routines.filter(filterFunction);
         const preSortedRoutines = filtered.sort(
             this.state.sortInvert ? (a, b) => sortFunc(b, a) : sortFunc
@@ -78,7 +97,6 @@ export default class RoutineList extends Component {
         const byInclusiveTime = typeof maxTime === "undefined" ? Array.from(routines).map(r => r.inclusive_time).sort((a, b) => a - b) : [];
         const myMaxTime = typeof maxTime === "undefined" ? byInclusiveTime.pop() : maxTime;
         console.log(maxTime, "is the max time.");
-        const self = this;
         const loadMoreRoutines = () => self.setState(state => ({displayAmount: state.displayAmount + 100 }));
         return <React.Fragment>
             <HeaderComponent
