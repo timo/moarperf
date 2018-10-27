@@ -47,7 +47,7 @@ class CallersList extends Component {
             <div>
                 <RoutineList metadata={this.props.metadata}
                              routines={this.state.callers}
-                             columns={"sitecount nameInfo entriesInfo"}/>
+                             columns={"sitecount nameInfo inlineInfo entriesInfo"}/>
             </div>
         );
     }
