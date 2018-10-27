@@ -59,16 +59,16 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                 return (<td key={"sitecount"}>{routine.sitecount}</td>)
             },
             nameInfo() {
-                return <RoutineNameInfo routine={myMetadata} />
+                return <RoutineNameInfo key="nameinfo" routine={myMetadata} />
             },
             entriesInfo() {
-                return <EntriesInfo routine={routine} parentEntries={parentEntries} />;
+                return <EntriesInfo  key="entriesinfo" routine={routine} parentEntries={parentEntries} />;
             },
             exclusiveInclusiveTime() {
-                return <ExclusiveInclusiveTime routine={routine} maxTime={maxTime}/>
+                return <ExclusiveInclusiveTime key="exclusiveinclusivetime" routine={routine} maxTime={maxTime}/>
             },
             inlineInfo() {
-                return <InlineInfo routine={routine}/>
+                return <InlineInfo key="inlineinfo" routine={routine}/>
             }
         };
         let expandedComponent = <React.Fragment/>;
