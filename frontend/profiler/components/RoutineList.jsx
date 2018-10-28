@@ -91,8 +91,8 @@ export default class RoutineList extends Component {
         const sortFunc =
             (a, b) =>
                 comparify(
-                    attrOfEither(self.state.sortTarget, b, metadata[b.id]),
-                    attrOfEither(self.state.sortTarget, a, metadata[a.id]));
+                    attrOfEither(self.state.sortTarget, a, metadata[b.id]),
+                    attrOfEither(self.state.sortTarget, b, metadata[a.id]));
 
         const filtered = filterFunction === null || typeof filterFunction === "undefined" ? Array.from(routines) : routines.filter(filterFunction);
         const preSortedRoutines = filtered.sort(
