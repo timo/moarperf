@@ -278,6 +278,32 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
 
         if (typeof callId === "undefined") {
+            const buildTree = (thread_id, thread) => {
+                const children = threadData.filter((thread) => thread.parent_thread_id === thread_id);
+                const childTree = children.map((child) => buildTree(child.thread_id, child));
+                const childChunk = children.length > 0
+                    ? <ul> { childTree } </ul>
+                    : null;
+                return (
+                    <li key={thread.thread_id}>
+                        {
+                            thread.root_node === null
+                            ? <React.Fragment><BareLinkButton icon={"arrow-right"}/> {" "}
+                                    {
+                                        typeof thread.name === "string" ? thread.name
+                                            : <React.Fragment>Thread {thread.thread_id} (no code)</React.Fragment>
+                                    }
+
+                                </React.Fragment>
+                            : <React.Fragment>
+                                <BareLinkButton target={"/prof/callgraph/" + thread.root_node.toString()}
+                                                icon={"arrow-right"}/> Thread {thread.thread_id}
+                                </React.Fragment>
+                        }
+                        { childChunk }
+                    </li>
+                )
+            }
             return (
                 <Container>
                     <style>
@@ -285,17 +311,12 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                         li {
                             padding-top: 5px;
                             padding-bottom: 5px;
+                            list-style-type: none;
                         `}
                     </style>
                     <ul>
                     {
-                        threadData.map((thread) => (
-                            thread.root_node === null
-                                ? <li key={thread.thread_id}><BareLinkButton icon={"arrow-right"} /> Thread { thread.thread_id } (no code)</li>
-                                : <li key={thread.thread_id}>
-                                    <BareLinkButton target={"callgraph/" + thread.root_node.toString()} icon={"arrow-right"}/> Thread { thread.thread_id }
-                                </li>
-                        ))
+                        buildTree(0, {name: "Program Start", root_node: null, parent_thread: 0})
                     }
                     </ul>
                 </Container>
