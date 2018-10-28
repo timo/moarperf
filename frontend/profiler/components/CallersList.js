@@ -2,6 +2,7 @@ import React, {Component} from 'react';
 import RoutineList from "./RoutineList";
 
 import $ from 'jquery';
+import {RoutineListHeaderComponent} from "./RoutineOverviewPage";
 
 class CallersList extends Component {
     constructor(props) {
@@ -47,7 +48,10 @@ class CallersList extends Component {
             <div>
                 <RoutineList metadata={this.props.metadata}
                              routines={this.state.callers}
-                             columns={"sitecount nameInfo inlineInfo entriesInfo"}/>
+                             columns={"sitecount nameInfo inlineInfo entriesInfo"}
+
+                             HeaderComponent={RoutineListHeaderComponent}
+                />
             </div>
         );
     }
