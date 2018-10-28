@@ -4,17 +4,21 @@ import { Button } from 'reactstrap';
 
 import RoutineList from './RoutineList';
 
+export const RoutineListHeaderComponent = (props) => {
+    return (
+        <React.Fragment>
+            <h2>Routines</h2>
+            <Button onClick={() => props.onChangeSorting("name")}>Name</Button>
+            <Button onClick={() => props.onChangeSorting("file")}>Filename</Button>
+            <Button onClick={() => props.onChangeSorting("entries")}>Entries</Button>
+            <Button onClick={() => props.onChangeSorting("inclusive_time")}>Inclusive Time</Button>
+            <Button onClick={() => props.onChangeSorting("exclusive_time")}>Exclusive Time</Button>
+        </React.Fragment>
+    )
+}
+
+
 export default function RoutineOverviewPage(props) {
-    const HeaderComponent = (props) => {
-        return (
-            <React.Fragment>
-                <h2>Routines</h2>
-                <Button onClick={() => props.onChangeSorting("name")}>Name</Button>
-                <Button onClick={() => props.onChangeSorting("file")}>Filename</Button>
-                <Button onClick={() => props.onChangeSorting("entries")}>Entries</Button>
-            </React.Fragment>
-        )
-    }
 
     return (
       <ErrorBoundary>
@@ -33,7 +37,7 @@ export default function RoutineOverviewPage(props) {
 
             defaultSort={"inclusive_time"}
 
-            HeaderComponent={HeaderComponent}
+            HeaderComponent={RoutineListHeaderComponent}
         />
       </ErrorBoundary>);
 }

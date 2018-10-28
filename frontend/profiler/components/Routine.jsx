@@ -9,6 +9,7 @@ import RoutinePaths from "./RoutinePaths";
 import {ExclusiveInclusiveTime, EntriesInfo, InlineInfo, RoutineNameInfo} from "./RoutinePieces";
 import {AllocTableContent} from "./AllocationParts";
 import CallersList from "./CallersList";
+import { RoutineListHeaderComponent } from './RoutineOverviewPage';
 
 export default class Routine extends Component<{ routine: *, metadata: *, columns: *, expanded: *, allRoutineChildren: *, onExpandButtonClicked: *, maxTime: *, parentEntries: * }> {
     constructor(props) {
@@ -86,8 +87,9 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
                                         columns={"sitecount nameInfo entriesInfo inlineInfo exclusiveInclusiveTime"}
                                         maxTime={routine.inclusive_time}
                                         parentEntries={routine.entries}
-                                        headerComponent={null}
                                         defaultSort={"inclusive_time"}
+
+                                        HeaderComponent={RoutineListHeaderComponent}
                         />
                     }
                 </Container>);
