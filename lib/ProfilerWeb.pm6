@@ -625,6 +625,10 @@ monitor ProfilerWeb {
         my @q-results = $query.allrows(:array-of-hash);
         $query.finish;
 
+        if @q-results == 1 and not @q-results<type_id>.defined {
+            return []
+        }
+
         @q-results
     }
 
