@@ -127,7 +127,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 return;
             self.setState((state) => ({
                 allocations: allocs,
-                isLoading: { allocs: false }
+                isLoading: { ...state.isLoading, allocs: false }
             }));
         }
 
