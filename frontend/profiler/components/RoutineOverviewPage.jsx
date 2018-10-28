@@ -8,11 +8,11 @@ export const RoutineListHeaderComponent = (props) => {
     return (
         <React.Fragment>
             <h2>Routines</h2>
-            <Button onClick={() => props.onChangeSorting("name")}>Name</Button>
-            <Button onClick={() => props.onChangeSorting("file")}>Filename</Button>
-            <Button onClick={() => props.onChangeSorting("entries")}>Entries</Button>
-            <Button onClick={() => props.onChangeSorting("inclusive_time")}>Inclusive Time</Button>
-            <Button onClick={() => props.onChangeSorting("exclusive_time")}>Exclusive Time</Button>
+            <Button size="sm" onClick={() => props.onChangeSorting("name")}>Name</Button>
+            <Button size="sm" onClick={() => props.onChangeSorting("file")}>Filename</Button>
+            <Button size="sm" onClick={() => props.onChangeSorting("entries")}>Entries</Button>
+            <Button size="sm" onClick={() => props.onChangeSorting("inclusive_time")}>Inclusive Time</Button>
+            <Button size="sm" onClick={() => props.onChangeSorting("exclusive_time")}>Exclusive Time</Button>
         </React.Fragment>
     )
 }
