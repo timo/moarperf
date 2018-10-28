@@ -83,10 +83,17 @@ export default class RoutineList extends Component {
             return 0;
         }
 
+        const comparify = (a, b) =>
+            (typeof a) === "string" || (typeof b) === "string"
+                ? a.toString().localeCompare(b.toString())
+                : b - a;
+
         const sortFunc =
             (a, b) =>
-                attrOfEither(self.state.sortTarget, b, metadata[b.id]).toString().localeCompare(
-                    (attrOfEither(self.state.sortTarget, a, metadata[a.id])).toString());
+                comparify(
+                    attrOfEither(self.state.sortTarget, b, metadata[b.id]),
+                    attrOfEither(self.state.sortTarget, a, metadata[a.id]));
+
         const filtered = filterFunction === null || typeof filterFunction === "undefined" ? Array.from(routines) : routines.filter(filterFunction);
         const preSortedRoutines = filtered.sort(
             this.state.sortInvert ? (a, b) => sortFunc(b, a) : sortFunc
