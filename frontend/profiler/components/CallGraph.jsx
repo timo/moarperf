@@ -351,6 +351,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 <Row>
                     <Col>
                         <Breadcrumb>
+                            <BreadcrumbItem><Link to={"/prof/callgraph/"}>Thread list</Link></BreadcrumbItem>
                             {
                                 path.map((node, idx) => (
                                     <BreadcrumbItem key={"breadcrumb_" + idx}>
