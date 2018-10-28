@@ -158,14 +158,19 @@ export default function GCOverview(props) {
     if (typeof props.overview.stats_per_sequence !== "undefined") {
         ignoreNulls(props.overview.stats_per_sequence).forEach((d) => console.log(d.cleared_bytes + d.promoted_bytes + d.retained_bytes));
     }
+    if (typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined") {
+        return (<Container>
+            <Row>
+                <Col>
+                    <Button onClick={props.onRequestGCOverview}>Get GC overview</Button>
+                </Col>
+            </Row>
+        </Container>)
+    }
     return (
         <Container>
             <Row>
                 <Col>
-                    {
-                        typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined"
-                            ? <Button onClick={props.onRequestGCOverview}>Get GC overview</Button>
-                            :
                             <React.Fragment>
                                 <h2>Time spent per GC run</h2>
                                 <ResponsiveContainer width={"100%"} height={100}>
@@ -204,7 +209,6 @@ export default function GCOverview(props) {
                                     </BarChart>
                                 </ResponsiveContainer>
                             </React.Fragment>
-                    }
                 </Col>
             </Row>
             <Table striped>
