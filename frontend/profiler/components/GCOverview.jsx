@@ -58,7 +58,7 @@ const makeSpans = input => {
             });
     };
 
-const GcTableRow = ({ data, expanded, seq_details, onGCExpandButtonClicked }) => {
+const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonClicked }) => {
     return (
         <React.Fragment>
             <tr key={data.sequence_num}>
@@ -72,7 +72,15 @@ const GcTableRow = ({ data, expanded, seq_details, onGCExpandButtonClicked }) =>
                     }
                 </td>
                 <td>{data.participants}</td>
-                <td>{timeToHuman(data.earliest_start_time)}</td>
+                <td>{timeToHuman(data.earliest_start_time)}
+                    {
+                        typeof prevData === "undefined"
+                            ? null
+                            : <React.Fragment>{" "}
+                                <small>{timeToHuman(data.earliest_start_time - prevData.earliest_start_time - prevData.max_time)} after prev</small>
+                            </React.Fragment>
+                    }
+                </td>
                 <td>{timeToHuman(data.max_time, "ms spent")}</td>
             </tr>
             {
@@ -137,8 +145,9 @@ const GcTable = ({ overview, expanded, seq_details, onGCExpandButtonClicked }) =
         return (<tr><td colSpan={5} key={0}>There were no GC runs during the recording.</td></tr>);
     }
     let seen = -1;
-    return ignoreNulls(overview.stats_per_sequence).map((data, index) =>
-        <GcTableRow key={"gcTableRow_" + index} data={data} expanded={expanded} seq_details={seq_details} onGCExpandButtonClicked={onGCExpandButtonClicked} />
+    const rowInputData = ignoreNulls(overview.stats_per_sequence);
+    return rowInputData.map((data, index) =>
+        <GcTableRow key={"gcTableRow_" + index} data={data} prevData={index > 0 ? rowInputData[index - 1] : undefined} expanded={expanded} seq_details={seq_details} onGCExpandButtonClicked={onGCExpandButtonClicked} />
     )
 }
 
