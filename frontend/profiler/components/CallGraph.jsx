@@ -15,6 +15,17 @@ import {
 } from "./RoutinePieces";
 import {AllocTableContent} from "./AllocationParts";
 
+export function BareLinkButton({icon, target}) {
+    return (
+            target
+        ?
+            <Link to={target}><Button>
+                <i className={"fas fa-" + icon}/>
+            </Button>
+            </Link>
+        : <Button disabled={true}><i className={"fas fa-" + icon}/></Button>
+    )
+}
 
 export default class CallGraph extends Component<{ routines: *, callId: * }> {
     constructor (props) {
@@ -26,6 +37,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 allocs: false,
                 incAllocs: false,
                 childIncAllocs: false,
+                threadData: false,
             },
             error: null,
             allocsError: null,
@@ -35,7 +47,33 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             allocations: [],
             inclusiveAllocations: [],
             childInclusiveAllocations: {},
+            threadData: null,
         }
+    }
+
+    requestThreadData() {
+        this.setState((state) => ({
+            isLoading: {
+                ...state.isLoading,
+                threadData: true
+            }
+        }));
+
+        const stateChangeForThreads = (self, threads) => {
+            self.setState(state => (
+                {
+                    isLoading: { ...state.isLoading, threadData: false },
+                    threadData: threads,
+                }))
+        }
+
+        $.ajax({
+            url: '/thread-data',
+            type: 'GET',
+            contentType: 'application/json',
+            success: (path) => stateChangeForThreads(this, path),
+            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { ...state.isLoading, threadData: false }, error: errorStatus + errorText}))}
+        });
     }
 
     requestPathAndChildren() {
@@ -128,6 +166,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
     requestChildInclusiveAllocations() {
         this.setState((state) => ({
             isLoading: {
+                ...state.isLoading,
                 childIncAllocs: this.state.children.length
             }
         }));
@@ -135,6 +174,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         const stateChangeForIncAllocs = (self, allocs, child_id) => {
             self.setState((state) => ({
                 isLoading: {
+                    ...state.isLoading,
                     childIncAllocs: state.isLoading.childIncAllocs - 1
                 },
                 childInclusiveAllocations: {
@@ -157,25 +197,53 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
 
     componentDidMount() {
         this.requestPathAndChildren()
+        if (this.props.callId === undefined)
+            this.requestThreadData();
     }
 
     componentDidUpdate(prevProps) {
         if (prevProps.callId !== this.props.callId) {
-            this.setState((state) => ({
-                isLoading: {
-                    ...state.isLoading,
-                    incAllocs: false,
-                    childIncAllocs: false,
-                },
-                call: {},
-                path: [],
-                error: null,
-                allocsError: null,
-                allocations: [],
-                inclusiveAllocations: [],
-                childInclusiveAllocations: [],
-            }));
-            this.requestPathAndChildren();
+            if (this.props.callId === undefined) {
+                this.setState((state) => ({
+                    ...state,
+                    isLoading: {
+                        path: false,
+                        children: false,
+                        allocs: false,
+                        incAllocs: false,
+                        childIncAllocs: false,
+                        threadData: false,
+                    },
+                    call: {},
+                    path: [],
+                    error: null,
+                    allocsError: null,
+                    allocations: [],
+                    inclusiveAllocations: [],
+                    childInclusiveAllocations: [],
+                    threadData: null,
+                }));
+
+                this.requestThreadData();
+            }
+            else {
+                this.setState((state) => ({
+                    ...state,
+                    isLoading: {
+                        ...state.isLoading,
+                        incAllocs: false,
+                        childIncAllocs: false,
+                    },
+                    call: {},
+                    path: [],
+                    error: null,
+                    allocsError: null,
+                    allocations: [],
+                    inclusiveAllocations: [],
+                    childInclusiveAllocations: [],
+                }));
+                this.requestPathAndChildren();
+            }
         }
     }
 
@@ -193,6 +261,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 allocs: loadingAllocations,
                 incAllocs: loadingInclusiveAllocations,
                 childIncAllocs: loadingChildIncAllocations,
+                threadData: loadingThreadData,
             },
             error,
             path,
@@ -200,16 +269,37 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             allocations,
             inclusiveAllocations,
             childInclusiveAllocations,
+            threadData,
         } = this.state;
+
+
+        if (loadingPath || loadingChildren || loadingThreadData || typeof call === "undefined" || threadData === null) {
+            return (<Container><div>Hold on...</div></Container>)
+        }
 
         if (typeof callId === "undefined") {
             return (
-                <Redirect to={"/prof/callgraph/" + (call.id || "0")} />
+                <Container>
+                    <style>
+                        { `
+                        li {
+                            padding-top: 5px;
+                            padding-bottom: 5px;
+                        `}
+                    </style>
+                    <ul>
+                    {
+                        threadData.map((thread) => (
+                            thread.root_node === null
+                                ? <li key={thread.thread_id}><BareLinkButton icon={"arrow-right"} /> Thread { thread.thread_id } (no code)</li>
+                                : <li key={thread.thread_id}>
+                                    <BareLinkButton target={"callgraph/" + thread.root_node.toString()} icon={"arrow-right"}/> Thread { thread.thread_id }
+                                </li>
+                        ))
+                    }
+                    </ul>
+                </Container>
             )
-        }
-
-        if (loadingPath || loadingChildren || typeof call === "undefined") {
-            return (<Container><div>Hold on...</div></Container>)
         }
 
         if (error) {

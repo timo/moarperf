@@ -175,6 +175,26 @@ monitor ProfilerWeb {
                 );
     }
 
+    method thread-data() {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select
+                total_time,
+                first_entry_time,
+                root_node,
+                thread_id,
+                parent_thread_id
+
+              from profile
+              order by thread_id asc;
+            STMT
+
+        $query.execute;
+        my @threads = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        @threads;
+    }
+
     method all-routines() {
         %!all_routines ||= do {
             my $query = $!dbh.prepare(q:to/STMT/);
