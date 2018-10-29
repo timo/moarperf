@@ -273,7 +273,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         } = this.state;
 
 
-        if (loadingPath || loadingChildren || loadingThreadData || typeof call === "undefined" || threadData === null) {
+        if (loadingPath || loadingChildren || loadingThreadData || typeof call === "undefined" && threadData === null) {
             return (<Container><div>Hold on...</div></Container>)
         }
 
