@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis, Label } from 'recharts';
 //import memoize from 'memoize-state';
 import {
@@ -158,6 +158,8 @@ export default function GCOverview(props) {
     if (typeof props.overview.stats_per_sequence !== "undefined") {
         ignoreNulls(props.overview.stats_per_sequence).forEach((d) => console.log(d.cleared_bytes + d.promoted_bytes + d.retained_bytes));
     }
+    // 0 == hide major, 1 == show all, 2 == only major
+    const [filterMode, setFilterMode] = useState(1);
     if (typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined") {
         return (<Container>
             <Row>
@@ -167,12 +169,21 @@ export default function GCOverview(props) {
             </Row>
         </Container>)
     }
+    const sourceOfData = ignoreNulls(props.overview.stats_per_sequence);
+    const dataToUse = filterMode === 0
+                ? only_minor(sourceOfData)
+                : filterMode === 2
+                    ? only_major(sourceOfData)
+                    : sourceOfData;
     return (
         <Container>
             <Row><Col>
+                <Button onClick={() => setFilterMode(0)} size={"sm"} disabled={filterMode === 0}>Only Minor Collections</Button>
+                <Button onClick={() => setFilterMode(1)} size={"sm"} disabled={filterMode === 1}>Everything</Button>
+                <Button onClick={() => setFilterMode(2)} size={"sm"} disabled={filterMode === 2}>Only Major Collections</Button>
                 <h2>Time spent per GC run</h2>
                 <ResponsiveContainer width={"100%"} height={100}>
-                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
+                    <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
                         <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
                         <Tooltip content={<div></div>}/>
                     </BarChart>
@@ -180,7 +191,7 @@ export default function GCOverview(props) {
                 <div>Total Time: { timeToHuman(totalTime) }</div>
                 <h2>Time between GC runs</h2>
                 <ResponsiveContainer width={"100%"} height={100}>
-                    <BarChart height={100} data={time_diffs(ignoreNulls(props.overview.stats_per_sequence))} syncId={"gcoverview"}>
+                    <BarChart height={100} data={time_diffs(dataToUse)} syncId={"gcoverview"}>
                         <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
                         <Tooltip content={(stuff) => {
                             const outer = stuff.payload;
@@ -200,7 +211,7 @@ export default function GCOverview(props) {
                 </ResponsiveContainer>
                 <h2>Amounts of Data</h2>
                 <ResponsiveContainer width={"100%"} height={100}>
-                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
+                    <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
                         <Bar dataKey={"promoted_bytes"} fill={"#f32"} stackId={"nursery_bytes"} isAnimationActive={false}/>
                         <Bar dataKey={"retained_bytes"} fill={"#fa5"} stackId={"nursery_bytes"} isAnimationActive={false}/>
                         <Bar dataKey={"cleared_bytes"}  fill={"#3f3"} stackId={"nursery_bytes"} isAnimationActive={false}/>
