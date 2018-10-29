@@ -169,48 +169,44 @@ export default function GCOverview(props) {
     }
     return (
         <Container>
-            <Row>
-                <Col>
-                            <React.Fragment>
-                                <h2>Time spent per GC run</h2>
-                                <ResponsiveContainer width={"100%"} height={100}>
-                                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
-                                        <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
-                                        <Tooltip content={<div></div>}/>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                                <div>Total Time: { timeToHuman(totalTime) }</div>
-                                <h2>Time between GC runs</h2>
-                                <ResponsiveContainer width={"100%"} height={100}>
-                                    <BarChart height={100} data={time_diffs(ignoreNulls(props.overview.stats_per_sequence))} syncId={"gcoverview"}>
-                                        <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
-                                        <Tooltip content={(stuff) => {
-                                            const outer = stuff.payload;
-                                            if (typeof outer !== "undefined" && outer !== null && outer.length > 0) {
-                                                const payload = outer[0].payload;
-                                                return (
-                                                    <div style={{background: "#aaa"}}>
-                                                        {payload.sequence_num}:<br/>
-                                                        {timeToHuman(payload.earliest_start_time, "ms since start")}<br/>
-                                                        {timeToHuman(payload.time_since_prev, "ms since previous run")}<br/>
-                                                        {timeToHuman(payload.max_time, "ms time spent")}<br/>
-                                                    </div>);
-                                            }
-                                        }
-                                        } />
-                                    </BarChart>
-                                </ResponsiveContainer>
-                                <h2>Amounts of Data</h2>
-                                <ResponsiveContainer width={"100%"} height={100}>
-                                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
-                                        <Bar dataKey={"promoted_bytes"} fill={"#f32"} stackId={"nursery_bytes"} isAnimationActive={false}/>
-                                        <Bar dataKey={"retained_bytes"} fill={"#fa5"} stackId={"nursery_bytes"} isAnimationActive={false}/>
-                                        <Bar dataKey={"cleared_bytes"}  fill={"#3f3"} stackId={"nursery_bytes"} isAnimationActive={false}/>
-                                    </BarChart>
-                                </ResponsiveContainer>
-                            </React.Fragment>
-                </Col>
-            </Row>
+            <Row><Col>
+                <h2>Time spent per GC run</h2>
+                <ResponsiveContainer width={"100%"} height={100}>
+                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
+                        <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
+                        <Tooltip content={<div></div>}/>
+                    </BarChart>
+                </ResponsiveContainer>
+                <div>Total Time: { timeToHuman(totalTime) }</div>
+                <h2>Time between GC runs</h2>
+                <ResponsiveContainer width={"100%"} height={100}>
+                    <BarChart height={100} data={time_diffs(ignoreNulls(props.overview.stats_per_sequence))} syncId={"gcoverview"}>
+                        <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
+                        <Tooltip content={(stuff) => {
+                            const outer = stuff.payload;
+                            if (typeof outer !== "undefined" && outer !== null && outer.length > 0) {
+                                const payload = outer[0].payload;
+                                return (
+                                    <div style={{background: "#aaa"}}>
+                                        {payload.sequence_num}:<br/>
+                                        {timeToHuman(payload.earliest_start_time, "ms since start")}<br/>
+                                        {timeToHuman(payload.time_since_prev, "ms since previous run")}<br/>
+                                        {timeToHuman(payload.max_time, "ms time spent")}<br/>
+                                    </div>);
+                            }
+                        }
+                        } />
+                    </BarChart>
+                </ResponsiveContainer>
+                <h2>Amounts of Data</h2>
+                <ResponsiveContainer width={"100%"} height={100}>
+                    <BarChart height={100} data={ignoreNulls(props.overview.stats_per_sequence)} syncId={"gcoverview"}>
+                        <Bar dataKey={"promoted_bytes"} fill={"#f32"} stackId={"nursery_bytes"} isAnimationActive={false}/>
+                        <Bar dataKey={"retained_bytes"} fill={"#fa5"} stackId={"nursery_bytes"} isAnimationActive={false}/>
+                        <Bar dataKey={"cleared_bytes"}  fill={"#3f3"} stackId={"nursery_bytes"} isAnimationActive={false}/>
+                    </BarChart>
+                </ResponsiveContainer>
+            </Col></Row>
             <Table striped>
                 <thead>
                 <tr>
