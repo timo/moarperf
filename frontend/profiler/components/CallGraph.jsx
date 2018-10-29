@@ -342,9 +342,6 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             )
         }
 
-        console.log("children:", children);
-        console.log("path:", path);
-
         const routine = routines[call.routine_id];
         return (
             <Container>
