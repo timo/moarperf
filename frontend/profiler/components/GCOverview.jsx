@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis, Label } from 'recharts';
 //import memoize from 'memoize-state';
 import {
@@ -160,6 +160,27 @@ export default function GCOverview(props) {
     }
     // 0 == hide major, 1 == show all, 2 == only major
     const [filterMode, setFilterMode] = useState(1);
+    const [isLoading, setIsLoading]   = useState(false);
+
+    useEffect(() => {
+        if (!isLoading && typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined") {
+            props.onRequestGCOverview();
+            setIsLoading(true);
+        }
+        else if (isLoading && !(typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined")) {
+            setIsLoading(false);
+        }
+    }, [props.overview, props.overview.stats_per_sequence]);
+
+    if (isLoading) {
+        return (<Container>
+            <Row>
+                <Col>
+                    Loading, please wait ...
+                </Col>
+            </Row>
+        </Container>)
+    }
     if (typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined") {
         return (<Container>
             <Row>
