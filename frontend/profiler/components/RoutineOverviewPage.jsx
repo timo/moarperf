@@ -1,5 +1,5 @@
 import ErrorBoundary from "react-error-boundary";
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Button } from 'reactstrap';
 
 import RoutineList from './RoutineList';
@@ -19,12 +19,27 @@ export const RoutineListHeaderComponent = (props) => {
 
 
 export default function RoutineOverviewPage(props) {
+    const [isLoading, setIsLoading] = useState(false);
+
+    useEffect(() => {
+        if (!isLoading && (props.profilerState.routineOverview.length === 0 || props.profilerState.routines.length === 0)) {
+            setIsLoading(true);
+            props.onRequestRoutineOverview();
+        }
+        else if (isLoading && props.profilerState.routineOverview.length !== 0 && props.profilerState.routines.length !== 0) {
+            setIsLoading(false);
+        }
+    }, [props.profilerState.routineOverview, props.profilerState.routines]);
+
+    if (isLoading) {
+        return <div>Loading, hold on...</div>
+    }
 
     return (
       <ErrorBoundary>
         {
             props.profilerState.routineOverview.length === 0 || props.profilerState.routines.length === 0
-                ? <Button onClick={props.onClick}>Get Routine overview</Button>
+                ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
                 : null
         }
         <RoutineList

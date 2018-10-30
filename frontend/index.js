@@ -118,7 +118,8 @@ const ProfilerApp = props => {
                     <OverviewPage/>
                 </Route>
                 <Route path={props.match.url + "/routines"}>
-                    <RoutineOverviewPage profilerState={props.profilerState} onClick={props.onRequestRoutineOverview}
+                    <RoutineOverviewPage profilerState={props.profilerState}
+                                         onRequestRoutineOverview={props.onRequestRoutineOverview}
                                          onExpandButtonClicked={props.onRoutineExpanded}/>
                 </Route>
                 <Route path={props.match.url + "/gc"}>
