@@ -403,8 +403,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     <Button onClick={() => this.requestChildInclusiveAllocations() }>Show allocations for all children</Button>
                 <Table striped><tbody>
                     {
-                        children.map((child, idx) => (<React.Fragment>
-                            <tr key={"child_" + idx}>
+                        children.map((child, idx) => (<React.Fragment key={"child_" + idx}>
+                            <tr>
                                 <LinkButton target={child.id.toString()} icon={"arrow-right"}/>
                                 <RoutineNameInfo routine={routines[child.routine_id]}/>
                                 <EntriesInfo routine={child} parentEntries={call.entries}/>
