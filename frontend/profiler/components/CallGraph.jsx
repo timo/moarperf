@@ -38,6 +38,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 incAllocs: false,
                 childIncAllocs: false,
                 threadData: false,
+                routineOverview: false,
             },
             error: null,
             allocsError: null,
@@ -197,8 +198,12 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
 
     componentDidMount() {
         this.requestPathAndChildren()
-        if (this.props.callId === undefined)
+        if (typeof this.props.callId === "undefined")
             this.requestThreadData();
+        if (this.state.isLoading.routineOverview === false && (typeof this.props.routines === "undefined" || this.props.routines.length === 0)) {
+            this.props.onRequestRoutineOverview();
+            this.setState((state) => ({ isLoading: { ...state.isLoading, routineOverview: true}}));
+        }
     }
 
     componentDidUpdate(prevProps) {
@@ -273,7 +278,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         } = this.state;
 
 
-        if (loadingPath || loadingChildren || loadingThreadData || typeof call === "undefined" && threadData === null) {
+        if (loadingPath || loadingChildren || loadingThreadData || typeof call === "undefined" || typeof callId === "undefined" && threadData === null) {
             return (<Container><div>Hold on...</div></Container>)
         }
 

@@ -134,6 +134,8 @@ const ProfilerApp = props => {
                         <CallGraph
                             routines={props.profilerState.routines}
                             callId={match.params.id}
+
+                            onRequestRoutineOverview={props.onRequestRoutineOverview}
                         />
                     </ErrorBoundary>
                 )}/>
