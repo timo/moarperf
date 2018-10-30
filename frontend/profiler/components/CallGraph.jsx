@@ -434,7 +434,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                         <AllocTableContent allocations={allocations} parentBareEntries={call.entries} parentSpeshJitEntries={call.spesh_entries + call.jit_entries} />
                         </ErrorBoundary>
                         { loadingAllocations && <th><td colSpan={3}><span>Loading allocations...</span></td></th> }
-                        { inclusiveAllocations.length === 0 && <Button onClick={() => this.requestInclusiveAllocations()}>Load inclusive allocations</Button> }
+                        { inclusiveAllocations.length === 0 && <tr><td><Button onClick={() => this.requestInclusiveAllocations()}>Load inclusive allocations</Button></td></tr> }
                         { loadingInclusiveAllocations && <th><td colSpan={3}><span>Loading inclusive allocations...</span></td></th> }
                         { inclusiveAllocations.length !== 0 && <th><td colSpan={3}>Inclusive Allocations</td></th>}
                         <ErrorBoundary>
