@@ -2,19 +2,21 @@ import React, {Component} from 'react';
 import {Container, Row, Table, Button} from 'reactstrap';
 import $ from 'jquery';
 
-import {EntriesInfo, numberFormatter, RoutineFileInfo, RoutineNameInfo} from './RoutinePieces';
+import {EntriesInfo, numberFormatter, RoutineNameInfo} from './RoutinePieces';
 import {AllocNameAndRepr} from "./AllocationParts";
-import RoutineList from './RoutineList';
 
-export function Bytes ({ size, totalCount, extraData }) {
+export function Bytes ({ size, totalCount, extraData, kilo }) {
+    if (kilo) {
+        size = size / 1024;
+    }
     return <React.Fragment>
-        <span>{numberFormatter(size)} <small>bytes {extraData && <span><small>+ x</small></span> || null}</small></span>
+        <span>{numberFormatter(size)} <small>{kilo && "kilo"}bytes {extraData && <span><small>+ x</small></span> || null}</small></span>
         {
             totalCount > 0 &&
             <React.Fragment>
                 <br/>
                 <small>
-                <span>{numberFormatter(size * totalCount)} <small>bytes total</small></span>
+                <span>{numberFormatter(size * totalCount)} <small>{kilo && "kilo"}bytes total</small></span>
                 </small>
             </React.Fragment>
             || null

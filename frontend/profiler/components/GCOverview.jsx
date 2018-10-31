@@ -7,6 +7,7 @@ import {
 import ErrorBoundary from 'react-error-boundary';
 
 import { timeToHuman, numberFormatter } from './RoutinePieces';
+import {Bytes} from "./AllocationViewer";
 
 const memoize = a => a;
 
@@ -161,6 +162,7 @@ export default function GCOverview(props) {
     // 0 == hide major, 1 == show all, 2 == only major
     const [filterMode, setFilterMode] = useState(1);
     const [isLoading, setIsLoading]   = useState(false);
+    const [useStackedBars, setUseStackedBars] = useState(true);
 
     useEffect(() => {
         if (!isLoading && typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined") {
@@ -196,6 +198,28 @@ export default function GCOverview(props) {
                 : filterMode === 2
                     ? only_major(sourceOfData)
                     : sourceOfData;
+
+    const colorForDataKey = {
+        promoted_bytes: "#f32",
+        retained_bytes: "#fa5",
+        cleared_bytes:  "#3f3",
+    };
+
+    const tooltipTextForDataKey = {
+        promoted_bytes: "Promoted",
+        retained_bytes: "Retained",
+        cleared_bytes:  "Cleared",
+    };
+
+
+    const memoryAmountSource = useStackedBars
+        ? [{title: "Promoted, Kept, Freed", dataKeys: ["promoted_bytes", "retained_bytes", "cleared_bytes"]}]
+        : [
+            {title: "Promoted to the old generation", dataKeys: ["promoted_bytes"]},
+            {title: "Retained for another GC run", dataKeys: ["retained_bytes"]},
+            {title: "Cleared from the nursery", dataKeys: ["cleared_bytes"]},
+        ];
+
     return (
         <Container>
             <Row><Col>
@@ -231,13 +255,41 @@ export default function GCOverview(props) {
                     </BarChart>
                 </ResponsiveContainer>
                 <h2>Amounts of Data</h2>
-                <ResponsiveContainer width={"100%"} height={100}>
-                    <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
-                        <Bar dataKey={"promoted_bytes"} fill={"#f32"} stackId={"nursery_bytes"} isAnimationActive={false}/>
-                        <Bar dataKey={"retained_bytes"} fill={"#fa5"} stackId={"nursery_bytes"} isAnimationActive={false}/>
-                        <Bar dataKey={"cleared_bytes"}  fill={"#3f3"} stackId={"nursery_bytes"} isAnimationActive={false}/>
-                    </BarChart>
-                </ResponsiveContainer>
+                <Button onClick={() => setUseStackedBars(true)} size={"sm"}  disabled={useStackedBars === true}>Combined Chart</Button>
+                <Button onClick={() => setUseStackedBars(false)} size={"sm"} disabled={useStackedBars === false}>Split Charts</Button>
+                {
+                    memoryAmountSource.map(({title, dataKeys}) => (
+                        <React.Fragment>
+                        <h3>{ title }</h3>
+                        <ResponsiveContainer width={"100%"} height={100}>
+                            <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
+                                {
+                                    dataKeys.map(key => (
+                                        <Bar dataKey={key} fill={colorForDataKey[key]} stackId={"nursery_bytes"} isAnimationActive={false}/>
+                                    ))
+                                }
+                                <Tooltip content={(stuff) => {
+                                    const outer = stuff.payload;
+                                    if (typeof outer !== "undefined" && outer !== null && outer.length > 0) {
+                                        const payload = outer[0].payload;
+                                        return (
+                                            <div style={{background: "#aaa"}}>
+                                                {payload.sequence_num}:<br/>
+                                                {
+                                                    dataKeys.map(key => (
+                                                        <React.Fragment><Bytes kilo size={payload[key]}/> <small>{tooltipTextForDataKey[key]}</small><br/></React.Fragment>
+                                                    ))
+                                                }
+                                            </div>);
+                                    }
+                                }
+                                } />
+
+                            </BarChart>
+                        </ResponsiveContainer>
+                        </React.Fragment>
+                    ))
+                }
             </Col></Row>
             <Table striped>
                 <thead>
