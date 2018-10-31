@@ -263,6 +263,7 @@ export default function GCOverview(props) {
                         <h3>{ title }</h3>
                         <ResponsiveContainer width={"100%"} height={100}>
                             <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
+                                <YAxis tickFormatter={num => numberFormatter(num / 1024)}/>
                                 {
                                     dataKeys.map(key => (
                                         <Bar dataKey={key} fill={colorForDataKey[key]} stackId={"nursery_bytes"} isAnimationActive={false}/>
