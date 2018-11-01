@@ -813,7 +813,7 @@ monitor ProfilerWeb {
 
     method !gc-stats-per-sequence() {
         my $stats-per-sequence-q = $!dbh.prepare(q:to/STMT/);
-                    select
+            select
                 min(time) as min_time,
                 max(time) as max_time,
                 min(start_time) as earliest_start_time,
