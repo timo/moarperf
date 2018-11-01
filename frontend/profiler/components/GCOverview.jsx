@@ -165,9 +165,6 @@ export default function GCOverview(props) {
     const totalTime = typeof props.overview.stats_per_sequence === "undefined"
         ? 0
         : Array.from(props.overview.stats_per_sequence).filter(d => d !== null).map(d => d.max_time).reduce((a, b) => a + b, 0);
-    if (typeof props.overview.stats_per_sequence !== "undefined") {
-        ignoreNulls(props.overview.stats_per_sequence).forEach((d) => console.log(d.cleared_bytes + d.promoted_bytes + d.retained_bytes));
-    }
     // 0 == hide major, 1 == show all, 2 == only major
     const [filterMode, setFilterMode] = useState(1);
     const [isLoading, setIsLoading]   = useState(false);
