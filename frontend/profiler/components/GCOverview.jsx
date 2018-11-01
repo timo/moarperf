@@ -58,6 +58,15 @@ const makeSpans = input => {
                     });
             });
     };
+const relativize = memoize(input => input.map(line => {
+        const total = line.retained_bytes + line.promoted_bytes + line.cleared_bytes;
+        return {
+            ...line,
+            rel_retained_bytes: line.retained_bytes / total,
+            rel_promoted_bytes: line.promoted_bytes / total,
+            rel_cleared_bytes:  line.cleared_bytes  / total,
+        }
+    }));
 
 const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonClicked }) => {
     return (
@@ -162,7 +171,9 @@ export default function GCOverview(props) {
     // 0 == hide major, 1 == show all, 2 == only major
     const [filterMode, setFilterMode] = useState(1);
     const [isLoading, setIsLoading]   = useState(false);
-    const [useStackedBars, setUseStackedBars] = useState(true);
+
+    // 0 == split bars, 1 == stacked bars absolute, 2 == stacked bars relative (every row is 100% tall)
+    const [stackedBarMode, setStackedBarMode] = useState(2);
 
     useEffect(() => {
         if (!isLoading && typeof props.overview === "undefined" || typeof props.overview.stats_per_sequence === "undefined") {
@@ -192,33 +203,44 @@ export default function GCOverview(props) {
             </Row>
         </Container>)
     }
-    const sourceOfData = ignoreNulls(props.overview.stats_per_sequence);
+    const sourceOfData = relativize(ignoreNulls(props.overview.stats_per_sequence));
     const dataToUse = filterMode === 0
                 ? only_minor(sourceOfData)
                 : filterMode === 2
                     ? only_major(sourceOfData)
                     : sourceOfData;
 
+
+
     const colorForDataKey = {
         promoted_bytes: "#f32",
         retained_bytes: "#fa5",
         cleared_bytes:  "#3f3",
+
+        rel_promoted_bytes: "#f32",
+        rel_retained_bytes: "#fa5",
+        rel_cleared_bytes:  "#3f3",
     };
 
     const tooltipTextForDataKey = {
         promoted_bytes: "Promoted",
         retained_bytes: "Retained",
         cleared_bytes:  "Cleared",
+        rel_promoted_bytes: "Promoted",
+        rel_retained_bytes: "Retained",
+        rel_cleared_bytes:  "Cleared",
     };
 
-
-    const memoryAmountSource = useStackedBars
-        ? [{title: "Promoted, Kept, Freed", dataKeys: ["promoted_bytes", "retained_bytes", "cleared_bytes"]}]
-        : [
-            {title: "Promoted to the old generation", dataKeys: ["promoted_bytes"]},
-            {title: "Retained for another GC run", dataKeys: ["retained_bytes"]},
-            {title: "Cleared from the nursery", dataKeys: ["cleared_bytes"]},
-        ];
+    const memoryAmountSource =
+        [
+            [
+                {title: "Promoted to the old generation", dataKeys: ["promoted_bytes"]},
+                {title: "Retained for another GC run", dataKeys: ["retained_bytes"]},
+                {title: "Cleared from the nursery", dataKeys: ["cleared_bytes"]},
+            ],
+            [{title: "Promoted, Kept, Freed", dataKeys: ["promoted_bytes", "retained_bytes", "cleared_bytes"]}],
+            [{title: "Percentages Promoted, Kept, Freed", dataKeys: ["rel_promoted_bytes", "rel_retained_bytes", "rel_cleared_bytes"]}],
+        ][stackedBarMode];
 
     return (
         <Container>
@@ -255,15 +277,18 @@ export default function GCOverview(props) {
                     </BarChart>
                 </ResponsiveContainer>
                 <h2>Amounts of Data</h2>
-                <Button onClick={() => setUseStackedBars(true)} size={"sm"}  disabled={useStackedBars === true}>Combined Chart</Button>
-                <Button onClick={() => setUseStackedBars(false)} size={"sm"} disabled={useStackedBars === false}>Split Charts</Button>
+                <Button onClick={() => setStackedBarMode(0)} size={"sm"} disabled={stackedBarMode === 0}>Split Charts</Button>
+                <Button onClick={() => setStackedBarMode(1)} size={"sm"} disabled={stackedBarMode === 1}>Combined Chart</Button>
+                <Button onClick={() => setStackedBarMode(2)} size={"sm"} disabled={stackedBarMode === 2}>Combined Relative Amounts</Button>
                 {
                     memoryAmountSource.map(({title, dataKeys}) => (
                         <React.Fragment>
                         <h3>{ title }</h3>
                         <ResponsiveContainer width={"100%"} height={100}>
                             <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
-                                <YAxis tickFormatter={num => numberFormatter(num / 1024)}/>
+                                {
+                                    stackedBarMode !== 2 && <YAxis tickFormatter={num => numberFormatter(num / 1024)}/>
+                                }
                                 {
                                     dataKeys.map(key => (
                                         <Bar dataKey={key} fill={colorForDataKey[key]} stackId={"nursery_bytes"} isAnimationActive={false}/>
@@ -277,9 +302,15 @@ export default function GCOverview(props) {
                                             <div style={{background: "#aaa"}}>
                                                 {payload.sequence_num}:<br/>
                                                 {
-                                                    dataKeys.map(key => (
-                                                        <React.Fragment><Bytes kilo size={payload[key]}/> <small>{tooltipTextForDataKey[key]}</small><br/></React.Fragment>
-                                                    ))
+                                                    stackedBarMode === 2
+                                                        ?
+                                                            dataKeys.map(key => (
+                                                                <React.Fragment>{tooltipTextForDataKey[key]}: {numberFormatter(payload[key] * 100, 2)}<small>%</small><br/></React.Fragment>
+                                                            ))
+                                                        :
+                                                            dataKeys.map(key => (
+                                                                <React.Fragment><Bytes kilo size={payload[key]}/> <small>{tooltipTextForDataKey[key]}</small><br/></React.Fragment>
+                                                            ))
                                                 }
                                             </div>);
                                     }
