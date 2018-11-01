@@ -239,6 +239,11 @@ export default function GCOverview(props) {
             [{title: "Percentages Promoted, Kept, Freed", dataKeys: ["rel_promoted_bytes", "rel_retained_bytes", "rel_cleared_bytes"]}],
         ][stackedBarMode];
 
+    const barGraphWidth =
+        dataToUse.length < 10
+            ? (10 * dataToUse.length) + "%"
+            : "100%";
+
     return (
         <Container>
             <Row><Col>
@@ -246,7 +251,7 @@ export default function GCOverview(props) {
                 <Button onClick={() => setFilterMode(1)} size={"sm"} disabled={filterMode === 1}>Everything</Button>
                 <Button onClick={() => setFilterMode(2)} size={"sm"} disabled={filterMode === 2}>Only Major Collections</Button>
                 <h2>Time spent per GC run</h2>
-                <ResponsiveContainer width={"100%"} height={100}>
+                <ResponsiveContainer width={barGraphWidth} height={100}>
                     <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
                         <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
                         <Tooltip content={<div></div>}/>
@@ -254,7 +259,7 @@ export default function GCOverview(props) {
                 </ResponsiveContainer>
                 <div>Total Time: { timeToHuman(totalTime) }</div>
                 <h2>Time between GC runs</h2>
-                <ResponsiveContainer width={"100%"} height={100}>
+                <ResponsiveContainer width={barGraphWidth} height={100}>
                     <BarChart height={100} data={time_diffs(dataToUse)} syncId={"gcoverview"}>
                         <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
                         <Tooltip content={(stuff) => {
@@ -281,7 +286,7 @@ export default function GCOverview(props) {
                     memoryAmountSource.map(({title, dataKeys}) => (
                         <React.Fragment>
                         <h3>{ title }</h3>
-                        <ResponsiveContainer width={"100%"} height={100}>
+                        <ResponsiveContainer width={barGraphWidth} height={100}>
                             <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
                                 {
                                     stackedBarMode !== 2 && <YAxis tickFormatter={num => numberFormatter(num / 1024)}/>
