@@ -185,7 +185,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             }))
         };
 
-        this.state.children.forEach((child, idx) => {
+        this.state.children.forEach((child) => {
             $.ajax({
                 url: '/inclusive-call-allocations/' + child.id,
                 type: 'GET',
@@ -347,6 +347,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             )
         }
 
+        const upTarget = path.length > 0 ? path[path.length - 1].call_id : "/prof/callgraph/";
         const routine = routines[call.routine_id];
         return (
             <Container>
@@ -400,8 +401,11 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     </Table>
                 </Col></Row>
                 <Row><Col>
+                    <div>
+                    <LinkButton target={upTarget.toString()} icon={"arrow-left"}/>
                     <Button onClick={() => this.requestChildInclusiveAllocations() }>Show allocations for all children</Button>
-                <Table striped><tbody>
+                    </div>
+                    <Table striped><tbody>
                     {
                         children.map((child, idx) => (<React.Fragment key={"child_" + idx}>
                             <tr>
