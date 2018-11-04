@@ -72,6 +72,9 @@ export default class RoutinePaths extends Component<{routineId: *, callIdList: *
             padding: "0.3em !important",
             paddingLeft: "12px !important",
         };
+        const isHighlighted = typeof this.props.routineId === "undefined"
+            ? entry => this.props.callIdList.filter(listEntry => entry.call === listEntry).length > 0
+            : entry => entry.routine === this.props.routineId;
         function digestNode(children, node, depth = 1) {
             console.log("digesting children:", children, node);
             if (children.length > 0) {
@@ -102,7 +105,9 @@ export default class RoutinePaths extends Component<{routineId: *, callIdList: *
                         if (!self.state.minimalView) {
                             tdStyle.borderBottom = "4px solid " + childRoutine.color;
                         }
-                        row.push(<td key={key++} className={classnames({entrance: children.length > 1 })} style={{...tdStyle}}>
+                        console.log(child);
+                        console.log(isHighlighted(child));
+                        row.push(<td key={key++} className={classnames({entrance: children.length > 1, highlighted: isHighlighted(child) })} style={{...tdStyle}}>
                             <Link style={linkStyle}
                                   to={"callgraph/" + child.call}
                                   title={childRoutine.name + " - " + childRoutine.file + ":" + childRoutine.line}>
@@ -150,7 +155,19 @@ export default class RoutinePaths extends Component<{routineId: *, callIdList: *
                     border-bottom: 5px solid transparent;
 
                     border-left: 5px solid darkgrey;
-                }`}
+                }
+
+                td.highlighted {
+                     padding: 0.3rem;
+                }
+
+                td.highlighted a {
+                    padding: 0.5rem;
+                    border: 3px solid darkblue;
+                    display: inline-block;
+                    width: 100%
+                }
+                `}
                 </style>
                 { this.state.minimalView
                     ? <style>{`
