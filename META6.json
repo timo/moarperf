@@ -7,7 +7,8 @@
         "Cro::HTTP",
         "Cro::WebSocket",
         "App::MoarVM::HeapAnalyzer",
-        "Digest::SHA1::Native"
+        "Digest::SHA1::Native",
+        "DBIish"
     ],
     "provides": {
         "HeapAnalyzerWeb": "lib/HeapAnalyzerWeb.pm6",
