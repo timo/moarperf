@@ -181,6 +181,13 @@ export default class RoutinePaths extends Component<{routineId: *, callIdList: *
                             table-layout: fixed;
                             width: auto;
                         }
+                        td.highlighted a {
+                            padding: 0px;
+                            border-top: 0px;
+                            border-bottom: 0px;
+                            padding-top: 0px;
+                            padding-bottom: 0px;
+                        }
                     `}</style>
                     : ""
                 }
