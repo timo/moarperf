@@ -42,7 +42,7 @@ function AllocatingRoutineRow(props: { routine: T, allRoutines: any, metadata: a
     return <React.Fragment><tr>
         <td>
             <Button onClick={() => setIsExpanded(!isExpanded)}>
-                <i className="fas fa-folder-open"/>
+                <i className="fas fa-sitemap"/>
             </Button>
         </td>
         <td>{props.routine.sitecount}</td>
