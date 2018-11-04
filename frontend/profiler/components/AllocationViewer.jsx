@@ -1,9 +1,10 @@
-import React, {Component} from 'react';
+import React, {Component, useState} from 'react';
 import {Container, Row, Table, Button} from 'reactstrap';
 import $ from 'jquery';
 
-import {EntriesInfo, numberFormatter, RoutineNameInfo} from './RoutinePieces';
+import {EntriesInfo, LinkButton, numberFormatter, RoutineNameInfo} from './RoutinePieces';
 import {AllocNameAndRepr} from "./AllocationParts";
+import RoutinePaths from "./RoutinePaths";
 
 export function Bytes ({ size, totalCount, extraData, kilo }) {
     if (kilo) {
@@ -24,52 +25,69 @@ export function Bytes ({ size, totalCount, extraData, kilo }) {
     </React.Fragment>
 }
 
-export class AllocRoutineList extends Component {
-    static defaultProps = {};
+function AllocatingRoutineRow(props: { routine: T, allRoutines: any, metadata: any }) {
+    const [isExpanded, setIsExpanded] = useState(false);
 
-    static propTypes = {};
+    console.log(props);
 
-    state = {};
+    console.log(props.routine.callsites);
 
-    render() {
-        // const HeaderComponent = this.props.HeaderComponent;
+    const expandedParts =
+        !isExpanded
+            ? <React.Fragment/>
+            : <tr><td colSpan={6}><Container>
+                <RoutinePaths callIdList={props.routine.callsites.join(",")} allRoutines={props.metadata}/>
+            </Container></td></tr>
 
-        const routines = this.props.routines;
-        const metadata = this.props.metadata;
+    return <React.Fragment><tr>
+        <td>
+            <Button onClick={() => setIsExpanded(!isExpanded)}>
+                <i className="fas fa-folder-open"/>
+            </Button>
+        </td>
+        <td>{props.routine.sitecount}</td>
+        <RoutineNameInfo routine={props.metadata[props.routine.id]}/>
+        <EntriesInfo routine={props.routine}/>
+        <td>
+            <Bytes extraData={props.routine.alloc.has_unmanaged_data} size={props.routine.alloc.managed_size}
+                   totalCount={props.routine.allocs}/>
+        </td>
+        <td>{numberFormatter(props.routine.allocs)}</td>
+    </tr>
+        { expandedParts }
+    </React.Fragment>
+}
 
-        return (
-            <div>
-                { /*<HeaderComponent /> */ }
-                <Table striped>
-                    <thead>
-                        <tr>
-                            <th>Sites</th>
-                            <th>Name</th>
-                            <th>Entries</th>
-                            <th>Size</th>
-                            <th>Count</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {
-                        routines.map((routine) => (
-                        <tr>
-                            <td key={"sitecount"}>{routine.sitecount}</td>
-                            <RoutineNameInfo routine={metadata[routine.id]}/>
-                            <EntriesInfo routine={routine}/>
-                            <td>
-                                <Bytes extraData={routine.alloc.has_unmanaged_data} size={routine.alloc.managed_size}
-                                       totalCount={routine.allocs}/>
-                            </td>
-                            <td>{numberFormatter(routine.allocs)}</td>
-                        </tr>
-                        ))
-                    }
-                    </tbody>
-                </Table>
-            </div>
-        );
-    }
+export function AllocRoutineList(props) {
+    // const HeaderComponent = this.props.HeaderComponent;
+
+    const routines = props.routines;
+    const metadata = props.metadata;
+
+    return (
+        <div>
+            { /*<HeaderComponent /> */ }
+            <Table striped>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>Sites</th>
+                        <th>Name</th>
+                        <th>Entries</th>
+                        <th>Size</th>
+                        <th>Count</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {
+                    routines.map((routine) => (
+                        <AllocatingRoutineRow key={routine.id} routine={routine} metadata={metadata}/>
+                    ))
+                }
+                </tbody>
+            </Table>
+        </div>
+    );
 }
 
 export class AllocationType extends Component<{ onClick: () => any, alloc: any }> {
@@ -106,7 +124,12 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                 it.setState((state) => ({
                     isLoading: { ...state.isLoading, allocatingRoutines: false },
                     loadErrors: { ...state.loadErrors, allocatingRoutines: null },
-                    allocatingRoutines: result.map((routine) => ({ ...routine, alloc })),
+                    allocatingRoutines: result.map((routine) => (
+                        {
+                            ...routine,
+                            alloc,
+                            callsites: routine.callsites.split(",").map((a) => parseInt(a))
+                        })),
                 }))
             };
 

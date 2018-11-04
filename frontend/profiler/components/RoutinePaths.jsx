@@ -5,7 +5,7 @@ import { Link } from 'react-router-dom';
 import classnames from 'classnames';
 import {ROUTINE_CHILDREN_GET} from "../actions";
 
-export default class RoutinePaths extends Component<{routineId: *, allRoutines: *}> {
+export default class RoutinePaths extends Component<{routineId: *, callIdList: *, allRoutines: *}> {
     constructor(props) {
         super(props);
         this.state = {
@@ -20,7 +20,7 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
     componentDidMount() {
         this.state.isLoading = true;
         function calculateDepth(tree) {
-            var childArray;
+            let childArray;
             if (tree instanceof Array) {
                 childArray = tree;
             }
@@ -39,8 +39,11 @@ export default class RoutinePaths extends Component<{routineId: *, allRoutines: 
             }
             return max + 1;
         }
+        const url = typeof this.props.routineId === "undefined"
+            ? '/call-paths/' + this.props.callIdList
+            : '/routine-paths/' + this.props.routineId;
         $.ajax({
-            url: '/routine-paths/' + this.props.routineId,
+            url: url,
             type: 'GET',
             contentType: 'application/json',
             success: (paths) => this.setState(state => ({isLoading: false, paths: paths, pathDepth: calculateDepth(paths)})),

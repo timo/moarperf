@@ -301,7 +301,7 @@ monitor ProfilerWeb {
         %thread-nodes;
     }
 
-    method call-path(Int $call-id) {
+    multi method call-path(Int $call-id) {
         my %thread-nodes = self!thread-ids-and-root-nodes;
 
         my Junction $any-threadnode = any(%thread-nodes.keys);
@@ -331,13 +331,35 @@ monitor ProfilerWeb {
         @nodes;
     }
 
+    multi method call-path(Str $call-id) {
+        die "invalid list of call ids" unless $call-id ~~ / (<[1..9]><[0..9]>*)+ % "," /;
+        note "string of call ids: $call-id";
+        my $call-infos = $!dbh.prepare(qq:to/STMT/);
+            select
+                c.id         as call_id,
+                c.parent_id  as parent_id,
+                c.routine_id as routine_id
+
+            from calls c
+
+            where c.id in($call-id);
+            STMT
+
+        $call-infos.execute();
+        my @call-ids = $call-infos.allrows(:array-of-hash);
+        $call-infos.finish;
+
+        return self!call-ids-paths(@call-ids);
+    }
+
     method routine-paths(Int $routine-id) {
         my %thread-nodes = self!thread-ids-and-root-nodes;
 
         my $query = $!dbh.prepare(q:to/STMT/);
             select
                 c.id             as call_id,
-                c.parent_id      as parent_id
+                c.parent_id      as parent_id,
+                c.routine_id     as routine_id
 
             from calls c
 
@@ -345,18 +367,28 @@ monitor ProfilerWeb {
             STMT
         $query.execute($routine-id);
 
+        my @call-ids = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        return self!call-ids-paths(@call-ids);
+    }
+
+    method !call-ids-paths(@call-ids) {
         my %active-calls is SetHash;
         my %children-of;
         my %parent-of;
         my %routine-id;
-        for $query.allrows(:array-of-hash) {
+
+        note "getting paths for @call-ids[]";
+
+        for @call-ids {
             %children-of{.<parent_id>}.push: .<call_id>;
             %active-calls{.<parent_id>} = 1 unless %parent-of{.<parent_id>}:exists;
             %parent-of{.<call_id>} = .<parent_id>;
-            %routine-id{.<call_id>} = $routine-id;
+            %routine-id{.<call_id>} = .<routine_id>;
         }
 
-        $query.finish;
+        my %thread-nodes = self!thread-ids-and-root-nodes();
 
         my $parent-of-call-q = $!dbh.prepare(q:to/STMT/);
             select
@@ -745,7 +777,8 @@ monitor ProfilerWeb {
                 total(allocations.jit) as jit_allocs, total(allocations.spesh) as spesh_allocs, total(allocations.count) as allocs,
                 total(calls.jit_entries) as jit_entries, total(calls.spesh_entries) as spesh_entries, total(calls.entries) as entries,
 
-                count(calls.id) as sitecount
+                count(calls.id) as sitecount,
+                group_concat(calls.id, ",") as callsites
 
                 from routines
                     inner join allocations on allocations.call_id == calls.id

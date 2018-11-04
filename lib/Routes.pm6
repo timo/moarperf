@@ -112,6 +112,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "routine-paths", { $profiler.routine-paths($routine-id) };
         }
 
+        get -> 'call-paths', Str $call-id {
+            json-content "call-path", { $profiler.call-path($call-id) };
+        }
+
         get -> 'call-path', Int $call-id {
             json-content "call-path", { $profiler.call-path($call-id) };
         }
