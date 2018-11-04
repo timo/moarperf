@@ -402,7 +402,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 </Col></Row>
                 <Row><Col>
                     <div>
-                    <LinkButton target={upTarget.toString()} icon={"arrow-left"}/>
+                    <BareLinkButton target={upTarget.toString()} icon={"arrow-left"}/>{" "}
                     <Button onClick={() => this.requestChildInclusiveAllocations() }>Show allocations for all children</Button>
                     </div>
                     <Table striped><tbody>
