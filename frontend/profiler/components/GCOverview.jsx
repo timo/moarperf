@@ -82,6 +82,7 @@ const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonCli
                     }
                 </td>
                 <td>{data.participants}</td>
+                <td>{timeToHuman(data.max_time, "ms spent")}</td>
                 <td>{timeToHuman(data.earliest_start_time)}
                     {
                         typeof prevData === "undefined"
@@ -91,7 +92,6 @@ const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonCli
                             </React.Fragment>
                     }
                 </td>
-                <td>{timeToHuman(data.max_time, "ms spent")}</td>
             </tr>
             {
                 expanded[data.sequence_num] && seq_details && seq_details[data.sequence_num] ?
@@ -332,9 +332,9 @@ export default function GCOverview(props) {
                 <tr>
                     <th></th>
                     <th>GC Run</th>
-                    <th>threads</th>
-                    <th>Start Time</th>
+                    <th>Threads</th>
                     <th>Timing</th>
+                    <th>Start Time</th>
                 </tr>
                 </thead>
                 <tbody>
