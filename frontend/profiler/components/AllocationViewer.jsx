@@ -36,7 +36,7 @@ function AllocatingRoutineRow(props: { routine: T, allRoutines: any, metadata: a
         !isExpanded
             ? <React.Fragment/>
             : <tr><td colSpan={6}><Container>
-                <RoutinePaths callIdList={props.routine.callsites.join(",")} allRoutines={props.metadata}/>
+                <RoutinePaths callIdList={props.routine.callsites} allRoutines={props.metadata}/>
             </Container></td></tr>
 
     return <React.Fragment><tr>
