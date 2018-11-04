@@ -254,6 +254,7 @@ export default function GCOverview(props) {
                 <ResponsiveContainer width={barGraphWidth} height={100}>
                     <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
                         <Bar dataKey={"max_time"} fill={"#38f"} isAnimationActive={false}/>
+                        <YAxis tickFormatter={num => numberFormatter(num / 1000)}/>
                         <Tooltip content={<div></div>}/>
                     </BarChart>
                 </ResponsiveContainer>
@@ -262,6 +263,7 @@ export default function GCOverview(props) {
                 <ResponsiveContainer width={barGraphWidth} height={100}>
                     <BarChart height={100} data={time_diffs(dataToUse)} syncId={"gcoverview"}>
                         <Bar dataKey={"time_since_prev"} fill={"#f83"} isAnimationActive={false}/>
+                        <YAxis tickFormatter={num => numberFormatter(num / 1000)}/>
                         <Tooltip content={(stuff) => {
                             const outer = stuff.payload;
                             if (typeof outer !== "undefined" && outer !== null && outer.length > 0) {
