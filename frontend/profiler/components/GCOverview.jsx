@@ -348,13 +348,6 @@ export default function GCOverview(props) {
                     </ErrorBoundary>
                 </tbody>
             </Table>
-            <Table striped>
-                <thead>
-                <tr>
-                <th></th>
-                </tr>
-                </thead>
-            </Table>
         </Container>
     )
 }
