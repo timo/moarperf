@@ -177,7 +177,6 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                 }
                 else {
                     expandContent = <React.Fragment>
-                        <div>
                             <AllocRoutineList routines={ allocatingRoutines }
                                          metadata={ this.props.metadata }
                                          allRoutineChildren={ this.props.allRoutineChildren }
@@ -186,7 +185,6 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
 
                                          // columns={"expand sitecount nameInfo "}
                             />
-                        </div>
                     </React.Fragment>
                 }
             }
@@ -317,7 +315,7 @@ export default class AllocationTypeList extends Component {
                     <h2>All types allocated by this program</h2>
                 </Row>
                 <Row>
-                    <Table responsive striped>
+                    <Table striped>
                         <tr>
                             <th style={{width: "1%"}}></th>
                             <th>Name<br/><small>REPR</small></th>
