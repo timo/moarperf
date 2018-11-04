@@ -709,11 +709,11 @@ monitor ProfilerWeb {
                 t.name as name,
 
                 {
-                    alloc-props(<managed_size has_unmanaged_data repr scdesc>, :total-size)
+                    alloc-props(<managed_size has_unmanaged_data repr scdesc>)
                 }
-                total(a.jit) as jit,
-                total(a.spesh) as spesh,
-                total(a.count) as count,
+                a.jit as jit,
+                a.spesh as spesh,
+                a.count as count,
 
                 count(call_id) as sites
 
@@ -722,7 +722,6 @@ monitor ProfilerWeb {
 
                 where call_id in($calls-string)
 
-                group by a.type_id
                 order by count desc
                 ;
             STMT
