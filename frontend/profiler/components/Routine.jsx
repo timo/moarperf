@@ -23,7 +23,7 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
 
     componentDidMount() {
         if (this.props.shouldScrollTo === this.props.routine.id) {
-            this.refs.row.scrollIntoView();
+            this.refs.row.scrollIntoView({ behavior: "smooth" });
         }
     }
 
@@ -32,7 +32,7 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
             if (typeof prevProps.shouldScrollTo === "undefined"
                 || prevProps.shouldScrollTo !== this.props.shouldScrollTo) {
                 if (this.props.shouldScrollTo === this.props.routine.id) {
-                    this.refs.row.scrollIntoView();
+                    this.refs.row.scrollIntoView({ behavior: "smooth" });
                 }
             }
         }
