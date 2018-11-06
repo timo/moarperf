@@ -130,7 +130,9 @@ export function RoutineFileInfo({routine}) {
 
 export function RoutineNameInfo({routine}) {
     return (<td key={"nameInfo"}>
-        <span className="routineName"><strong>{routine.name}</strong></span><br/>
+        <span className="routineName"><strong>{routine.name}</strong></span> <Link to={"/prof/routines/" + routine.id}>
+        <i className="fas fa-external-link-square-alt"/>
+    </Link><br/>
         <small><RoutineFileInfo routine={routine} /></small>
     </td>)
 }
