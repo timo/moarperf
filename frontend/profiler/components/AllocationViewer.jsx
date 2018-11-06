@@ -316,12 +316,15 @@ export default class AllocationTypeList extends Component {
                 </Row>
                 <Row>
                     <Table striped>
+                        <thead>
                         <tr>
                             <th style={{width: "1%"}}></th>
                             <th>Name<br/><small>REPR</small></th>
                             <th>Type Properties</th>
                             <th>Count</th>
                         </tr>
+                        </thead>
+                        <tbody>
                         {
                             allAllocations.map(alloc =>
                             <AllocationType key={alloc.id} alloc={alloc}
@@ -330,6 +333,7 @@ export default class AllocationTypeList extends Component {
                             />
                             )
                         }
+                        </tbody>
                     </Table>
                 </Row>
             </Container>
