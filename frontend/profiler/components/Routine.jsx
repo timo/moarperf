@@ -21,6 +21,23 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
         }
     }
 
+    componentDidMount() {
+        if (this.props.shouldScrollTo === this.props.routine.id) {
+            this.refs.row.scrollIntoView();
+        }
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (typeof this.props.shouldScrollTo !== "undefined") {
+            if (typeof prevProps.shouldScrollTo === "undefined"
+                || prevProps.shouldScrollTo !== this.props.shouldScrollTo) {
+                if (this.props.shouldScrollTo === this.props.routine.id) {
+                    this.refs.row.scrollIntoView();
+                }
+            }
+        }
+    }
+
     requestAllocations() {
         const stateChangeForAlloc = (self, allocs) => {
             self.setState((state) => ({
@@ -40,7 +57,18 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
     }
 
     render() {
-        let {routine, metadata, columns, expanded, allRoutineChildren, onExpandButtonClicked, maxTime, parentEntries} = this.props;
+        let {
+            routine,
+            metadata,
+            columns,
+            expanded,
+            allRoutineChildren,
+            onExpandButtonClicked,
+            maxTime,
+            parentEntries,
+            shouldScrollTo,
+        } = this.props;
+
         if (routine === null) {
             return "";
         }
@@ -120,7 +148,7 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
             }
         }
         return [
-            <tr key={routine.id + "_entry"}>
+            <tr key={routine.id + "_entry"} className={shouldScrollTo === routine.id ? "scrolled" : undefined} ref={typeof shouldScrollTo !== "undefined" ? "row" : undefined}>
                 {
                     columns.map((name) => columnFunctions[name]())
                 }

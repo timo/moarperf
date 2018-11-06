@@ -37,6 +37,11 @@ export default function RoutineOverviewPage(props) {
 
     return (
       <ErrorBoundary>
+        <style>{`
+        tr.scrolled td {
+            background: #cef;
+        }
+        `}</style>
         {
             props.profilerState.routineOverview.length === 0 || props.profilerState.routines.length === 0
                 ? <Button onClick={props.onRequestRoutineOverview}>Get Routine overview</Button>
@@ -51,6 +56,8 @@ export default function RoutineOverviewPage(props) {
             onExpandButtonClicked={props.onExpandButtonClicked}
 
             defaultSort={"inclusive_time"}
+
+            shouldScrollTo={+props.match.params.id}
 
             HeaderComponent={RoutineListHeaderComponent}
         />

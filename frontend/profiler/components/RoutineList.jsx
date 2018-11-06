@@ -50,6 +50,7 @@ export default class RoutineList extends Component {
             HeaderComponent,
             defaultSort,
             filterFunction,
+            shouldScrollTo,
         } = this.props;
 
         const self = this;
@@ -105,6 +106,7 @@ export default class RoutineList extends Component {
         const myMaxTime = typeof maxTime === "undefined" ? byInclusiveTime.pop() : maxTime;
         console.log(maxTime, "is the max time.");
         const loadMoreRoutines = () => self.setState(state => ({displayAmount: state.displayAmount + 100 }));
+
         return <React.Fragment>
             <HeaderComponent
                 columns={columns}
@@ -134,6 +136,8 @@ export default class RoutineList extends Component {
                             onExpandButtonClicked={onExpandButtonClicked}
                             expanded={expanded[routine.id]}
                             allRoutineChildren={allRoutineChildren}
+
+                            shouldScrollTo={typeof shouldScrollTo === "number" ? shouldScrollTo : undefined}
                         /></ErrorBoundary>))
                 }
                 {

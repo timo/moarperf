@@ -117,11 +117,14 @@ const ProfilerApp = props => {
                 <Route exact path={props.match.url + '/'}>
                     <OverviewPage/>
                 </Route>
-                <Route path={props.match.url + "/routines"}>
+                <Route path={props.match.url + "/routines/:id?"} render={({match, location}) => (
                     <RoutineOverviewPage profilerState={props.profilerState}
                                          onRequestRoutineOverview={props.onRequestRoutineOverview}
-                                         onExpandButtonClicked={props.onRoutineExpanded}/>
-                </Route>
+                                         onExpandButtonClicked={props.onRoutineExpanded}
+
+                                         match={match}
+                            />)}
+                        />
                 <Route path={props.match.url + "/gc"}>
                     <ErrorBoundary>
                         <GCOverview
