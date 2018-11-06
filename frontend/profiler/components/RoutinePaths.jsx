@@ -109,7 +109,7 @@ export default class RoutinePaths extends Component<{routineId: *, callIdList: *
                         console.log(isHighlighted(child));
                         row.push(<td key={key++} className={classnames({entrance: children.length > 1, highlighted: isHighlighted(child) })} style={{...tdStyle}}>
                             <Link style={linkStyle}
-                                  to={"callgraph/" + child.call}
+                                  to={"/prof/callgraph/" + child.call}
                                   title={childRoutine.name + " - " + childRoutine.file + ":" + childRoutine.line}>
                                 <NameDisplay routine={child.routine} /></Link>
                         </td>);
