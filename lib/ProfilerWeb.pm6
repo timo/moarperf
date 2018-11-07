@@ -125,7 +125,9 @@ monitor ProfilerWeb {
                 first_entry_time,
                 root_node,
                 thread_id,
-                parent_thread_id
+                parent_thread_id,
+
+                max(spesh_time) as spesh_time
 
               from profile
               order by thread_id asc;
@@ -168,10 +170,30 @@ monitor ProfilerWeb {
         my %allgcstats = $query.allrows(:array-of-hash).head;
         $query.finish;
 
+        $query = $!dbh.prepare(q:to/STMT/);
+            select
+                total(entries) as entries_total,
+                total(spesh_entries) as spesh_entries_total,
+                total(jit_entries) as jit_entries_total,
+                total(inlined_entries) as inlined_entries_total,
+
+                total(deopt_one) as deopt_one_total,
+                total(deopt_all) as deopt_all_total,
+
+                total(osr) as osr_total
+
+            from calls;
+            STMT
+
+        $query.execute;
+        my %callframestats = $query.row(:hash);
+        $query.finish;
+
         return %(
                 :@threads,
                 :@gcstats,
                 :%allgcstats,
+                :%callframestats,
                 );
     }
 
