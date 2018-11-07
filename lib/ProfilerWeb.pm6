@@ -127,7 +127,7 @@ monitor ProfilerWeb {
                 thread_id,
                 parent_thread_id,
 
-                max(spesh_time) as spesh_time
+                spesh_time as spesh_time
 
               from profile
               order by thread_id asc;

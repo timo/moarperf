@@ -118,16 +118,16 @@ export default class OverviewPage extends React.Component {
                         <XAxis dataKey={"thread"}/>
                     </BarChart>
                 </div>
-                <div>
-                    This is the overview page. Please excuse the mess, it's only temporary.
-                </div>
                 <div style={{float: "clear"}}>
                     <h3>Threads</h3>
+                    <p>
+                        The profiled code ran for <strong>{ timeToHuman(this.state.overviewData.totalTime) }</strong>
+                    </p>
                     <p>
                         At the end of the program, <strong>{this.state.overviewData.threads.length} threads</strong> were active.
                     </p>
                     <p>
-                        The dynamic optimizer ("spesh") has been active for { timeToHuman(this.state.overviewData.threads[0].spesh_time) }.
+                        The dynamic optimizer ("spesh") has been active for <strong>{ timeToHuman(this.state.overviewData.threads[0].spesh_time) }</strong>.
                     </p>
                 </div>
                 <div>
