@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis, Label } from 'recharts';
 //import memoize from 'memoize-state';
 import {
-    Button, Container, Row, Col, Table
+    ButtonGroup, Button, Container, Row, Col, Table
 } from 'reactstrap';
 import ErrorBoundary from 'react-error-boundary';
 
@@ -247,9 +247,11 @@ export default function GCOverview(props) {
     return (
         <Container>
             <Row><Col>
+                <ButtonGroup>
                 <Button onClick={() => setFilterMode(0)} size={"sm"} disabled={filterMode === 0}>Only Minor Collections</Button>
                 <Button onClick={() => setFilterMode(1)} size={"sm"} disabled={filterMode === 1}>Everything</Button>
                 <Button onClick={() => setFilterMode(2)} size={"sm"} disabled={filterMode === 2}>Only Major Collections</Button>
+                </ButtonGroup>
                 <h2>Time spent per GC run</h2>
                 <ResponsiveContainer width={barGraphWidth} height={100}>
                     <BarChart height={100} data={dataToUse} syncId={"gcoverview"}>
@@ -281,9 +283,11 @@ export default function GCOverview(props) {
                     </BarChart>
                 </ResponsiveContainer>
                 <h2>Amounts of Data</h2>
+                <ButtonGroup>
                 <Button onClick={() => setStackedBarMode(0)} size={"sm"} disabled={stackedBarMode === 0}>Split Charts</Button>
                 <Button onClick={() => setStackedBarMode(1)} size={"sm"} disabled={stackedBarMode === 1}>Combined Chart</Button>
                 <Button onClick={() => setStackedBarMode(2)} size={"sm"} disabled={stackedBarMode === 2}>Combined Relative Amounts</Button>
+                </ButtonGroup>
                 {
                     memoryAmountSource.map(({title, dataKeys}) => (
                         <React.Fragment>
