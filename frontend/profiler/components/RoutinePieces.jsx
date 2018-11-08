@@ -128,8 +128,9 @@ export function RoutineFileInfo({routine}) {
     return <span className="routineFileInfo" style={{overflowWrap: "break-word"}}>{ link }</span>
 }
 
-export function RoutineNameInfo({routine}) {
+export function RoutineNameInfo({routine, searchResults}) {
     return (<td key={"nameInfo"}>
+        { typeof searchResults === "number" && searchResults > 0 && <div style={{float: "left", paddingRight: "1em"}}><i className="fas fa-hand-point-right fa-2x"/></div> }
         <span className="routineName"><strong>{routine.name}</strong></span> <Link to={"/prof/routines/" + routine.id}>
         <i className="fas fa-external-link-square-alt"/>
     </Link><br/>

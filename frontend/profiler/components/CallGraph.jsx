@@ -404,8 +404,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
 
         const isChildMatched = child => (
             searchResults !== null
-            && searchResults.hasOwnProperty(child.id.toString())
-            && searchResults[child.id.toString()].length > 0
+            && searchResults.hasOwnProperty(child.id)
+            && searchResults[child.id][0]
         );
 
         return (
@@ -460,12 +460,6 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     </Table>
                 </Col></Row>
                 <Row><Col>
-                    <style>{`
-                        .searchMatched {
-                            border-left: 4px solid black;
-                            border-right: 4px solid black;
-                        }
-                    `}</style>
                     <div style={{float: "right"}}>
                         Search: <Input style={{width: "unset", display: "inline-block"}} type="text" value={searchText} onChange={searchTextChange} />
                     </div>
@@ -476,9 +470,9 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     <Table striped><tbody>
                     {
                         children.map((child, idx) => (<React.Fragment key={"child_" + idx}>
-                            <tr className={classnames({ searchMatched: isChildMatched(child)})}>
+                            <tr>
                                 <LinkButton target={child.id.toString()} icon={"arrow-right"}/>
-                                <RoutineNameInfo routine={routines[child.routine_id]}/>
+                                <RoutineNameInfo routine={routines[child.routine_id]} searchResults={isChildMatched(child)}/>
                                 <EntriesInfo routine={child} parentEntries={call.entries}/>
                                 <InlineInfo routine={child}/>
                                 <ExclusiveInclusiveTime routine={child} maxTime={call.inclusive}/>
