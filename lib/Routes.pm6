@@ -120,8 +120,8 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "call-path", { $profiler.call-path($call-id) };
         }
 
-        get -> 'call-children', Int $call-id {
-            json-content "call-children", { $profiler.children-of-call($call-id) };
+        get -> 'call-children', Int $call-id, Str $search? {
+            json-content "call-children", { $profiler.children-of-call($call-id, $search) };
         }
 
         get -> 'gc-overview' {

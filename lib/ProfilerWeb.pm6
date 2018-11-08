@@ -55,6 +55,8 @@ monitor ProfilerWeb {
     has @.routine_overview;
     has %.all_routines;
 
+    has $!created_search_metadata;
+
     method status-messages() {
         note "status messages subscribed";
         $!status-updates.Supply
@@ -195,6 +197,94 @@ monitor ProfilerWeb {
                 :%allgcstats,
                 :%callframestats,
                 );
+    }
+
+    method !ensure-search-metadata {
+        return if $!created_search_metadata;
+        KEEP $!created_search_metadata = True;
+
+        note "building search metadata";
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select count(*) from pragma_table_info('calls')
+                where name == 'highest_child_id'
+            STMT
+
+        $query.execute;
+        my $hci_exists = $query.row(:array).head;
+        $query.finish;
+        given $hci_exists {
+            when 0 {
+                note "column is missing";
+                $query = $!dbh.prepare(q:to/STMT/);
+                    alter table calls
+                        add column highest_child_id int;
+                    STMT
+                $query.execute;
+                $query.finish;
+            }
+            when 1 {
+                note "column exists";
+                # reset all values
+                $query = $!dbh.prepare(q:to/STMT/);
+                    update calls
+                        set highest_child_id = null;
+                    STMT
+                $query.execute;
+                $query.finish;
+            }
+            default {
+                die "unexpected return value when looking for highest_child_id row in calls table: $_";
+            }
+        }
+
+        $query = $!dbh.prepare(q:to/STMT/);
+            -- find rows where no other row has the row's id as its parent_id
+            -- those shall seed the progress with initial "highest child id"
+            -- values
+            with no_children as (select id from
+                (select c.id as id, count(children.id) as childcount
+                    from calls c
+                        left join calls children on c.id == children.parent_id
+                    group by c.id)
+                where childcount == 0)
+                update calls set highest_child_id = id where calls.id in no_children;
+            STMT
+
+        note $query.execute, " rows have an initial highest_child_id";
+        $query.finish;
+
+        $query = $!dbh.prepare(q:to/STMT/);
+            -- set a row's highest_child_id to
+            update calls set highest_child_id = (
+                -- the maximum of its children's highest_child_ids
+                    select max(children.highest_child_id) as maxval
+                        from calls children
+                        where children.parent_id == calls.id
+                        group by children.parent_id
+                    )
+                -- unless it is already set. also, it must
+                    where highest_child_id is null and calls.id in (
+                        select foo.id from
+                        -- correspond to a third set of rows
+                            (select
+                                parents.id as id,
+                                count(children.highest_child_id) as nonnullcount,
+                                count(children.id) as allcount
+
+                                from calls parents
+                                    left outer join calls children on parents.id == children.parent_id
+                                group by parents.id) foo
+                    -- where every child has its highest_child_id already set.
+                    where foo.nonnullcount == foo.allcount);
+            STMT
+
+        my $resultcount;
+        repeat {
+            $resultcount = $query.execute;
+        } until $resultcount == 0;
+        $query.finish;
+
+        note "created highest_child_id rows in ", now - ENTER now;
     }
 
     method thread-data() {
@@ -563,7 +653,7 @@ monitor ProfilerWeb {
         @results;
     }
 
-    method children-of-call(Int $id) {
+    method children-of-call(Int $id, Str $search?) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
                 c.id              as id,
@@ -603,6 +693,36 @@ monitor ProfilerWeb {
         }
 
         $query.finish;
+
+        with $search {
+            self!ensure-search-metadata();
+            my $query = $!dbh.prepare(q:to/STMT/);
+                select tc.id as topcall_id, count(ic.id) as hitcount, group_concat(distinct ic.routine_id) as hit_ids
+
+                    from calls tc
+                        inner join (
+                            select c.id as id, c.parent_id as parent_id, r.id as routine_id
+
+                            from calls c
+                                inner join routines r on c.routine_id == r.id
+
+                            where c.routine_id in (select ar.id from routines ar where ar.name like ?)
+                        ) ic on ic.id >= tc.id and ic.id <= tc.highest_child_id
+
+                    where tc.parent_id == ?
+                    group by tc.id;
+                STMT
+            if $query.execute("%$search%", $id) {
+                my %searchresults;
+                for $query.allrows(:array-of-hash) {
+                    %searchresults{.<topcall_id>} = [.<hitcount>, .<hit_ids>];
+                }
+                for @results -> %r {
+                    %r<searchhits> = $_ with %searchresults{%r<id>}
+                }
+            }
+            $query.finish;
+        }
 
         @results;
     }
