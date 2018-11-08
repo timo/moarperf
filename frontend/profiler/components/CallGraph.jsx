@@ -1,7 +1,8 @@
 import React, {Component} from 'react';
-import {Breadcrumb, BreadcrumbItem, Button, Col, Container, Row, Table} from 'reactstrap';
+import {Breadcrumb, BreadcrumbItem, Button, Col, Container, Row, Table, Input} from 'reactstrap';
 import {Link, Redirect} from 'react-router-dom';
 import $ from 'jquery';
+import classnames from 'classnames';
 import ErrorBoundary from 'react-error-boundary'
 
 import {
@@ -49,6 +50,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             inclusiveAllocations: [],
             childInclusiveAllocations: {},
             threadData: null,
+            searchText: "hello",
+            searchResults: null,
         }
     }
 
@@ -86,7 +89,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 path: true,
                 children: true,
                 allocs: true
-            }
+            },
+            searchResults: null
         }));
 
         const stateChangeForPath = (self, path, currentCallId) => {
@@ -139,11 +143,50 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             success: (allocs) => stateChangeForAlloc(this, allocs, this.props.callId),
             error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { allocs: false }, allocsError: errorStatus + errorText}))}
         });
+
+        if (this.state.searchText.length > 1) {
+            console.log("requestPathAndChildren will requestSearch");
+            this.requestSearch(this.state.searchText);
+        }
+        else if (this.state.searchResults !== null && this.state.searchResults.length > 0) {
+            console.log("requestPathAndChildren will reset search results");
+            this.setState(() => { searchResults: null })
+        }
+    }
+
+    requestSearch(searchText) {
+        console.log("requestSearch:", searchText);
+        const stateChangeForSearch = (self, searchResults, currentCallId, currentSearchText) => {
+            console.log("stateChangeForSearch:", currentSearchText);
+            if (currentCallId !== self.props.callId)
+                return;
+            if (currentSearchText !== self.state.searchText)
+                return;
+
+            self.setState((state) => ({
+                searchResults: searchResults
+            }));
+        }
+
+        $.ajax({
+            url: '/call-children/' + this.props.callId + "/search/" + encodeURIComponent(searchText),
+            type: 'GET',
+            contentType: 'application/json',
+            success: (searchResults) => stateChangeForSearch(this, searchResults, this.props.callId, searchText),
+            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { allocs: false }, allocsError: errorStatus + errorText}))}
+        });
+    }
+
+    onSearchTextChanged(searchText) {
+        console.log("onSearchTextChanged:", searchText);
+        this.setState(() => ({ searchText: searchText }));
+        this.requestSearch(searchText);
     }
 
     requestInclusiveAllocations() {
         this.setState((state) => ({
             isLoading: {
+                ...state.isLoading,
                 incAllocs: true
             }
         }));
@@ -151,7 +194,10 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         const stateChangeForIncAllocs = (self, allocs) => {
             self.setState((state) => ({
                 inclusiveAllocations: allocs,
-                isLoading: { incAllocs: false }
+                isLoading: {
+                    ...state.isLoading,
+                    incAllocs: false
+                }
             }))
         }
 
@@ -227,6 +273,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     inclusiveAllocations: [],
                     childInclusiveAllocations: [],
                     threadData: null,
+                    searchResults: null,
                 }));
 
                 this.requestThreadData();
@@ -275,6 +322,8 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             inclusiveAllocations,
             childInclusiveAllocations,
             threadData,
+            searchText,
+            searchResults,
         } = this.state;
 
 
@@ -347,8 +396,18 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             )
         }
 
+        const self = this;
+        const searchTextChange = e => self.onSearchTextChanged(e.target.value);
+
         const upTarget = path.length > 0 ? path[path.length - 1].call_id : "/prof/callgraph/";
         const routine = routines[call.routine_id];
+
+        const isChildMatched = child => (
+            searchResults !== null
+            && searchResults.hasOwnProperty(child.id.toString())
+            && searchResults[child.id.toString()].length > 0
+        );
+
         return (
             <Container>
                 <Row>
@@ -401,6 +460,15 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     </Table>
                 </Col></Row>
                 <Row><Col>
+                    <style>{`
+                        .searchMatched {
+                            border-left: 4px solid black;
+                            border-right: 4px solid black;
+                        }
+                    `}</style>
+                    <div style={{float: "right"}}>
+                        Search: <Input style={{width: "unset", display: "inline-block"}} type="text" value={searchText} onChange={searchTextChange} />
+                    </div>
                     <div>
                     <BareLinkButton target={upTarget.toString()} icon={"arrow-left"}/>{" "}
                     <Button onClick={() => this.requestChildInclusiveAllocations() }>Show allocations for all children</Button>
@@ -408,7 +476,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                     <Table striped><tbody>
                     {
                         children.map((child, idx) => (<React.Fragment key={"child_" + idx}>
-                            <tr>
+                            <tr className={classnames({ searchMatched: isChildMatched(child)})}>
                                 <LinkButton target={child.id.toString()} icon={"arrow-right"}/>
                                 <RoutineNameInfo routine={routines[child.routine_id]}/>
                                 <EntriesInfo routine={child} parentEntries={call.entries}/>

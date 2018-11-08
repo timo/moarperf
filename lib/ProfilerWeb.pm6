@@ -694,10 +694,13 @@ monitor ProfilerWeb {
 
         $query.finish;
 
-        with $search {
-            self!ensure-search-metadata();
-            my $query = $!dbh.prepare(q:to/STMT/);
-                select tc.id as topcall_id, count(ic.id) as hitcount, group_concat(distinct ic.routine_id) as hit_ids
+        @results;
+    }
+
+    method search-call-children(Int $id, Str $search) {
+        self!ensure-search-metadata();
+        my $query = $!dbh.prepare(q:to/STMT/);
+                        select tc.id as topcall_id, count(ic.id) as hitcount, group_concat(distinct ic.routine_id) as hit_ids
 
                     from calls tc
                         inner join (
@@ -712,19 +715,14 @@ monitor ProfilerWeb {
                     where tc.parent_id == ?
                     group by tc.id;
                 STMT
-            if $query.execute("%$search%", $id) {
-                my %searchresults;
-                for $query.allrows(:array-of-hash) {
-                    %searchresults{.<topcall_id>} = [.<hitcount>, .<hit_ids>];
-                }
-                for @results -> %r {
-                    %r<searchhits> = $_ with %searchresults{%r<id>}
-                }
+        my %searchresults;
+        if $query.execute("%$search%", $id) {
+            for $query.allrows(:array-of-hash) {
+                %searchresults{.<topcall_id>} = [.<hitcount>, .<hit_ids>];
             }
-            $query.finish;
         }
-
-        @results;
+        $query.finish;
+        %searchresults;
     }
 
     sub alloc-props(*@props, Bool :$total-size) {
