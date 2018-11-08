@@ -178,9 +178,13 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
     }
 
     onSearchTextChanged(searchText) {
-        console.log("onSearchTextChanged:", searchText);
-        this.setState(() => ({ searchText: searchText }));
-        this.requestSearch(searchText);
+        if (searchText.length == 0) {
+            this.setState(() => ({ searchText: "", searchResults: null }));
+        }
+        else {
+            this.setState(() => ({searchText: searchText}));
+            this.requestSearch(searchText);
+        }
     }
 
     requestInclusiveAllocations() {
