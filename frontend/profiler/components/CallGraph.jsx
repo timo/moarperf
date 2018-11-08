@@ -50,7 +50,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             inclusiveAllocations: [],
             childInclusiveAllocations: {},
             threadData: null,
-            searchText: "hello",
+            searchText: "",
             searchResults: null,
         }
     }
