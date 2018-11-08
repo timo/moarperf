@@ -178,7 +178,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
     }
 
     onSearchTextChanged(searchText) {
-        if (searchText.length == 0) {
+        if (searchText.length === 0) {
             this.setState(() => ({ searchText: "", searchResults: null }));
         }
         else {
