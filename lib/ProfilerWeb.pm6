@@ -238,6 +238,22 @@ monitor ProfilerWeb {
         }
 
         $query = $!dbh.prepare(q:to/STMT/);
+            create index if not exists parent_id_index on calls(parent_id);
+            STMT
+        $query.execute;
+        $query.finish;
+
+        $query = $!dbh.prepare(q:to/STMT/);
+            select count(*) from calls;
+            STMT
+
+        $query.execute;
+        my $total-calls = $query.row(:array).head;
+        $query.finish;
+
+        my $calls-done;
+
+        $query = $!dbh.prepare(q:to/STMT/);
             -- find rows where no other row has the row's id as its parent_id
             -- those shall seed the progress with initial "highest child id"
             -- values
@@ -250,7 +266,18 @@ monitor ProfilerWeb {
                 update calls set highest_child_id = id where calls.id in no_children;
             STMT
 
-        note $query.execute, " rows have an initial highest_child_id";
+        note ($calls-done = $query.execute), " rows have an initial highest_child_id";
+        $query.finish;
+
+        $query = $!dbh.prepare(q:to/STMT/);
+            select root_node from profile
+                where root_node is not null
+                order by root_node asc
+            STMT
+
+        $query.execute;
+        my @root-segments = flat $query.allrows()>>.[0], $total-calls;
+        dd @root-segments;
         $query.finish;
 
         $query = $!dbh.prepare(q:to/STMT/);
@@ -259,7 +286,7 @@ monitor ProfilerWeb {
                 -- the maximum of its children's highest_child_ids
                     select max(children.highest_child_id) as maxval
                         from calls children
-                        where children.parent_id == calls.id
+                        where children.id >= ?1 and children.id <= ?2 and children.parent_id == calls.id
                         group by children.parent_id
                     )
                 -- unless it is already set. also, it must
@@ -273,15 +300,25 @@ monitor ProfilerWeb {
 
                                 from calls parents
                                     left outer join calls children on parents.id == children.parent_id
+                                where children.id >= ?1 and children.id <= ?2
                                 group by parents.id) foo
                     -- where every child has its highest_child_id already set.
                     where foo.nonnullcount == foo.allcount);
             STMT
 
-        my $resultcount;
-        repeat {
-            $resultcount = $query.execute;
-        } until $resultcount == 0;
+        note "there are $total-calls calls in total";
+
+        my int $resultcount;
+        my int $depth = 0;
+        my $starttime = now;
+        for @root-segments.rotor(2 => -1) -> ($low, $high) {
+            note "working on segment $($++) from $low to $high";
+            repeat {
+                $resultcount = $query.execute($low, $high);
+                $calls-done += $resultcount;
+                note (now - $starttime).fmt("%5f"), " $calls-done / $total-calls (last touched $resultcount rows" if ++$ %% 5;
+            } until $resultcount == 0;
+        }
         $query.finish;
 
         note "created highest_child_id rows in ", now - ENTER now;
