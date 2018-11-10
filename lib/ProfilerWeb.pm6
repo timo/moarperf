@@ -224,13 +224,8 @@ monitor ProfilerWeb {
             }
             when 1 {
                 note "column exists";
-                # reset all values
-                $query = $!dbh.prepare(q:to/STMT/);
-                    update calls
-                        set highest_child_id = null;
-                    STMT
-                $query.execute;
-                $query.finish;
+                # TODO maybe check integrity?
+                return;
             }
             default {
                 die "unexpected return value when looking for highest_child_id row in calls table: $_";
@@ -690,7 +685,7 @@ monitor ProfilerWeb {
         @results;
     }
 
-    method children-of-call(Int $id, Str $search?) {
+    method children-of-call(Int $id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
                 c.id              as id,
