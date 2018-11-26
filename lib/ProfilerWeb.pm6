@@ -970,40 +970,46 @@ monitor ProfilerWeb {
         $query.allrows(:array-of-hash).eager;
     }
 
-    method data-for-flamegraph(Int $thread-id) {
-        my $thread-q = $!dbh.prepare(q:to/STMT/);
-            select
-                root_node,
-                total_time
-            from profile
-            where thread_id = ?
-        STMT
-
-        $thread-q.execute($thread-id);
-        my ($call-id, $total-time) = $thread-q.row;
-        $thread-q.finish;
-
-        sub children-with-width-of(Int $call-id, $parent-total, $global-width = 1e0) {
-            my $query = $!dbh.prepare(q:to/STMT/);
+    method data-for-flamegraph(Int $call-id) {
+        my $query = $!dbh.prepare(q:to/STMT/);
                 select
                     c.id as id,
                     c.inclusive_time as inclusive,
+                    c.exclusive_time as exclusive,
                     c.routine_id     as routine_id
 
                 from calls c
 
-                where c.parent_id = ?
+                where c.parent_id = ?001 or c.id = ?001
 
-                order by calls.id asc
+                order by c.id asc
                 ;
             STMT
 
-            [
-                $call-id, $parent-total
-            ]
+        my $total-inclusive-time;
+
+        sub children-of(Int $call-id, $depth = 0) {
+            $query.execute($call-id);
+
+            my @results = $query.allrows(:array-of-hash);
+            my $parent = @results.shift;
+
+            my @return = [
+                do for @results {
+                    children-of(.<id>.Int, $depth + 1)
+                }
+            ];
+
+            %(
+                call_id => $parent.<id>,
+                routine_id => $parent.<routine_id>,
+                value => $parent.<inclusive>,
+                children => @return
+            );
         }
 
-
+        LEAVE $query.finish;
+        children-of($call-id);
     }
 
     sub val-from-query($query, $field) {

@@ -211,6 +211,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             }
         }
 
+        get -> 'flamegraph-for', Int $call-id {
+            json-content "flamegraph-for", { $profiler.data-for-flamegraph($call-id) }
+        }
+
         # get -> 'latest-tips' {
         #     web-socket -> $incoming {
         #         supply whenever $tipsy.latest-tips -> $tip {
