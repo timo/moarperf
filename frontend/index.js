@@ -115,7 +115,7 @@ const ProfilerApp = props => {
             </Nav>
             <Switch>
                 <Route exact path={props.match.url + '/'}>
-                    <OverviewPage/>
+                    <OverviewPage allRoutines={props.profilerState.routines}/>
                 </Route>
                 <Route path={props.match.url + "/routines/:id?"} render={({match, location}) => (
                     <RoutineOverviewPage profilerState={props.profilerState}

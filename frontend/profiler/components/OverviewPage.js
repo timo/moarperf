@@ -1,6 +1,8 @@
 import $ from "jquery";
 import React from "react";
 
+import {FlameGraph} from 'react-flame-graph';
+
 import { Table, Progress } from 'reactstrap';
 
 import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis, Label } from 'recharts';
@@ -25,9 +27,11 @@ export default class OverviewPage extends React.Component {
         super(props);
         this.state = {
             isLoading: {
-                overviewData: false
+                overviewData: false,
+                flameGraph: false,
             },
             overviewData: null,
+            flameGraph: null,
             error: null,
         }
     }
@@ -37,7 +41,8 @@ export default class OverviewPage extends React.Component {
         this.setState((state) => ({
             isLoading: {
                 ...state.isLoading,
-                overviewData: true
+                overviewData: true,
+                flameGraph: true,
             }
         }));
 
@@ -75,6 +80,39 @@ export default class OverviewPage extends React.Component {
                     }))
             }
         });
+
+        const stateChangeForFlameGraph = (self, flamegraph) => {
+            function recurseLookup(node) {
+                return ({
+                    ...node,
+                    name: self.props.allRoutines[node.routine_id].name,
+                    children: node.children.map(recurseLookup)
+                });
+            }
+            if (self.props.allRoutines.length === 0) {
+                this.onRequestRoutineOverview();
+            } else {
+                self.setState((state) => (
+                    {
+                        isLoading: {...state.isLoading, flameGraph: false},
+                        flamegraph: recurseLookup(flamegraph)
+                    }));
+            }
+        };
+
+        $.ajax({
+            url: '/flamegraph-for/0',
+            type: 'GET',
+            contentType: 'application/json',
+            success: (flamegraph) => stateChangeForFlameGraph(this, flamegraph),
+            error: (xhr, errorStatus, errorText) => {
+                this.setState(state => (
+                    {
+                        isLoading: {...state.isLoading, flameGraph: false},
+                        error: errorStatus + errorText
+                    }))
+            }
+        });
     }
 
     componentDidMount() {
@@ -107,6 +145,12 @@ export default class OverviewPage extends React.Component {
         const speshcount = callframestats.spesh_entries_total;
         const jitcount = callframestats.jit_entries_total;
         const interpcount = callframestats.entries_total - (jitcount + speshcount);
+
+        let flamegraph_fragment = <React.Fragment></React.Fragment>;
+
+        if (this.state.flamegraph !== null && typeof this.state.flamegraph !== "undefined") {
+            flamegraph_fragment = <FlameGraph data={this.state.flamegraph} width={500} height={700}/>
+        }
 
         return (
             <div>
@@ -209,6 +253,7 @@ export default class OverviewPage extends React.Component {
                         During profilation, code in hot loops was <strong>on-stack-replaced (OSR'd) { numberFormatter(callframestats.osr_total) } times</strong>.
                     </p>
                 </div>
+                { flamegraph_fragment }
             </div>
         );
     }
