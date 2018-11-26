@@ -789,6 +789,7 @@ monitor ProfilerWeb {
 
                 where call_id = ?
 
+                group by a.type_id
                 order by count asc
                 ;
             STMT
