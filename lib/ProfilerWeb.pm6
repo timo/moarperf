@@ -583,38 +583,6 @@ monitor ProfilerWeb {
         @result-tree;
     }
 
-    method recursive-children-of-call(Int $call-id) {
-        sub with-children-of-multiple(@call, &code) {
-            my $call-list = @call.join(",");
-            my $query = $!dbh.prepare(qq:to/STMT/);
-                select
-                    id, parent_id
-
-                from calls
-                where
-                    parent_id in($call-list)
-                STMT
-
-            $query.execute();
-            code($_) for $query.allrows(:array-of-hash);
-            $query.finish;
-        }
-
-        my @looking-for = $call-id;
-        my %children;
-
-        while @looking-for {
-            my @old-looking-for = @looking-for;
-            @looking-for = Empty;
-            with-children-of-multiple @old-looking-for, {
-                %children{.<parent_id>}.push: .<id>;
-                @looking-for.push: .<id>;
-            }
-        }
-
-        %children;
-    }
-
     method callers-of-routine($routine-id) {
         my $query = $!dbh.prepare(q:to/STMT/);
             select
@@ -871,10 +839,6 @@ monitor ProfilerWeb {
     }
 
     method call-allocations-inclusive(Int $call) {
-        my @callnodes = flat self.recursive-children-of-call($call).values>>.Slip, $call.Slip;
-
-        my $calls-string = @callnodes.join(",");
-
         my $qstring = qq:to/STMT/;
             select
                 a.type_id as type_id,
@@ -883,24 +847,26 @@ monitor ProfilerWeb {
                 {
                     alloc-props(<managed_size has_unmanaged_data repr scdesc>)
                 }
-                a.jit as jit,
-                a.spesh as spesh,
-                a.count as count,
+                total(a.jit) as jit,
+                total(a.spesh) as spesh,
+                total(a.count) as count,
 
                 count(call_id) as sites
 
                 from allocations a
                     inner join types t on a.type_id = t.id
+                    inner join calls on a.call_id between calls.id + 1 and calls.highest_child_id
 
-                where call_id in($calls-string)
+                where calls.id == ?
 
+                group by a.type_id
                 order by count desc
                 ;
             STMT
 
         my $query = $!dbh.prepare($qstring);
 
-        $query.execute();
+        $query.execute($call);
         my @q-results = $query.allrows(:array-of-hash);
         $query.finish;
 
