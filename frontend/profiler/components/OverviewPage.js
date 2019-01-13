@@ -1,12 +1,11 @@
 import $ from "jquery";
 import React from "react";
 
-import {FlameGraph} from 'react-flame-graph';
+import {Progress, Table} from 'reactstrap';
 
-import { Table, Progress } from 'reactstrap';
-
-import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis, Label } from 'recharts';
-import { numberFormatter, timeToHuman } from "./RoutinePieces";
+import {Bar, BarChart, XAxis, YAxis} from 'recharts';
+import {LinkButton, numberFormatter, RoutineNameInfo, timeToHuman} from "./RoutinePieces";
+import {AutoSizedFlameGraph} from "./FlameGraph";
 
 function FrameCountRow(props: { value: number, entries_total: number, frametypename: string, color: string }) {
     return <tr>
@@ -22,6 +21,19 @@ function FrameCountRow(props: { value: number, entries_total: number, frametypen
     </tr>;
 }
 
+function FlameGraphTitleBar({ allRoutines, call }) {
+    return (
+        <table>
+            <tbody>
+                <tr>
+                    <LinkButton target={"/prof/callgraph/" + call.id.toString()} icon={"arrow-right"}/>
+                    <RoutineNameInfo routine={allRoutines[call.routine_id]}/>
+                </tr>
+            </tbody>
+        </table>
+    )
+}
+
 export default class OverviewPage extends React.Component {
     constructor(props) {
         super(props);
@@ -29,10 +41,16 @@ export default class OverviewPage extends React.Component {
             isLoading: {
                 overviewData: false,
                 flameGraph: false,
+                callInfo: false,
             },
             overviewData: null,
             flameGraph: null,
+            flameGraphDepth: null,
+            flameGraphThread: 0,
+            flameGraphNodeSelected: null,
+            flameGraphCallInfo: null,
             error: null,
+            reactToRoutineOverview: null,
         }
     }
 
@@ -81,21 +99,51 @@ export default class OverviewPage extends React.Component {
             }
         });
 
-        const stateChangeForFlameGraph = (self, flamegraph) => {
-            function recurseLookup(node) {
+        const stateChangeForFlameGraph = (self, data) => {
+            let {
+                node : flamegraph,
+                incomplete
+            } = data;
+            console.log("data:", data);
+            console.log(flamegraph, incomplete);
+            var depth = 1;
+            function recurseLookup(node, curDepth) {
+                if (curDepth > depth) {
+                    depth = curDepth;
+                }
+                if (node.hasOwnProperty('incomplete')) {
+                    return ({
+                        ...node,
+                        name: self.props.allRoutines[node.rid].name,
+                        tooltip: node.cid + ": " + self.props.allRoutines[node.rid].name,
+                        children: node.incomplete ? [{
+                            name: "[more]",
+                            tooltip: node.cid + " has more children...",
+                            routine_id: node.rid,
+                            value: node.value,
+                            backgroundColor: "#999",
+                            color: "#fff",
+                        }] : [],
+                        incomplete: node.incomplete
+                    });
+                }
                 return ({
                     ...node,
-                    name: self.props.allRoutines[node.routine_id].name,
-                    children: node.children.map(recurseLookup)
+                    tooltip: node.cid + ": " + self.props.allRoutines[node.rid].name,
+                    name: self.props.allRoutines[node.rid].name,
+                    children: node.children.map(recurseLookup, curDepth + 1)
                 });
             }
             if (self.props.allRoutines.length === 0) {
-                this.onRequestRoutineOverview();
+                this.props.onRequestRoutineOverview();
+                this.state.reactToRoutineOverview = stateChangeForFlameGraph.bind(this, self, data);
             } else {
                 self.setState((state) => (
                     {
                         isLoading: {...state.isLoading, flameGraph: false},
-                        flamegraph: recurseLookup(flamegraph)
+                        flameGraph: recurseLookup(flamegraph, 1),
+                        flameGraphDepth: depth,
+                        reactToRoutineOverview: null,
                     }));
             }
         };
@@ -117,6 +165,48 @@ export default class OverviewPage extends React.Component {
 
     componentDidMount() {
         this.requestOverviewData();
+    }
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.allRoutines.length !== prevProps.allRoutines.length) {
+            if (prevState.reactToRoutineOverview !== null) {
+                prevState.reactToRoutineOverview()
+            }
+        }
+    }
+
+    requestCallInfo(callId : integer) {
+        this.setState(state => ({
+            isLoading: { ...state.isLoading, callInfo: true },
+            flameGraphNodeSelected: callId,
+            flameGraphCallInfo: null,
+        }));
+
+        const stateChangeForChildren = (self, children, currentCallId) => {
+            if (currentCallId !== self.state.flameGraphNodeSelected)
+                return;
+            const childs = Array.from(children);
+            const thisCall = childs.shift();
+            self.setState((state) => ({
+                isLoading: { ...state.isLoading, callInfo: false },
+                flameGraphCallInfo: thisCall
+            }));
+        }
+
+        $.ajax({
+            url: '/call-children/' + callId,
+            type: 'GET',
+            contentType: 'application/json',
+            success: (children) => stateChangeForChildren(this, children, callId),
+            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { ...state.isLoading, callId: false }, error: errorStatus + errorText}))}
+        });
+    }
+
+    reactFlamegraphSelection(node, uid) {
+        const ttip = node.tooltip;
+        const cidstr = ttip.split(": ")[0];
+        const callId = parseInt(cidstr);
+        this.requestCallInfo(callId);
     }
 
     render() {
@@ -146,10 +236,20 @@ export default class OverviewPage extends React.Component {
         const jitcount = callframestats.jit_entries_total;
         const interpcount = callframestats.entries_total - (jitcount + speshcount);
 
-        let flamegraph_fragment = <React.Fragment></React.Fragment>;
+        let flamegraph_fragment = <React.Fragment/>;
 
-        if (this.state.flamegraph !== null && typeof this.state.flamegraph !== "undefined") {
-            flamegraph_fragment = <FlameGraph data={this.state.flamegraph} width={500} height={700}/>
+        if (this.state.flameGraph !== null && typeof this.state.flameGraph !== "undefined") {
+            const infoFragment = this.state.flameGraphCallInfo === null
+                ? <div>Loading...</div>
+                : <FlameGraphTitleBar call={this.state.flameGraphCallInfo} allRoutines={this.props.allRoutines} />;
+            flamegraph_fragment =
+                <React.Fragment>
+                    {infoFragment}
+                    <AutoSizedFlameGraph data={this.state.flameGraph} height={5 + 20 * this.state.flameGraphDepth} onChange={(node, uid) => this.reactFlamegraphSelection(node, uid)}/>
+                </React.Fragment>;
+        }
+        else if (this.state.isLoading.flameGraph) {
+            flamegraph_fragment = <div style={{textAlign: "center", paddingTop: "100px", height: "300px"}}>Loading flame graph...</div>
         }
 
         return (

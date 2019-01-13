@@ -115,7 +115,9 @@ const ProfilerApp = props => {
             </Nav>
             <Switch>
                 <Route exact path={props.match.url + '/'}>
-                    <OverviewPage allRoutines={props.profilerState.routines}/>
+                    <OverviewPage allRoutines={props.profilerState.routines}
+                                  onRequestRoutineOverview={props.onRequestRoutineOverview}
+                    />
                 </Route>
                 <Route path={props.match.url + "/routines/:id?"} render={({match, location}) => (
                     <RoutineOverviewPage profilerState={props.profilerState}
@@ -153,7 +155,9 @@ const ProfilerApp = props => {
                     </ErrorBoundary>
                 )}/>
                 <Route exact path={props.match.url}>
-                    <OverviewPage/>
+                    <OverviewPage allRoutines={props.profilerState.routines}
+                                  onRequestRoutineOverview={props.onRequestRoutineOverview}
+                    />
                 </Route>
                 <Route>
                     <div>oh no.</div>

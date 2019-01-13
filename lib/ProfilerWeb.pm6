@@ -953,7 +953,7 @@ monitor ProfilerWeb {
                 ;
             STMT
 
-        my $total-inclusive-time;
+        my @incomplete;
 
         sub children-of(Int $call-id, $depth = 0) {
             $query.execute($call-id);
@@ -961,22 +961,38 @@ monitor ProfilerWeb {
             my @results = $query.allrows(:array-of-hash);
             my $parent = @results.shift;
 
-            my @return = [
-                do for @results {
-                    children-of(.<id>.Int, $depth + 1)
-                }
-            ];
+            if $depth < $maxdepth {
+                my @return = [
+                    do for @results {
+                        children-of(.<id>.Int, $depth + 1)
+                    }
+                ];
 
-            %(
-                call_id => $parent.<id>,
-                routine_id => $parent.<routine_id>,
-                value => $parent.<inclusive>,
-                children => @return
-            );
+                %(
+                    cid => $parent.<id>,
+                    rid => $parent.<routine_id>,
+                    value => $parent.<inclusive>,
+                    children => @return
+                );
+            }
+            else {
+                @incomplete.push: $parent.<id> if @results != 0;
+
+                %(
+                    cid => $parent.<id>,
+                    rid => $parent.<routine_id>,
+                    value => $parent.<inclusive>,
+                    incomplete => @results != 0,
+                );
+            }
         }
 
         LEAVE $query.finish;
-        children-of($call-id);
+        my $node := children-of($call-id);
+        return %(
+            :$node,
+            :@incomplete
+        );
     }
 
     sub val-from-query($query, $field) {
