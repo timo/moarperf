@@ -940,7 +940,7 @@ class ProfilerWeb {
         $query.allrows(:array-of-hash).eager;
     }
 
-    method data-for-flamegraph(Int $call-id) {
+    method data-for-flamegraph(Int $call-id, Int $maxdepth = 15) {
         my $query = $!dbh.prepare(q:to/STMT/);
                 select
                     c.id as id,
