@@ -665,6 +665,7 @@ class ProfilerWeb {
                 c.inlined_entries as inlined_entries,
                 c.spesh_entries   as spesh_entries,
                 c.jit_entries     as jit_entries,
+                c.highest_child_id as highest_child_id,
 
                 c.routine_id      as routine_id
 
