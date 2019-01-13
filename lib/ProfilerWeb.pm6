@@ -845,6 +845,8 @@ class ProfilerWeb {
             select
                 a.type_id as type_id,
                 t.name as name,
+                
+                group_concat(a.call_id) as call_ids,
 
                 {
                     alloc-props(<managed_size has_unmanaged_data repr scdesc>)
@@ -857,7 +859,7 @@ class ProfilerWeb {
 
                 from allocations a
                     inner join types t on a.type_id = t.id
-                    inner join calls on a.call_id between calls.id + 1 and calls.highest_child_id
+                    inner join calls on a.call_id between calls.id and calls.highest_child_id
 
                 where calls.id == ?
 
