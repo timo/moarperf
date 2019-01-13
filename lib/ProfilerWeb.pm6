@@ -1,4 +1,4 @@
-use OO::Monitors;
+#use OO::Monitors;
 use DBIish;
 use Digest::SHA1::Native;
 
@@ -46,7 +46,7 @@ sub concise-file($file is copy) {
 }
 
 
-monitor ProfilerWeb {
+class ProfilerWeb {
     has $.dbh;
     has $.filename;
 
