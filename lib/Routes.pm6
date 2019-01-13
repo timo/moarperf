@@ -6,7 +6,7 @@ use ProfilerWeb;
 use CodeRunner;
 
 sub json-content($route, &code) {
-    say "json content";
+    say "json content: $route";
     my $start = now;
     my $result = code();
     note "$route in { now - $start }";
