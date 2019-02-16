@@ -455,9 +455,9 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                         <tr>
                             <td>Specializer Info</td>
                             <td>
-                                { call.osr && <span>OSR'd {call.osr} times</span> }
-                                { call.deopt_one && <span>Partially Deopted {call.deopt_one} times</span> }
-                                { call.deopt_all && <span>Fully Deopted {call.deopt_all} times</span> }
+                                { !!call.osr && <span>OSR'd {call.osr} times</span> } {" "}
+                                { !!call.deopt_one && <span>Partially Deopted {call.deopt_one} times</span> }  {" "}
+                                { !!call.deopt_all && <span>Fully Deopted {call.deopt_all} times</span> }  {" "}
                             </td>
                         </tr>
                         </tbody>
