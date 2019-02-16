@@ -5,7 +5,7 @@ import {Progress, Table} from 'reactstrap';
 
 import {Bar, BarChart, XAxis, YAxis} from 'recharts';
 import {LinkButton, numberFormatter, RoutineNameInfo, timeToHuman} from "./RoutinePieces";
-import {AutoSizedFlameGraph} from "./FlameGraph";
+import {AutoSizedFlameGraph, postprocessFlameGraphData} from "./FlameGraph";
 
 function FrameCountRow(props: { value: number, entries_total: number, frametypename: string, color: string }) {
     return <tr>
@@ -22,16 +22,30 @@ function FrameCountRow(props: { value: number, entries_total: number, frametypen
 }
 
 function FlameGraphTitleBar({ allRoutines, call }) {
-    return (
-        <table>
-            <tbody>
+    if (call !== null) {
+        return (
+            <table style={{height: "3em"}}>
+                <tbody>
                 <tr>
                     <LinkButton target={"/prof/callgraph/" + call.id.toString()} icon={"arrow-right"}/>
                     <RoutineNameInfo routine={allRoutines[call.routine_id]}/>
                 </tr>
-            </tbody>
-        </table>
-    )
+                </tbody>
+            </table>
+        )
+    }
+    else {
+        return (
+            <table style={{height: "3em"}}>
+                <tbody>
+                <tr>
+                    <LinkButton disabled icon={"arrow-right"}/>
+                    <td>Click a node to select & zoom</td>
+                </tr>
+                </tbody>
+            </table>
+        )
+    }
 }
 
 export default class OverviewPage extends React.Component {
@@ -46,7 +60,6 @@ export default class OverviewPage extends React.Component {
             overviewData: null,
             flameGraph: null,
             flameGraphDepth: null,
-            flameGraphThread: 0,
             flameGraphNodeSelected: null,
             flameGraphCallInfo: null,
             error: null,
@@ -106,34 +119,7 @@ export default class OverviewPage extends React.Component {
             } = data;
             console.log("data:", data);
             console.log(flamegraph, incomplete);
-            var depth = 1;
-            function recurseLookup(node, curDepth) {
-                if (curDepth > depth) {
-                    depth = curDepth;
-                }
-                if (node.hasOwnProperty('incomplete')) {
-                    return ({
-                        ...node,
-                        name: self.props.allRoutines[node.rid].name,
-                        tooltip: node.cid + ": " + self.props.allRoutines[node.rid].name,
-                        children: node.incomplete ? [{
-                            name: "[more]",
-                            tooltip: node.cid + " has more children...",
-                            routine_id: node.rid,
-                            value: node.value,
-                            backgroundColor: "#999",
-                            color: "#fff",
-                        }] : [],
-                        incomplete: node.incomplete
-                    });
-                }
-                return ({
-                    ...node,
-                    tooltip: node.cid + ": " + self.props.allRoutines[node.rid].name,
-                    name: self.props.allRoutines[node.rid].name,
-                    children: node.children.map(recurseLookup, curDepth + 1)
-                });
-            }
+            const flameGraphData = postprocessFlameGraphData(flamegraph, self.props.allRoutines);
             if (self.props.allRoutines.length === 0) {
                 this.props.onRequestRoutineOverview();
                 this.state.reactToRoutineOverview = stateChangeForFlameGraph.bind(this, self, data);
@@ -141,8 +127,8 @@ export default class OverviewPage extends React.Component {
                 self.setState((state) => (
                     {
                         isLoading: {...state.isLoading, flameGraph: false},
-                        flameGraph: recurseLookup(flamegraph, 1),
-                        flameGraphDepth: depth,
+                        flameGraph: flameGraphData.flamegraph,
+                        flameGraphDepth: flameGraphData.maxDepth,
                         reactToRoutineOverview: null,
                     }));
             }
@@ -239,13 +225,13 @@ export default class OverviewPage extends React.Component {
         let flamegraph_fragment = <React.Fragment/>;
 
         if (this.state.flameGraph !== null && typeof this.state.flameGraph !== "undefined") {
-            const infoFragment = this.state.flameGraphCallInfo === null
+            const infoFragment = this.state.flameGraphCallInfo === null && this.state.flamegraph === null
                 ? <div>Loading...</div>
                 : <FlameGraphTitleBar call={this.state.flameGraphCallInfo} allRoutines={this.props.allRoutines} />;
             flamegraph_fragment =
                 <React.Fragment>
                     {infoFragment}
-                    <AutoSizedFlameGraph data={this.state.flameGraph} height={5 + 20 * this.state.flameGraphDepth} onChange={(node, uid) => this.reactFlamegraphSelection(node, uid)}/>
+                    <AutoSizedFlameGraph data={this.state.flameGraph} height={200 + 20 * this.state.flameGraphDepth} onChange={(node, uid) => this.reactFlamegraphSelection(node, uid)}/>
                 </React.Fragment>;
         }
         else if (this.state.isLoading.flameGraph) {
