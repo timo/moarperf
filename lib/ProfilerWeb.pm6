@@ -947,25 +947,29 @@ class ProfilerWeb {
         my $query = $!dbh.prepare(q:to/STMT/);
                 select
                     c.id as id,
-                    c.inclusive_time as inclusive,
-                    c.exclusive_time as exclusive,
-                    c.routine_id     as routine_id
+                    c.inclusive_time   as inclusive,
+                    -- c.exclusive_time as exclusive,
+                    c.entries          as entries,
+                    c.routine_id       as routine_id
 
                 from calls c
 
-                where c.parent_id = ?001 or c.id = ?001
+                where (c.parent_id = ?001 and c.inclusive_time > 1) or c.id = ?001
 
                 order by c.id asc
                 ;
             STMT
 
         my @incomplete;
+        my $highestCId = -Inf;
 
         sub children-of(Int $call-id, $depth = 0) {
             $query.execute($call-id);
 
             my @results = $query.allrows(:array-of-hash);
             my $parent = @results.shift;
+
+            $highestCId max= $call-id;
 
             if $depth < $maxdepth {
                 my @return = [
@@ -978,7 +982,7 @@ class ProfilerWeb {
                     cid => $parent.<id>,
                     rid => $parent.<routine_id>,
                     value => $parent.<inclusive>,
-                    children => @return
+                    |(children => @return if @return)
                 );
             }
             else {
@@ -993,11 +997,12 @@ class ProfilerWeb {
             }
         }
 
-        LEAVE $query.finish;
+        LEAVE $query.finish with $query;
         my $node := children-of($call-id);
         return %(
             :$node,
-            :@incomplete
+            :@incomplete,
+            :$highestCId,
         );
     }
 
