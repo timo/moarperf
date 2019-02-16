@@ -4,6 +4,7 @@ import {Link, Redirect} from 'react-router-dom';
 import $ from 'jquery';
 import classnames from 'classnames';
 import ErrorBoundary from 'react-error-boundary'
+import {AutoSizedFlamegraph} from './FlameGraph'
 
 import {
     EntriesInfo,
@@ -40,6 +41,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 childIncAllocs: false,
                 threadData: false,
                 routineOverview: false,
+                flameGraph: false,
             },
             error: null,
             allocsError: null,
@@ -49,6 +51,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             allocations: [],
             inclusiveAllocations: [],
             childInclusiveAllocations: {},
+            flameGraph: null,
             threadData: null,
             searchText: "",
             searchResults: null,
@@ -152,6 +155,39 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             console.log("requestPathAndChildren will reset search results");
             this.setState(() => ({ searchResults: null }))
         }
+    }
+
+    requestFlameGraph() {
+        this.setState((state) => ({isLoading: { ...state.isLoading, flameGraph: true }, flameGraph: null}));
+
+        const stateChangeForFlameGraph = (self, data) => {
+            let {
+                node : flamegraph,
+                incomplete
+            } = data;
+            console.log("data:", data);
+            console.log(flamegraph, incomplete);
+            const flameGraphData = postprocessFlameGraphData(data, self.props.routines);
+            self.setState((state) => (
+                {
+                    isLoading: {...state.isLoading, flameGraph: false},
+                    flameGraph: flameGraphData.flameGraph,
+                    flameGraphDepth: flameGraphData.maxDepth,
+                }));
+        };
+        $.ajax({
+            url: '/flamegraph-for/' + this.props.callId,
+            type: 'GET',
+            contentType: 'application/json',
+            success: (flamegraph) => stateChangeForFlameGraph(this, flamegraph),
+            error: (xhr, errorStatus, errorText) => {
+                this.setState(state => (
+                    {
+                        isLoading: {...state.isLoading, flameGraph: false},
+                        error: errorStatus + errorText
+                    }))
+            }
+        });
     }
 
     requestSearch(searchText) {
@@ -268,6 +304,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                         incAllocs: false,
                         childIncAllocs: false,
                         threadData: false,
+                        flameGraph: false,
                     },
                     call: {},
                     path: [],
