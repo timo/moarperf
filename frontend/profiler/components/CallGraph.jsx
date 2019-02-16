@@ -124,7 +124,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             type: 'GET',
             contentType: 'application/json',
             success: (children) => stateChangeForChildren(this, children, this.props.callId),
-            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { children: false }, error: errorStatus + errorText}))}
+            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { ...state.isLoading, children: false }, error: errorStatus + errorText}))}
         });
 
         const stateChangeForAlloc = (self, allocs, currentCallId) => {
@@ -141,7 +141,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
             type: 'GET',
             contentType: 'application/json',
             success: (allocs) => stateChangeForAlloc(this, allocs, this.props.callId),
-            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { allocs: false }, allocsError: errorStatus + errorText}))}
+            error: (xhr, errorStatus, errorText) => {this.setState(state => ({isLoading: { ...state.isLoading, allocs: false }, allocsError: errorStatus + errorText}))}
         });
 
         if (this.state.searchText.length > 1) {
@@ -150,7 +150,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
         else if (this.state.searchResults !== null && this.state.searchResults.length > 0) {
             console.log("requestPathAndChildren will reset search results");
-            this.setState(() => { searchResults: null })
+            this.setState(() => ({ searchResults: null }))
         }
     }
 
