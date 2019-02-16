@@ -138,7 +138,15 @@ export function RoutineNameInfo({routine, searchResults}) {
     </td>)
 }
 
-export function LinkButton({icon, target}) {
+export function LinkButton({icon, target, disabled}) {
+    if (disabled) {
+        return (<td key={"link"}>
+                <Button disabled>
+                    <i className={"fas fa-" + icon}/>
+                </Button>
+                </td>
+        )
+    }
     return (<td key={"link"}>
             <Link to={target}><Button>
                 <i className={"fas fa-" + icon}/>
