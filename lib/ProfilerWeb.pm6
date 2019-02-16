@@ -666,6 +666,9 @@ class ProfilerWeb {
                 c.spesh_entries   as spesh_entries,
                 c.jit_entries     as jit_entries,
                 c.highest_child_id as highest_child_id,
+                c.deopt_one       as deopt_one,
+                c.deopt_all       as deopt_all,
+                c.osr             as osr,
 
                 c.routine_id      as routine_id
 
