@@ -42,7 +42,7 @@
     "eslint-plugin-flowtype": "^2.50.3",
     "jquery": "^3.3.1",
     "memoize-state": "^1.5.1",
-    "react": "^16.7.0-alpha.0",
+    "react": "^16.8.2",
     "react-dimensions": "^2.0.0-alpha2",
     "react-dom": "^16.7.0-alpha.0",
     "react-error-boundary": "^1.2.3",
