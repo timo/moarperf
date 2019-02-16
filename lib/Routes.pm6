@@ -211,8 +211,12 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             }
         }
 
-        get -> 'flamegraph-for', Int $call-id {
+        get -> 'flamegraph-for', Int $call-id where * >= 0 {
             json-content "flamegraph-for", { $profiler.data-for-flamegraph($call-id) }
+        }
+
+        get -> 'flamegraph-for', Int $call-id, "maxdepth", Int $maxdepth where * > 0 {
+            json-content "flamegraph-for", { $profiler.data-for-flamegraph($call-id, $maxdepth) }
         }
 
         # get -> 'latest-tips' {
