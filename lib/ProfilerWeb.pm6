@@ -206,7 +206,7 @@ class ProfilerWeb {
         note "building search metadata";
         my $query = $!dbh.prepare(q:to/STMT/);
             select count(*) from pragma_table_info('calls')
-                where name == 'highest_child_id'
+                where name = 'highest_child_id'
             STMT
 
         $query.execute;
@@ -742,8 +742,16 @@ class ProfilerWeb {
     }
 
     method all-allocs() {
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select count(*) from pragma_table_info('allocations')
+                where name = 'replaced'
+            STMT
+
+        $query.execute;
+        my $replaced-exists = $query.row(:array).head;
+        $query.finish;
+
         my @q-results;
-        my $query;
         $query = $!dbh.prepare(q:c:to/STMT/);
             select
                 t.id,
@@ -755,6 +763,13 @@ class ProfilerWeb {
                 total(a.jit) as jit,
                 total(a.spesh) as spesh,
                 total(a.count) as count,
+
+                {
+                    $replaced-exists
+                            ?? "total(a.replaced) as replaced,"
+                            !! "0 as replaced,"
+                }
+
 
                 count(call_id) as sites,
 
@@ -840,7 +855,17 @@ class ProfilerWeb {
 
     method routine-allocations(Int $routine) {
         # TODO fallback for pre-extra-info profiles
-        my $query = $!dbh.prepare(q:c:to/STMT/);
+
+        my $query = $!dbh.prepare(q:to/STMT/);
+            select count(*) from pragma_table_info('allocations')
+                where name = 'replaced'
+            STMT
+
+        $query.execute;
+        my $replaced-exists = $query.row(:array).head;
+        $query.finish;
+
+        $query = $!dbh.prepare(q:c:to/STMT/);
             select
                 a.type_id as type_id,
                 t.name as name,
@@ -851,6 +876,11 @@ class ProfilerWeb {
 
 
                 total(a.jit) as jit, total(a.spesh) as spesh, total(a.count) as count,
+                {
+                    $replaced-exists
+                        ?? "total(a.replaced) as replaced,"
+                        !! "0 as replaced,"
+                }
                 group_concat(c.id, ",") as participants
 
                 from allocations a

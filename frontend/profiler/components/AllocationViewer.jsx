@@ -218,6 +218,7 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                                totalCount={this.props.alloc.count}/>
                     </td>
                     <td>{numberFormatter(this.props.alloc.count)}</td>
+                    <td>{numberFormatter(this.props.alloc.replaced)}</td>
                 </tr>
                 {
                     expandComponent
@@ -322,6 +323,7 @@ export default class AllocationTypeList extends Component {
                             <th>Name<br/><small>REPR</small></th>
                             <th>Type Properties</th>
                             <th>Count</th>
+                            <th>Optimized Out</th>
                         </tr>
                         </thead>
                         <tbody>
