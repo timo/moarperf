@@ -809,6 +809,35 @@ class ProfilerWeb {
         @q-results
     }
 
+    method routine-spesh-overview() {
+        my $query = $!dbh.prepare(q:c:to/STMT/);
+            select
+                total(c.deopt_one) as deopt_one, total(c.deopt_all) as deopt_all, total(c.osr) as osr,
+                total(c.entries) as entries,
+                total(c.inlined_entries) as inlined_entries,
+                total(c.spesh_entries)   as spesh_entries,
+                total(c.jit_entries)     as jit_entries,
+                count(c.id)      as sites,
+
+                c.routine_id as id
+
+                from calls c
+
+                where c.deopt_one > 0 or c.deopt_all > 0 or c.osr > 0
+
+                group by c.routine_id
+
+                order by c.deopt_one + c.deopt_all + c.osr asc
+                ;
+            STMT
+
+        $query.execute();
+        my @q-results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        @q-results
+    }
+
     method routine-allocations(Int $routine) {
         # TODO fallback for pre-extra-info profiles
         my $query = $!dbh.prepare(q:c:to/STMT/);

@@ -148,6 +148,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "routine-allocations", { $profiler.routine-allocations($routine) }
         }
 
+        get -> 'routine-spesh-overview' {
+            json-content "routine-spesh-overview", { $profiler.routine-spesh-overview() }
+        }
+
         get -> 'inclusive-call-allocations', Int $call {
             json-content "inclusive-call-allocations", { $profiler.call-allocations-inclusive($call) }
         }

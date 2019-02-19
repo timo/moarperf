@@ -54,6 +54,11 @@ const OverviewPage = Loadable({
     loading: () => <div>Hold on ...</div>,
 })
 
+const SpeshOverview = Loadable({
+    loader: () => import(/* webpackChunkName: "speshOverview" */ './profiler/components/SpeshOverview'),
+    loading: () => <div>Hold on ...</div>,
+})
+
 type SelectFileProps = {
   filePath: string,
   onChangeFilePath: (string) => void,
@@ -112,6 +117,9 @@ const ProfilerApp = props => {
                 <NavItem>
                     <NavLink tag={Link} to={path(props.match, "gc")}>GC</NavLink>
                 </NavItem>
+                <NavItem>
+                    <NavLink tag={Link} to={path(props.match, "spesh")}>Optimization</NavLink>
+                </NavItem>
             </Nav>
             <Switch>
                 <Route exact path={props.match.url + '/'}>
@@ -159,6 +167,15 @@ const ProfilerApp = props => {
                                   onRequestRoutineOverview={props.onRequestRoutineOverview}
                     />
                 </Route>
+                <Route path={props.match.url + "/spesh/"} render={({match, location}) => (
+                    <ErrorBoundary>
+                        <SpeshOverview
+                            metadata={props.profilerState.routines}
+                            allRoutineChildren={props.profilerState.allRoutineChildren}
+                            onRequestRoutineOverview={props.onRequestRoutineOverview}
+                        />
+                    </ErrorBoundary>
+                )}/>
                 <Route>
                     <div>oh no.</div>
                 </Route>
