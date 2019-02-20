@@ -53,6 +53,7 @@ function AllocatingRoutineRow(props: { routine: T, allRoutines: any, metadata: a
                    totalCount={props.routine.allocs}/>
         </td>
         <td>{numberFormatter(props.routine.allocs)}</td>
+        <td>{numberFormatter(props.routine.replaced)}</td>
     </tr>
         { expandedParts }
     </React.Fragment>
@@ -76,6 +77,7 @@ export function AllocRoutineList(props) {
                         <th>Entries</th>
                         <th>Size</th>
                         <th>Count</th>
+                        <th>Optimized Out</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -192,7 +194,7 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                 expandComponent =
                     <React.Fragment>
                         <tr>
-                            <td colSpan={4}>
+                            <td colSpan={5}>
                                 { expandContent }
                             </td>
                         </tr>

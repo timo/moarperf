@@ -974,11 +974,30 @@ class ProfilerWeb {
     }
 
     method allocating-routines-per-type(Int $type-id) {
-        my $query = $!dbh.prepare(q:to/STMT/);
+        my $query;
+
+        state $replaced-exists = do {
+            $query = $!dbh.prepare(q:to/STMT/);
+                                    select count(*) from pragma_table_info('allocations')
+                where name = 'replaced'
+            STMT
+
+            $query.execute;
+
+            $query.row(:array).head;
+            $query.finish;
+        }
+
+        $query = $!dbh.prepare(qq:to/STMT/);
             select
                 routines.id as id,
                 total(allocations.jit) as jit_allocs, total(allocations.spesh) as spesh_allocs, total(allocations.count) as allocs,
                 total(calls.jit_entries) as jit_entries, total(calls.spesh_entries) as spesh_entries, total(calls.entries) as entries,
+
+                {
+                    $replaced-exists ?? "total(allocations.replaced) as replaced,"
+                                     !! "0 as replaced,"
+                }
 
                 count(calls.id) as sitecount,
                 group_concat(calls.id, ",") as callsites
