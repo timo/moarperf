@@ -191,11 +191,36 @@ class ProfilerWeb {
         my %callframestats = $query.row(:hash);
         $query.finish;
 
+        state $replaced-exists = do {
+            $query = $!dbh.prepare(q:to/STMT/);
+                        select count(*) from pragma_table_info('allocations')
+                where name = 'replaced'
+            STMT
+
+            $query.execute;
+
+            $query.row(:array).head;
+            $query.finish;
+        }
+
+        $query = $!dbh.prepare(qq:to/STMT/);
+            select
+                total(a.jit + a.spesh + a.count) as allocated
+                { $replaced-exists ?? ", total(a.replaced) as replaced" !! "" }
+
+            from allocations a;
+        STMT
+
+        $query.execute;
+        my %allocationstats = $query.row(:hash);
+        $query.finish;
+
         return %(
                 :@threads,
                 :@gcstats,
                 :%allgcstats,
                 :%callframestats,
+                :%allocationstats,
                 );
     }
 

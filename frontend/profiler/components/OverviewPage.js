@@ -77,7 +77,7 @@ export default class OverviewPage extends React.Component {
             }
         }));
 
-        const stateChangeForOverviewData = (self, {threads, gcstats, allgcstats, callframestats}) => {
+        const stateChangeForOverviewData = (self, {threads, gcstats, allgcstats, callframestats, allocationstats}) => {
             var totalTime = 0;
             const timingSpans = threads.map((thread) => {
                 if (thread.first_entry_time + thread.total_time > totalTime)
@@ -94,7 +94,7 @@ export default class OverviewPage extends React.Component {
             self.setState((state) => (
                 {
                     isLoading: {...state.isLoading, overviewData: false},
-                    overviewData: {threads, gcstats, timingSpans, allgcstats, totalTime, callframestats}
+                    overviewData: {threads, gcstats, timingSpans, allgcstats, totalTime, callframestats, allocationstats}
                 }));
         };
 
@@ -215,6 +215,7 @@ export default class OverviewPage extends React.Component {
         const allgcstats = this.state.overviewData.allgcstats;
 
         const callframestats = this.state.overviewData.callframestats;
+        const allocationstats = this.state.overviewData.allocationstats;
 
         const gcpercent = 100 * allgcstats.total / this.state.overviewData.totalTime;
 
@@ -331,6 +332,15 @@ export default class OverviewPage extends React.Component {
                         Of {numberFormatter(speshcount + jitcount)} specialized or JIT-compiled frames,
                         there were <strong>{numberFormatter(callframestats.deopt_one_total)} deoptimizations</strong>
                         (that's <strong>{numberFormatter(100 * callframestats.deopt_one_total / (speshcount + jitcount), 2)}%</strong> of all optimized frames).
+                    </p>
+                    <p>
+                        There were <strong>{numberFormatter(allocationstats.allocated)} object allocations</strong>. The dynamic optimizer was
+                        {
+                            allocationstats.replaced ?
+                                <>{" "} able to eliminate the need to allocate <strong>{ numberFormatter(allocationstats.replaced) } additional objects</strong> {" "}
+                                (that's <strong>{numberFormatter(100 * allocationstats.replaced / (allocationstats.replaced + allocationstats.allocated), 2)}%</strong>) </>
+                                : <>{" "}not able to eliminate any allocations through scalar replacement</>
+                        }
                     </p>
                     <p>
                         There were <strong>{ numberFormatter(callframestats.deopt_all_total) } global deoptimizations</strong> triggered by the profiled code.
