@@ -767,14 +767,18 @@ class ProfilerWeb {
     }
 
     method all-allocs() {
-        my $query = $!dbh.prepare(q:to/STMT/);
-            select count(*) from pragma_table_info('allocations')
+        my $query;
+        state $replaced-exists = do {
+            $query = $!dbh.prepare(q:to/STMT/);
+                                    select count(*) from pragma_table_info('allocations')
                 where name = 'replaced'
             STMT
 
-        $query.execute;
-        my $replaced-exists = $query.row(:array).head;
-        $query.finish;
+            $query.execute;
+
+            $query.row(:array).head;
+            $query.finish;
+        }
 
         my @q-results;
         $query = $!dbh.prepare(q:c:to/STMT/);
@@ -879,16 +883,19 @@ class ProfilerWeb {
     }
 
     method routine-allocations(Int $routine) {
+        my $query;
         # TODO fallback for pre-extra-info profiles
-
-        my $query = $!dbh.prepare(q:to/STMT/);
-            select count(*) from pragma_table_info('allocations')
+        state $replaced-exists = do {
+            $query = $!dbh.prepare(q:to/STMT/);
+                                    select count(*) from pragma_table_info('allocations')
                 where name = 'replaced'
             STMT
 
-        $query.execute;
-        my $replaced-exists = $query.row(:array).head;
-        $query.finish;
+            $query.execute;
+
+            $query.row(:array).head;
+            $query.finish;
+        }
 
         $query = $!dbh.prepare(q:c:to/STMT/);
             select
