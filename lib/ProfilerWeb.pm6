@@ -199,8 +199,9 @@ class ProfilerWeb {
 
             $query.execute;
 
-            $query.row(:array).head;
+            my $result = $query.row(:array).head;
             $query.finish;
+            $result;
         }
 
         $query = $!dbh.prepare(qq:to/STMT/);
@@ -776,8 +777,9 @@ class ProfilerWeb {
 
             $query.execute;
 
-            $query.row(:array).head;
+            my $result = $query.row(:array).head;
             $query.finish;
+            $result;
         }
 
         my @q-results;
@@ -893,8 +895,9 @@ class ProfilerWeb {
 
             $query.execute;
 
-            $query.row(:array).head;
+            my $result = $query.row(:array).head;
             $query.finish;
+            $result;
         }
 
         $query = $!dbh.prepare(q:c:to/STMT/);
@@ -1016,8 +1019,9 @@ class ProfilerWeb {
 
             $query.execute;
 
-            $query.row(:array).head;
+            my $result = $query.row(:array).head;
             $query.finish;
+            $result;
         }
 
         $query = $!dbh.prepare(qq:to/STMT/);
