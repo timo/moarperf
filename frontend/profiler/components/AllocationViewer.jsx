@@ -1,10 +1,13 @@
 import React, {Component, useState} from 'react';
 import {Container, Row, Table, Button} from 'reactstrap';
 import $ from 'jquery';
+import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis } from 'recharts';
 
 import {EntriesInfo, LinkButton, numberFormatter, RoutineNameInfo} from './RoutinePieces';
 import {AllocNameAndRepr} from "./AllocationParts";
 import RoutinePaths from "./RoutinePaths";
+
+const memoize = a => a;
 
 export function Bytes ({ size, totalCount, extraData, kilo }) {
     if (kilo) {
@@ -92,18 +95,43 @@ export function AllocRoutineList(props) {
     );
 }
 
+const ignoreNulls = memoize(input => input.filter(a => a !== null));
+
+const trimNulls = memoize(input => {
+    let soakedUp = [];
+    let output = [];
+    for (let key in input) {
+        let value = input[key];
+        if (value === null) {
+            if (output.length != 0)
+                soakedUp.push({ sequence: key, fresh: 0, seen: 0, gen2: 0 })
+        }
+        else {
+            output.push(...soakedUp);
+            output.push(value);
+            soakedUp = [];
+        }
+    }
+    return output;
+});
+
+const sumUp = memoize(input => input.map(entry => ({ xAxis: entry.sequence, fresh: entry.fresh, seen: entry.seen, gen2: entry.gen2 })));
+
 export class AllocationType extends Component<{ onClick: () => any, alloc: any }> {
     constructor(props) {
         super(props);
         this.state = {
             isLoading: {
                 allocatingRoutines: false,
+                deallocationHistory: false,
             },
             loadErrors: {
                 allocatingRoutines: null,
+                deallocationHistory: null,
             },
             isExpanded: false,
             allocatingRoutines: null,
+            deallocationHistory: null,
         }
     }
 
@@ -111,7 +139,8 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
         console.log("handle expand called");
         if (this.state.isExpanded) {
             this.setState((state) => ({
-                isExpanded: !state.isExpanded
+                isExpanded: !state.isExpanded,
+                isHistoryExpanded: false,
             }));
         }
         else if (!this.state.isLoading.allocatingRoutines && (this.state.allocatingRoutines === null || this.state.loadErrors.allocatingRoutines !== null)) {
@@ -142,7 +171,7 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                 success: (routines) => stateChangeForRoutines(this, routines, this.props.alloc),
                 error: (xhr, errorStatus, errorText) => {
                     this.setState(state => ({
-                        isLoading: { allocatingRoutines: false },
+                        isLoading: { ...this.state.isLoading, allocatingRoutines: false },
                         loadErrors: {
                             ...state.loadErrors,
                             allocatingRoutines:
@@ -161,12 +190,65 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
         }
     }
 
+    handleExpandHistoryClick = () => {
+        console.log("handle expand history called");
+        if (this.state.isHistoryExpanded) {
+            this.setState((state) => ({
+                isHistoryExpanded: !state.isHistoryExpanded,
+                isExpanded: false,
+            }));
+        }
+        else if (!this.state.isLoading.deallocationHistory && (this.state.deallocationHistory === null || this.state.loadErrors.deallocationHistory !== null)) {
+            this.setState((state) => ({
+                isLoading: { ...state.isLoading, deallocationHistory: true },
+                loadErrors: { ...state.loadErrors, deallocationHistory: null },
+                isExpanded: false,
+                isHistoryExpanded: true,
+            }));
+
+            const stateChangeForDeallocations = (it, result, alloc) => {
+                console.log("changing state for received results");
+                it.setState((state) => ({
+                    isLoading: { ...state.isLoading, deallocationHistory: false },
+                    loadErrors: { ...state.loadErrors, deallocationHistory: null },
+                    deallocationHistory: result
+                }))
+            };
+
+            $.ajax({
+                url: '/deallocations-for-type/' + this.props.alloc.id,
+                type: 'GET',
+                contentType: 'application/json',
+                success: (routines) => stateChangeForDeallocations(this, routines, this.props.alloc),
+                error: (xhr, errorStatus, errorText) => {
+                    this.setState(state => ({
+                        isLoading: { ...state.isLoading, allocatingRoutines: false },
+                        loadErrors: {
+                            ...state.loadErrors,
+                            allocatingRoutines:
+                                state.loadErrors.allocatingRoutines
+                                + errorStatus
+                                + errorText}
+                    }))}
+            })
+
+            this.setState((state) => ({isLoading: {...state.isLoading, allocatingRoutines: true}}));
+        }
+        else if (!this.state.isHistoryExpanded) {
+            this.setState((state) => ({
+                isHistoryExpanded: true
+            }))
+        }
+    }
+
     render() {
         let {
             isExpanded,
+            isHistoryExpanded,
             isLoading,
             loadErrors,
             allocatingRoutines,
+            deallocationHistory,
         } = this.state;
 
         var expandComponent = <React.Fragment></React.Fragment>;
@@ -200,6 +282,38 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                         </tr>
                     </React.Fragment>;
         }
+        else if (isHistoryExpanded) {
+            var expandContent = null;
+            if (loadErrors.deallocationHistory === null) {
+                if (isLoading.deallocationHistory) {
+                    expandContent = <div><span>Loading, please wait...</span></div>
+                }
+            else {
+                    expandContent = <React.Fragment>
+                        <h2>{ this.props.alloc.name } freed in each GC run</h2>
+                        <ResponsiveContainer width={"100%"} height={200}>
+                            <BarChart data={sumUp(trimNulls(deallocationHistory))} height={300}>
+                                <Bar dataKey={"fresh"} fill={"#3f3"} stackId={"deallocs"} isAnimationActive={false}/>
+                                <Bar dataKey={"seen"} fill={"#fa5"} stackId={"deallocs"} isAnimationActive={false}/>
+                                <Bar dataKey={"gen2"} fill={"#f32"} stackId={"deallocs"} isAnimationActive={false}/>
+                                <XAxis dataKey={"xAxis"} />
+                                <YAxis />
+                            </BarChart>
+                        </ResponsiveContainer>
+                    </React.Fragment>
+                }
+            }
+            if (expandContent !== null)
+                expandComponent =
+                    <React.Fragment>
+                        <tr>
+                            <td colSpan={5}>
+                                { expandContent }
+                            </td>
+                        </tr>
+                    </React.Fragment>;
+
+        }
 
         console.log(this.props.alloc);
 
@@ -209,6 +323,9 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                     <td style={{whiteSpace: "nowrap"}}>
                         <Button onClick={this.handleExpandClick}>
                             <i className="fas fa-folder-open"/>
+                        </Button>{" "}
+                        <Button onClick={this.handleExpandHistoryClick}>
+                            <i className="fas fa-chart-line"/>
                         </Button>{" "}
                         <Button onClick={this.props.onClick}>
                             <i className="fab fa-readme"/>

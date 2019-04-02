@@ -164,6 +164,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "allocating-routines-per-type", { $profiler.allocating-routines-per-type($type) }
         }
 
+        get -> 'deallocations-for-type', Int $type {
+            json-content "deallocations-for-type", { $profiler.deallocations-for-type($type) }
+        }
+
         get -> 'model-overview' {
             content "application/json", to-json($model.model-overview)
         }

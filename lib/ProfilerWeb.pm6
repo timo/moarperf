@@ -1008,6 +1008,31 @@ class ProfilerWeb {
         @q-results;
     }
 
+    method deallocations-for-type(Int $type) {
+        my $qstring = q:c:to/STMT/;
+            select
+                total(d.nursery_fresh) as fresh, total(d.nursery_seen) as seen, total(d.gen2) as gen2,
+                d.gc_seq_num as sequence
+
+                from deallocations d
+
+                where d.type_id == ?
+                group by d.gc_seq_num;
+            STMT
+
+        my $query = $!dbh.prepare($qstring);
+
+        my @q-results;
+
+        $query.execute($type);
+        for $query.allrows(:array-of-hash) {
+            @q-results[.<sequence>.Int] = $_
+        }
+        $query.finish;
+
+        @q-results;
+    }
+
     method allocating-routines-per-type(Int $type-id) {
         my $query;
 
@@ -1256,8 +1281,45 @@ class ProfilerWeb {
         }
         $stats-of-sequence-q.finish();
 
+        my @deallocs_for_sequence;
+
+        try {
+            my $deallocs-for-sequence-q = $!dbh.prepare(q:to/STMT/);
+                select
+                    da.type_id              as typeid,
+                    total(da.nursery_fresh) as fresh,
+                    total(da.nursery_seen)  as seen,
+                    total(da.gen2)          as gen2,
+
+                    t.name           as typename
+
+                from deallocations da, types t
+                where da.type_id == t.id
+                      and da.gc_seq_num == ?
+
+                group by
+                    t.id
+                STMT
+
+            $deallocs-for-sequence-q.execute($sequence-num);
+            for $deallocs-for-sequence-q.allrows(:array-of-hash) -> $/ {
+                @deallocs_for_sequence[$<thread_id>] = $/;
+            }
+            $deallocs-for-sequence-q.finish;
+
+            CATCH {
+                default {
+                    note "error while trying to get deallocs...";
+                    .note
+                }
+            }
+        }
+
         return %(
-                :@stats_of_sequence
+                :@stats_of_sequence,
+                :@deallocs_for_sequence
                 );
+
+
     }
 }
