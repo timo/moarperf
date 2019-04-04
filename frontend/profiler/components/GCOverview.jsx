@@ -5,6 +5,7 @@ import {
     ButtonGroup, Button, Container, Row, Col, Table
 } from 'reactstrap';
 import ErrorBoundary from 'react-error-boundary';
+import $ from 'jquery';
 
 import { timeToHuman, numberFormatter } from './RoutinePieces';
 import {Bytes} from "./AllocationViewer";
@@ -69,6 +70,40 @@ const relativize = memoize(input => input.map(line => {
     }));
 
 const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonClicked }) => {
+    const [isLoading, setIsLoading] = useState(false);
+    const [hadError, setHadError]   = useState(null);
+    const [typeStats, setTypeStats] = useState(null);
+
+    const isExpanded = expanded[data.sequence_num];
+
+    useEffect(() => {
+        if (isExpanded && !isLoading && typeStats === null) {
+
+            const stateChangeForTypes = (it, result) => {
+                setIsLoading(false);
+                setHadError(null);
+
+                setTypeStats(result);
+            };
+
+            $.ajax({
+                url: '/deallocations-for-sequence/' + data.sequence_num,
+                type: 'GET',
+                contentType: 'application/json',
+                success: (types) => stateChangeForTypes(this, types),
+                error: (xhr, errorStatus, errorText) => {
+                    setIsLoading(false);
+                    setHadError(errorStatus + " " + errorText);
+                }
+            });
+
+            setIsLoading(true);
+        }
+        else if (isExpanded && isLoading && typeStats !== null) {
+            setIsLoading(false);
+        }
+    }, [data.sequence_num, expanded[data.sequence_num]]);
+
     return (
         <React.Fragment>
             <tr key={data.sequence_num}>
@@ -140,6 +175,37 @@ const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonCli
                             </Container>
                         </td>
                     </tr>
+                    : null
+            }
+            {
+                expanded[data.sequence_num] && typeStats !== null && !hadError ?
+                    <>
+                        <tr></tr>
+                    <tr>
+                        <td colSpan={5}>
+                            <Table>
+                                <thead>
+                                <tr>
+                                    <th>Type</th>
+                                    <th>Freed very early</th>
+                                    <th>Freed early</th>
+                                    <th>Freed late</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                {
+                                    typeStats.map(row => <tr>
+                                        <td>{ row.type_name }</td>
+                                        <td>{ numberFormatter(row.fresh) }</td>
+                                        <td>{ numberFormatter(row.seen) }</td>
+                                        <td>{ numberFormatter(row.gen2) }</td>
+                                    </tr>)
+                                }
+                                </tbody>
+                            </Table>
+                        </td>
+                    </tr>
+                    </>
                     : null
             }
         </React.Fragment>

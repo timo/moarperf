@@ -168,6 +168,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "deallocations-for-type", { $profiler.deallocations-for-type($type) }
         }
 
+        get -> 'deallocations-for-sequence', Int $seqnum {
+            json-content "deallocations-for-sequence", { $profiler.deallocations-for-sequence($seqnum) }
+        }
+
         get -> 'model-overview' {
             content "application/json", to-json($model.model-overview)
         }

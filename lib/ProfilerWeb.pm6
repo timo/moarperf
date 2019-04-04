@@ -1033,6 +1033,32 @@ class ProfilerWeb {
         @q-results;
     }
 
+    method deallocations-for-sequence(Int $seqnum) {
+        my $qstring = q:c:to/STMT/;
+            select
+                total(d.nursery_fresh) as fresh, total(d.nursery_seen) as seen, total(d.gen2) as gen2,
+                d.gc_seq_num as sequence,
+                d.type_id as type_id,
+                t.name as type_name
+
+                from deallocations d
+                    inner join types t on t.id == d.type_id
+
+                where d.gc_seq_num == ?
+                group by d.type_id
+                order by total(d.nursery_fresh) desc
+            STMT
+
+        my $query = $!dbh.prepare($qstring);
+
+        $query.execute($seqnum);
+        my @q-results = $query.allrows(:array-of-hash);
+        $query.finish;
+
+        @q-results;
+    }
+
+
     method allocating-routines-per-type(Int $type-id) {
         my $query;
 
