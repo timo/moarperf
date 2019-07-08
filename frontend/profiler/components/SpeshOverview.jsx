@@ -6,6 +6,10 @@ import classnames from 'classnames';
 import ErrorBoundary from 'react-error-boundary'
 import {EntriesInfo, RoutineNameInfo, numberFormatter} from "./RoutinePieces";
 
+const numberOrNothing = value => (
+    value === 0 ? <small>-</small> : numberFormatter(value)
+)
+
 export default function SpeshOverview(props) {
     const [routineData, setRoutineData] = useState(null);
     useEffect(
@@ -22,20 +26,21 @@ export default function SpeshOverview(props) {
 
     useEffect(
         () => {
-            props.onRequestRoutineOverview();
+            if (typeof props.metadata === "undefined" || props.metadata.length === 0)
+                props.onRequestRoutineOverview();
         }, [props.metadata]
     )
 
     const makeRoutineRow = routine => {
         console.log(routine, props.metadata[routine.id]);
         return (
-            <tr>
+            <tr key={routine.id}>
                 <td>{numberFormatter(routine.sites)}</td>
                 <RoutineNameInfo routine={props.metadata[routine.id]}/>
                 <EntriesInfo routine={routine}/>
-                <td>{numberFormatter(routine.deopt_one)}</td>
-                <td>{numberFormatter(routine.deopt_all)}</td>
-                <td>{numberFormatter(routine.osr)}</td>
+                <td>{numberOrNothing(routine.deopt_one)}</td>
+                <td>{numberOrNothing(routine.deopt_all)}</td>
+                <td>{numberOrNothing(routine.osr)}</td>
             </tr>
         );
     };
