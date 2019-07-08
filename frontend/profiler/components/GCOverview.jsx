@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis, Label } from 'recharts';
+import { ResponsiveContainer, BarChart, Bar, Tooltip, XAxis, YAxis } from 'recharts';
 //import memoize from 'memoize-state';
 import {
     ButtonGroup, Button, Container, Row, Col, Table
@@ -194,7 +194,7 @@ const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonCli
                                 </thead>
                                 <tbody>
                                 {
-                                    typeStats.map(row => <tr>
+                                    typeStats.map((row, idx) => <tr key={"dealloctype_" + idx}>
                                         <td>{ row.type_name }</td>
                                         <td>{ numberFormatter(row.fresh) }</td>
                                         <td>{ numberFormatter(row.seen) }</td>
