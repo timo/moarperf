@@ -1195,9 +1195,22 @@ class ProfilerWeb {
                 total(promoted_bytes) as promoted_bytes,
                 group_concat(thread_id, ",") as participants,
                 sequence_num,
-                full
+                full,
+                freed_freshness.fresh_freed as fresh_freed,
+                freed_freshness.seen_freed as seen_freed
 
             from gcs
+                inner join (
+                    select
+                        total(json_extract(t.extra_info, "$.managed_size") * da.nursery_fresh) as fresh_freed,
+                        total(json_extract(t.extra_info, "$.managed_size") * da.nursery_seen) as seen_freed,
+                        da.gc_seq_num as seq_num
+
+                    from deallocations da
+                        inner join types t on da.type_id = t.id
+
+                    group by da.gc_seq_num
+                ) freed_freshness on freed_freshness.seq_num = gcs.sequence_num
 
             group by sequence_num
             ;
@@ -1316,6 +1329,7 @@ class ProfilerWeb {
                     total(da.nursery_fresh) as fresh,
                     total(da.nursery_seen)  as seen,
                     total(da.gen2)          as gen2,
+                    da.gc_thread_id         as thread_id,
 
                     t.name           as typename
 
