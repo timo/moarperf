@@ -3,7 +3,7 @@
 import $ from 'jquery';
 // import type { HeapSnapshotState } from './reducer';
 
-export const STATUS_UPDATE = 'STATUS_UPDATE';
+export const STATUS_UPDATE = 'HEAP_STATUS_UPDATE';
 export const MODEL_OVERVIEW = 'MODEL_OVERVIEW';
 
 type StatusUpdateAction = { type : "HEAP_STATUS_UPDATE", body: any };

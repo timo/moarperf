@@ -133,7 +133,6 @@ export default class OverviewPage extends React.Component {
                     }));
             }
         };
-
         $.ajax({
             url: '/flamegraph-for/0',
             type: 'GET',

@@ -304,6 +304,11 @@ $.ajax({
               window.location.replace("#/prof/");
           }
       }
+      else if (body.filetype === "heap") {
+          if (window.location.hash === "#/") {
+              window.location.replace("#/heap/");
+          }
+      }
   }
 });
 

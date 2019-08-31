@@ -15,7 +15,7 @@ export default function heaspAnalyzerReducer(
   state : HeapSnapshotState = initialState,
   action : ActionTypes.HeapSnapshotAction,
 ) : HeapSnapshotState {
-  console.log('got a thing to reduce');
+  console.log('heap: got a thing to reduce');
   console.log(action);
   switch (action.type) {
     case ActionTypes.STATUS_UPDATE: {

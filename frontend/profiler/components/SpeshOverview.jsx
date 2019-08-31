@@ -45,9 +45,6 @@ export default function SpeshOverview(props) {
         );
     };
 
-    console.log("current routinedata and metadata:");
-    console.log(routineData, props.metadata);
-
     const routineListPart =
         routineData === null
         || typeof props.metadata === "undefined"

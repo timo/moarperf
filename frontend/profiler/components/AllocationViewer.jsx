@@ -288,16 +288,16 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
                 if (isLoading.deallocationHistory) {
                     expandContent = <div><span>Loading, please wait...</span></div>
                 }
-            else {
+                else {
                     expandContent = <React.Fragment>
-                        <h2>{ this.props.alloc.name } freed in each GC run</h2>
+                        <h2>{this.props.alloc.name} freed in each GC run</h2>
                         <ResponsiveContainer width={"100%"} height={200}>
                             <BarChart data={sumUp(trimNulls(deallocationHistory))} height={300}>
                                 <Bar dataKey={"fresh"} fill={"#3f3"} stackId={"deallocs"} isAnimationActive={false}/>
                                 <Bar dataKey={"seen"} fill={"#fa5"} stackId={"deallocs"} isAnimationActive={false}/>
                                 <Bar dataKey={"gen2"} fill={"#f32"} stackId={"deallocs"} isAnimationActive={false}/>
-                                <XAxis dataKey={"xAxis"} />
-                                <YAxis />
+                                <XAxis dataKey={"xAxis"}/>
+                                <YAxis/>
                             </BarChart>
                         </ResponsiveContainer>
                     </React.Fragment>

@@ -42,16 +42,16 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             static 'static/js', @path;
         }
 
-        get -> 'js', 'bootstrap.bundle.js' { static 'node_modules/bootstrap/dist/js/bootstrap.bundle.js' }
-        get -> 'js', 'bootstrap.bundle.js.map' { static 'node_modules/bootstrap/dist/js/bootstrap.bundle.js.map' }
+        get -> 'js', 'bootstrap.bundle.js' { static 'frontend/node_modules/bootstrap/dist/js/bootstrap.bundle.js' }
+        get -> 'js', 'bootstrap.bundle.js.map' { static 'frontend/node_modules/bootstrap/dist/js/bootstrap.bundle.js.map' }
 
         get -> 'css', *@path {
             static 'static/css', @path;
         }
 
-        get -> 'css', 'bootstrap.css' { static 'node_modules/bootstrap/dist/css/bootstrap.css' }
-        get -> 'css', 'bootstrap-grid.css' { static 'node_modules/bootstrap/dist/css/bootstrap-grid.css' }
-        get -> 'css', 'bootstrap-reboot.css' { static 'node_modules/bootstrap/dist/css/bootstrap-reboot.css' }
+        get -> 'css', 'bootstrap.css' { static 'frontend/node_modules/bootstrap/dist/css/bootstrap.css' }
+        get -> 'css', 'bootstrap-grid.css' { static 'frontend/node_modules/bootstrap/dist/css/bootstrap-grid.css' }
+        get -> 'css', 'bootstrap-reboot.css' { static 'frontend/node_modules/bootstrap/dist/css/bootstrap-reboot.css' }
 
         get -> 'imagery', *@path {
             static 'static/imagery', @path;
@@ -62,6 +62,9 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
                 content 'application/json', { filetype => "profile", filename => $filename }
             }
             # XXX something for the heap analyzer
+            elsif $model.model.defined {
+                content 'application/json', { filetype => "heap", filename => "who knows" }
+            }
             else {
                 content 'application/json', %( )
             }
