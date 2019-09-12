@@ -45,7 +45,6 @@ sub concise-file($file is copy) {
     $file
 }
 
-
 class ProfilerWeb {
     has $.dbh;
     has $.filename;
@@ -83,6 +82,15 @@ class ProfilerWeb {
         @!routine_overview = Empty;
         %!all_routines = Empty;
 
+        CATCH {
+            note "when trying to set up getting the routine overview:";
+            note $!;
+            $!status-updates.emit(%(
+                    data => "error",
+                            body => $_.Str
+                    ))
+        }
+
         start {
             note "getting all routines";
             my %all_routines = self.all-routines;
@@ -109,14 +117,6 @@ class ProfilerWeb {
                     body => $_.Str
                 ))
             }
-        }
-        CATCH {
-            note "when trying to set up getting the routine overview:";
-            note $!;
-            $!status-updates.emit(%(
-                data => "error",
-                body => $_.Str
-            ))
         }
     }
 
@@ -748,6 +748,7 @@ class ProfilerWeb {
         my %searchresults;
         if $query.execute("%$search%", $id) {
             for $query.allrows(:array-of-hash) {
+                if %searchresults{.<topcall_id>}:exists { note "    why is there already a result for $_.<topcall_id> in here?" }
                 %searchresults{.<topcall_id>} = [.<hitcount>, .<hit_ids>];
             }
         }
@@ -1064,7 +1065,7 @@ class ProfilerWeb {
 
         state $replaced-exists = do {
             $query = $!dbh.prepare(q:to/STMT/);
-                                    select count(*) from pragma_table_info('allocations')
+            select count(*) from pragma_table_info('allocations')
                 where name = 'replaced'
             STMT
 

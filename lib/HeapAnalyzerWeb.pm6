@@ -9,6 +9,14 @@ monitor HeapAnalyzerWeb {
 
     has Supplier $!status-updates = Supplier::Preserving.new;
 
+    has $!latest-model-state;
+
+    has %.operations-in-progress;
+
+    has $!highscores;
+
+    has Supplier $!progress-updates = Supplier::Preserving.new;
+
     method load-file($file is copy) {
         $file = $file.IO;
         die "$file does not exist" unless $file.e;
@@ -18,20 +26,62 @@ monitor HeapAnalyzerWeb {
         my $resolve = Promise.new;
         start {
             note "started!";
-            with $.model {
+            with $!model {
                 die "Switching models NYI";
             }
             note "sending pre-load message";
+            $!latest-model-state = "pre-load";
             $!status-updates.emit({ model_state => "pre-load" });
             note "building the model now";
             $!model .= new(:$file);
             note "going to resolve";
             $resolve.keep;
-            if $.model.num-snapshots == 1 {
+            if $!model.num-snapshots == 1 {
                 self.request-snapshot(0);
             }
             note "done, yay";
+            $!latest-model-state = "post-load";
             $!status-updates.emit({ model_state => "post-load", |self.model-overview });
+            $!model.highscores.then({
+                my @scores = .result;
+                my %lookups;
+                my $whole-result = %();
+                for [<frames_by_size frames_by_count frames>, <types_by_size types_by_count types>] -> @bits {
+                    my @all-indices;
+                    my @per-position-entries;
+                    for @scores -> $snap-score {
+                        for $snap-score<topIDs>{@bits.head(2)} {
+                            @all-indices.append($_.list);
+                        }
+                    }
+                    @all-indices .= unique;
+                    %lookups{@bits.tail} = @bits.tail eq "frames"
+                            ?? (@all-indices Z=> $!model.resolve-frames(@all-indices)).hash
+                            !! (@all-indices Z=> $!model.resolve-types(@all-indices)).hash;
+                }
+
+                for [<frames_by_size frames_by_count frames>, <types_by_size types_by_count types>] -> @bits {
+                    for @scores -> $snap-score {
+                        state $idx = 0;
+                        for @bits.head(2) -> $bit {
+                            my %right-lookup := %lookups{@bits.tail};
+                            my &formatter = @bits.tail eq "frames" ?? { (.<name> || "<anon>") ~ " $_.<file>:$_<line>" } !! { .<name> };
+                            for $snap-score<topIDs>{$bit}.list Z $snap-score<topscore>{$bit}.list {
+                                $whole-result{$bit}[$idx]{formatter %right-lookup{$_[0]}} = $_[1];
+                            }
+                        }
+                        $idx++;
+                    }
+                }
+
+                $whole-result<lookups> = %lookups;
+
+                $!highscores = $whole-result;
+
+                $!status-updates.emit({ model_state => "post-load", |self.model-overview });
+                LEAVE note "highscores calculated in $( now - ENTER now )s";
+                CATCH { .say }
+            });
             CATCH {
                 note "error loading heap snapshot";
                 $!status-updates.emit(
@@ -45,19 +95,32 @@ monitor HeapAnalyzerWeb {
         await $resolve;
     }
 
-    method announce-date {
-        $!status-updates.emit({ date => DateTime.now.Str })
+    method status-messages() {
+        LEAVE {
+            note "status messages opened; model state is $!latest-model-state";
+            if $!latest-model-state eq "post-load" {
+                Promise.in(0.1).then({ $!status-updates.emit({ model_state => "post-load", |self.model-overview }) });
+            }
+        }
+        $!status-updates.Supply
     }
 
-    method status-messages() {
-        $!status-updates.Supply
+    method progress-messages() {
+        LEAVE {
+            for %.operations-in-progress {
+                $!progress-updates.emit($_);
+            }
+        }
+        $!progress-updates.Supply
     }
 
     method model-overview() {
         with $!model {
             {
                 num_snapshots => $!model.num-snapshots,
-                loaded_snapshots => ^$!model.num-snapshots .map({ $!model.snapshot-state($_).Str })
+                loaded_snapshots => ^$!model.num-snapshots .map({ $%( state => $!model.snapshot-state($_).Str ) }),
+                |%(summaries => $_ with $!model.summaries),
+                |%(highscores => $_ with $!highscores),
             }
         }
         else {
@@ -68,106 +131,52 @@ monitor HeapAnalyzerWeb {
     }
 
     method request-snapshot($index) {
+        note "requested snapshot at ", DateTime.now;
+
         die "the model needs to load up first" without $!model;
         die "Snapshot ID $index out of range (0..$!model.num-snapshots())"
           unless $index ~~ 0..$!model.num-snapshots();
+
         die unless $!model.snapshot-state($index) ~~ SnapshotStatus::Unprepared;
+
+        $!status-updates.emit: %(
+            snapshot_index => $index,
+            snapshot_state => "Preparing");
+
         my Supplier $updates .= new;
+
+        my $update-key = (flat "a".."z", "A".."Z").pick(16).join("");
+
+        $!progress-updates.emit: %(
+                    progress => [0, 1, 0],
+                    description => "reading snapshot $index",
+                    uuid => $update-key,
+                    :!cancellable,
+                );
+
         start react {
             whenever $updates.Supply -> $message {
-                $!status-updates.emit: %(
-                    |$message.pairs.map({ $^p.key.subst("-", "_") => $^p.value }),
-                    snapshot_state => $!model.snapshot-state($index).Str);
-                LAST {
-                    await Promise.in(1);
-                    $!status-updates.emit: %(
-                        snapshot_index => $index,
-                        snapshot_state => $!model.snapshot-state($index).Str,
-                        is_done => True)
+                if $message<progress>:exists {
+                    $!progress-updates.emit: %(
+                            uuid => $update-key,
+                            progress => $message<progress>,
+                            :!cancellable,
+                        );
                 }
             }
-        };
-        $!model.prepare-snapshot($index, :$updates);
+            whenever $!model.promise-snapshot($index, :$updates) {
+                $!status-updates.emit: %(
+                    snapshot_index => $index,
+                    snapshot_state => %( state => $!model.snapshot-state($index).Str ),
+                    is_done => True,
+                )
+            }
+        }
+
+        $update-key;
+    }
+
+    method request-shared-data {
+
     }
 }
-#
-# class Tip {
-#     has Int $.id is required;
-#     has Str $.tip is required;
-#     has Int $.agreed = 0;
-#     has Int $.disagreed = 0;
-#
-#     method agree() {
-#         self.clone(agreed => $!agreed + 1)
-#     }
-#
-#     method disagree() {
-#         self.clone(disagreed => $!disagreed + 1)
-#     }
-# }
-#
-# class X::Tipsy::NoSuchId is Exception {
-#     has $.id;
-#     method message() { "No tip with ID '$!id'" }
-# }
-#
-# monitor Tipsy {
-#     has Int $!next-id = 1;
-#     has Tip %!tips-by-id{Int};
-#     has Supplier $!latest-tips = Supplier.new;
-#     has Supplier $!tip-change = Supplier.new;
-#
-#     method add-tip(Str $tip --> Nil) {
-#         my $id = $!next-id++;
-#         my $new-tip = Tip.new(:$id, :$tip);
-#         %!tips-by-id{$id} = $new-tip;
-#         start $!latest-tips.emit($new-tip);
-#     }
-#
-#     method latest-tips(--> Supply) {
-#         my @latest-existing = %!tips-by-id.values.sort(-*.id).head(50);
-#         supply {
-#             whenever $!latest-tips {
-#                 .emit;
-#             }
-#             .emit for @latest-existing;
-#         }
-#     }
-#
-#     method agree(Int $tip-id --> Nil) {
-#         self!with-tip: $tip-id, -> $tip-ref is rw {
-#             $tip-ref .= agree;
-#         }
-#     }
-#
-#     method disagree(Int $tip-id --> Nil) {
-#         self!with-tip: $tip-id, -> $tip-ref is rw {
-#             $tip-ref .= disagree;
-#         }
-#     }
-#
-#     method !with-tip(Int $tip-id, &operation --> Nil) {
-#         with %!tips-by-id{$tip-id} -> $tip-ref is rw {
-#             operation($tip-ref);
-#             start $!tip-change.emit($tip-ref<>);
-#         }
-#         else {
-#             X::Tipsy::NoSuchId.new(id => $tip-id).throw;
-#         }
-#     }
-#
-#     method top-tips(--> Supply) {
-#         my %initial-tips = %!tips-by-id;
-#         supply {
-#             my %current-tips = %initial-tips;
-#             sub emit-latest-sorted() {
-#                 emit [%current-tips.values.sort({ .disagreed - .agreed }).head(50)]
-#             }
-#             whenever Supply.merge($!latest-tips.Supply, $!tip-change.Supply) {
-#                 %current-tips{.id} = $_;
-#                 emit-latest-sorted;
-#             }
-#             emit-latest-sorted;
-#         }
-#     }
-# }

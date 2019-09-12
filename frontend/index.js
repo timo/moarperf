@@ -29,8 +29,8 @@ const RoutineOverviewPage = Loadable({
   loading: () => <div>Hold on ...</div>,
 });
 
-const SnapshotList = Loadable({
-  loader: () => import(/* webpackChunkName: "snapshotlist" */ './heapanalyzer/components/SnapshotList'),
+const HeapSnapshotApp = Loadable({
+  loader: () => import(/* webpackChunkName: "heapsnapshotapp" */ './heapanalyzer/components/HeapSnapshotApp'),
   loading: () => <div>Hold on ...</div>,
 });
 
@@ -210,50 +210,46 @@ const App = (props : HeapSnapshotAppProps) => (
               }
           </style>
       }
-  <Container>
-      <h1>
-          <Button onClick={props.onAppFullscreenClicked}><i className="fas fa-arrows-alt-h"></i></Button>
-          {" "}
-          <Button tag={Link} to={"/"}><i className="fas fa-home"/></Button>
-          {" "} MoarVM Performance Tool
-      </h1>
-      <Switch>
-          <Route exact path="/">
-            <React.Fragment>
-              { /* <GreetingsPage interest="everything" step="start"/> */ }
-              <SelectFile
-                  filePath={props.tipText}
-                  onChangeFilePath={props.onChangeFilePath}
-                  onLoadFile={props.onLoadFile}
-              />
-              {
-                  props.welcome.frontendMode === "heapsnapshot" ? (<Redirect to='/heap/' />) :
-                      props.welcome.frontendMode === "profile" ? (<Redirect to='/prof/' />) : null
-              }
-            </React.Fragment>
-          </Route>
-          <Route path="/heap">
-              <SnapshotList
-                  modelState={props.heapanalyzer.modelState}
-                  loadedSnapshots={props.heapanalyzer.loadedSnapshots}
-                  onRequestSnapshot={props.heapanalyzer.onRequestSnapshot}
-              />
-          </Route>
-          <Route path="/prof" render={({ match, location }) => (
-              <ProfilerApp
-                  profilerState={props.profiler}
-                  onRoutineExpanded={props.onRoutineExpanded}
-                  onRequestGCOverview={props.onRequestGCOverview}
-                  onRequestRoutineOverview={props.onRequestRoutineOverview}
-                  onGCExpandButtonClicked={props.onGCExpandButtonClicked}
-                  match={match}
-                  location={location} />
-              )} />
-          <Route>
-              <Row><Col>There is nothing at this URL. <Link to="/">Return</Link></Col></Row>
-          </Route>
-      </Switch>
-  </Container>
+      <Container>
+          <h1>
+              <Button onClick={props.onAppFullscreenClicked}><i className="fas fa-arrows-alt-h"></i></Button>
+              {" "}
+              <Button tag={Link} to={"/"}><i className="fas fa-home"/></Button>
+              {" "} MoarVM Performance Tool
+          </h1>
+          <Switch>
+              <Route exact path="/">
+                  <React.Fragment>
+                      { /* <GreetingsPage interest="everything" step="start"/> */}
+                      <SelectFile
+                          filePath={props.tipText}
+                          onChangeFilePath={props.onChangeFilePath}
+                          onLoadFile={props.onLoadFile}
+                      />
+                      {
+                          props.welcome.frontendMode === "heapsnapshot" ? (<Redirect to='/heap/'/>) :
+                              props.welcome.frontendMode === "profile" ? (<Redirect to='/prof/'/>) : null
+                      }
+                  </React.Fragment>
+              </Route>
+              <Route path="/heap">
+                  <HeapSnapshotApp heapanalyzer={props.heapanalyzer} onRequestSnapshot={props.onRequestSnapshot}/>
+              </Route>
+              <Route path="/prof" render={({match, location}) => (
+                  <ProfilerApp
+                      profilerState={props.profiler}
+                      onRoutineExpanded={props.onRoutineExpanded}
+                      onRequestGCOverview={props.onRequestGCOverview}
+                      onRequestRoutineOverview={props.onRequestRoutineOverview}
+                      onGCExpandButtonClicked={props.onGCExpandButtonClicked}
+                      match={match}
+                      location={location}/>
+              )}/>
+              <Route>
+                  <Row><Col>There is nothing at this URL. <Link to="/">Return</Link></Col></Row>
+              </Route>
+          </Switch>
+      </Container>
   </React.Fragment>
 );
 
@@ -264,11 +260,14 @@ function mapDispatch(dispatch) {
   return {
     onChangeFilePath: text => dispatch(WelcomeActions.changeFilePath(text)),
     onLoadFile: () => dispatch(WelcomeActions.requestFile()),
+
     onRequestSnapshot: index => dispatch(HeapAnalyzerActions.requestSnapshot(index)),
+
     onRoutineExpanded: id => dispatch(ProfilerActions.expandRoutine(id)),
     onRequestGCOverview: () => dispatch(ProfilerActions.getGCOverview()),
     onRequestRoutineOverview: () => dispatch(ProfilerActions.getRoutineOverview()),
     onGCExpandButtonClicked: (seq_nr) => dispatch(ProfilerActions.getGCDetails(seq_nr)),
+
     onAppFullscreenClicked: () => dispatch(ProfilerActions.toggleFullscreen())
   };
 }

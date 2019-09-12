@@ -1,25 +1,27 @@
 {
-    "license": "Artistic-2.0",
-    "source-url": "https://github.com/timo/moarperf",
-    "depends": [
-        "JSON::Fast",
-        "OO::Monitors",
-        "Cro::HTTP",
-        "Cro::WebSocket",
-        "App::MoarVM::HeapAnalyzer",
-        "Digest::SHA1::Native",
-        "DBIish"
-    ],
-    "provides": {
-        "HeapAnalyzerWeb": "lib/HeapAnalyzerWeb.pm6",
-        "ProfilerWeb": "lib/ProfilerWeb.pm6",
-        "CodeRunner": "lib/CodeRunner.pm6",
-        "Routes": "lib/Routes.pm6"
-    },
-    "name": "MoarPerf",
-    "description": "Web App to analyze perl6 program performance",
-    "resources": [],
-    "perl": "6.*",
-    "version": "0.1",
-    "authors": [ "Timo Paulssen" ]
+  "name": "MoarPerf",
+  "description": "Web App to analyze perl6 program performance",
+  "version": "0.1",
+  "perl": "6.*",
+  "authors": [
+    "Timo Paulssen"
+  ],
+  "depends": [
+    "JSON::Fast",
+    "OO::Monitors",
+    "Cro::HTTP",
+    "Cro::WebSocket",
+    "App::MoarVM::HeapAnalyzer",
+    "Digest::SHA1::Native",
+    "DBIish"
+  ],
+  "provides": {
+    "CodeRunner": "lib/CodeRunner.pm6",
+    "HeapAnalyzerWeb": "lib/HeapAnalyzerWeb.pm6",
+    "ProfilerWeb": "lib/ProfilerWeb.pm6",
+    "Routes": "lib/Routes.pm6"
+  },
+  "resources": [],
+  "license": "Artistic-2.0",
+  "source-url": "https://github.com/timo/moarperf"
 }

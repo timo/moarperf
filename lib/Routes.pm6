@@ -181,20 +181,36 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
 
         post -> 'request-snapshot' {
             request-body -> (Int :$index!) {
-                $model.request-snapshot($index);
-                response.status = 204;
+                json-content "request-snapshot", { %( update_key => $model.request-snapshot($index) ) }
             }
+        }
+
+        get -> 'request-heap-shared-data' {
+            json-content "request-heap-shared-data", { $model.request-shared-data }
         }
 
         get -> 'heap-status-messages' {
             web-socket -> $incoming {
-                supply whenever $model.status-messages -> $message {
-                    emit to-json {
-                        WS_ACTION => True,
-                        action => {
-                              type => "HEAP_STATUS_UPDATE",
-                              body => $message
-                        }
+                note "subscription to heap status messages";
+                supply {
+                    whenever $model.status-messages -> $message {
+                        note "sending off heap event at $(DateTime.now)";
+                        emit to-json {
+                            :WS_ACTION,
+                            action => {
+                                type => "HEAP_STATUS_UPDATE",
+                                body => $message
+                            }
+                        }, :sorted-keys
+                    }
+                    whenever $model.progress-messages -> $progress {
+                        emit to-json {
+                            :WS_ACTION,
+                            action => {
+                                type => "HEAP_PROGRESS_UPDATE",
+                                body => $progress
+                            }
+                        }, :sorted-keys
                     }
                 }
             }
