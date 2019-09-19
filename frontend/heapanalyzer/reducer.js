@@ -32,7 +32,7 @@ const initialState = {
   filePath: '',
   runningOperations: {},
 };
-export default function heaspAnalyzerReducer(
+export default function heapAnalyzerReducer(
   state : HeapSnapshotState = initialState,
   action : ActionTypes.HeapSnapshotAction,
 ) : HeapSnapshotState {
