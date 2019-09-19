@@ -189,6 +189,14 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "request-heap-shared-data", { $model.request-shared-data }
         }
 
+        get -> 'collectable-data', Int $snapshot, Int $index {
+            json-content "collectable-data", { $model.collectable-data($snapshot, $index) }
+        }
+
+        get -> 'collectable-outrefs', Int $snapshot, Int $index {
+            json-content "collectable-outrefs", { $model.collectable-outrefs($snapshot, $index) }
+        }
+
         get -> 'heap-status-messages' {
             web-socket -> $incoming {
                 note "subscription to heap status messages";

@@ -1,5 +1,3 @@
-import { ResponsiveContainer, CartesianGrid, BarChart, Bar, LineChart, Line, Tooltip, XAxis, YAxis } from 'recharts';
-
 import React, {useState} from 'react';
 
 /* TODO: put this in a proper module of its own */
@@ -25,28 +23,7 @@ export function numberFormatter(number, fractionDigits = 0, thousandSeperator = 
 }
 
 
-type HighscoreColumnData = { [string]: number };
-
-type HighscoreInputData = [
-  {
-    frames_by_size: Array<HighscoreColumnData>,
-    frames_by_count: Array<HighscoreColumnData>,
-    types_by_size: Array<HighscoreColumnData>,
-    types_by_count: Array<HighscoreColumnData>,
-    frame_details: { [number]: { cuid: string, name: string, file: string, line: number } },
-    type_details: { [number]: { name: string, repr: string } }
-  }
-];
-
 type SnapshotIndex = number;
-type LineKey = string;
-
-type HighscoreGraphData = {
-  frames_by_size: Array<{
-    snapshot: SnapshotIndex,
-    [LineKey]: number,
-  }>
-};
 
 type SnapshotListProps = {
   modelState: "post-load",
@@ -63,72 +40,21 @@ type SnapshotListProps = {
 function ProgressBoxes({ progress }) {
     var elements = [];
     for (let i = 0; i < progress[1]; i++) {
-      elements.push(<span key={i} style={{paddingLeft: "1em", height: "1em", border: "1px solid #000", backgroundColor: i > progress[0] ? "#999" : "#4b4"}} />);
+      elements.push(<span key={i} style={{paddingLeft: "1em", height: "1em", backgroundColor: i > progress[0] ? "#999" : "#4b4"}} />);
     }
-    return elements
-}
-
-function HighscoreLineChart({ highscores, dataKey: key, numberOfLines = 5 }) {
-  let data = highscores[key];
-  var allKeys = {};
-  var scorePerKey = {};
-  for (let entry of data) {
-    for (let innerKey in entry) {
-      allKeys[innerKey] = 1;
-      if (typeof scorePerKey[innerKey] === "undefined") {
-        scorePerKey[innerKey] = 0;
-      }
-      scorePerKey[innerKey] += entry[innerKey];
-    }
-  }
-
-  var keyList = [];
-  for (let key in allKeys) {
-    keyList.push(key);
-  }
-
-  keyList.sort((a, b) => ( scorePerKey[b] - scorePerKey[a] ));
-
-  keyList = keyList.slice(0, numberOfLines);
-
-  let startValue = 5;
-  let endValue   = 80;
-  let valueStep  = (endValue - startValue) / numberOfLines;
-
-  return (
-    <ResponsiveContainer height={300}>
-      <LineChart data={data}>
-        <XAxis/>
-        <YAxis width={100} tickFormatter={numberFormatter}/>
-        <CartesianGrid fill="white" horizontal={false} vertical={false} />
-        {
-          keyList.map((key, index) => (
-              <Line dataKey={key} key={key} dot={false} stroke={"hsl(199, 90%, " + (valueStep * index) + "%)"} />
-          ))
-        }
-        <Tooltip content={(stuff) => {
-            const outer = stuff.payload;
-            return (
-                <div style={{ background: "#ddd" }}>
-                  <ul>
-                {
-                    outer.map(val => ( <li>{ val.name  }: { numberFormatter(val.value) }</li> ))
-                }
-                </ul>
-                </div>
-            );
-        }}/>
-      </LineChart>
-    </ResponsiveContainer>
-  );
+    return <span style={{border: "1px solid #000" }}>{ elements }</span>
 }
 
 export default function SnapshotList(props : SnapshotListProps) {
-  let [numberOfTopSpots, setNumberOfTopSpots] = useState(10);
-  let numberOfSpotChange = e => setNumberOfTopSpots(e.target.value);
+  let [requestedSnapshot, setRequestedSnapshot] = useState("");
+
   if (props.modelState === 'post-load') {
     return [
       <div> <h2>Snapshots</h2>
+        <div>Request Snapshot
+          <form onSubmit={ev => { props.onRequestSnapshot(parseInt(requestedSnapshot)); ev.preventDefault() }}>
+            <input onChange={ev => setRequestedSnapshot(ev.target.value)} value={requestedSnapshot}/>
+          </form>
         <ul> {
           props.loadedSnapshots.map(({ state, update_key }, index) => {
             if (props.operations.length > 0 && typeof update_key === "string") {
@@ -162,61 +88,8 @@ export default function SnapshotList(props : SnapshotListProps) {
             })
           }
         </ul>
-      </div>,
-        <div> <h2>Summaries</h2>
-          <h3>Total Heap Size</h3>
-          <ResponsiveContainer  height={200}>
-            <BarChart data={props.summaries}>
-              <XAxis dataKey={"gc_seq_num"}/>
-              <YAxis width={100}/>
-              <Bar dataKey={"total_heap_size"} fill={"#d43d51"}/>
-            </BarChart>
-          </ResponsiveContainer>
-          <h3>Total Object Count</h3>
-          <ResponsiveContainer height={200}>
-            <BarChart data={props.summaries}>
-              <Bar dataKey={"total_objects"} stackId={"objcount"} fill={"#00876c"} />
-              <XAxis dataKey={"gc_seq_num"}/>
-              <YAxis width={100}/>
-            </BarChart>
-          </ResponsiveContainer>
-          <h3>Typeobjects, STables, and Frames</h3>
-          <ResponsiveContainer height={200}>
-            <BarChart data={props.summaries}>
-              <Bar dataKey={"total_typeobjects"} stackId={"objcount"} fill={"#87b174"}/>
-              <Bar dataKey={"total_stables"} stackId={"objcount"} fill={"#e49158"}/>
-              <Bar dataKey={"total_frames"} stackId={"objcount"} fill={"#d43d51"}/>
-              <XAxis dataKey={"gc_seq_num"}/>
-              <YAxis width={100}/>
-            </BarChart>
-          </ResponsiveContainer>
-          <h3>References</h3>
-          <ResponsiveContainer  height={200}>
-            <BarChart data={props.summaries}>
-              <Bar dataKey={"total_refs"}  fill={"#e49158"}/>
-              <XAxis dataKey={"gc_seq_num"}/>
-              <YAxis width={100}/>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>,
-        <div>
-          <h2>Top <input value={numberOfTopSpots} onChange={numberOfSpotChange} style={{ width:"5em" }} /> scores</h2>
-          {
-            typeof props.highscores === "undefined"
-                ? <div>Waiting for results...</div>
-                :
-            <>
-              <h3>Top objects by size</h3>
-              <HighscoreLineChart highscores={props.highscores} dataKey={"types_by_size"} numberOfLines={numberOfTopSpots} />
-              <h3>Top objects by count</h3>
-              <HighscoreLineChart highscores={props.highscores} dataKey={"types_by_count"} numberOfLines={numberOfTopSpots} />
-              <h3>Top frames by size</h3>
-              <HighscoreLineChart highscores={props.highscores} dataKey={"frames_by_size"} numberOfLines={numberOfTopSpots} />
-              <h3>Top frames by count</h3>
-              <HighscoreLineChart highscores={props.highscores} dataKey={"frames_by_count"} numberOfLines={numberOfTopSpots} />
-            </>
-          }
-        </div>
+      </div>
+      </div>
     ];
   } else if (props.modelState === 'pre-load') {
     return <div>Please wait for the model file to be loaded</div>;

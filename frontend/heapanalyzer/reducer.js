@@ -55,8 +55,11 @@ export default function heapAnalyzerReducer(
       } else if (action.body.hasOwnProperty('snapshot_index')) {
         const newSnapshots = state.loadedSnapshots.slice();
         console.log('    changing snapshot at', action.body.snapshot_index);
-        newSnapshots[action.body.snapshot_index] = {state: action.body.snapshot_state, update_key: action.body.update_key};
         console.log(action);
+        newSnapshots[action.body.snapshot_index] = {
+          ...action.body.snapshot_state,
+          update_key: typeof action.body.update_key === "undefined" ? newSnapshots[action.body.snapshot_index].update_key : action.body.update_key
+        };
         console.log(newSnapshots);
         return {
           ...state,

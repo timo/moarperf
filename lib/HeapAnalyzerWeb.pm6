@@ -176,7 +176,36 @@ monitor HeapAnalyzerWeb {
         $update-key;
     }
 
-    method request-shared-data {
+    method collectable-data($snapshot, $index) {
+        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
 
+        with $!model.promise-snapshot($snapshot).result -> $s {
+            $s.col-details($index);
+        }
+    }
+
+    method collectable-outrefs($snapshot, $index) {
+        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
+
+        with $!model.promise-snapshot($snapshot).result -> $s {
+            my @parts = $s.details($index);
+            my @pieces;
+            @pieces.push: @parts.shift;
+
+            my %categories := @parts.rotor(2).classify({ .head, .tail.key });
+
+            %(do for %categories {
+                .key => %(do for .value.list -> $typepair {
+                    $typepair.key => do for $typepair.value.list { .[1].value }
+                })
+            })
+        }
+    }
+
+    method request-shared-data {
+        %(
+            types => $!model.resolve-types(^$!model.num-types),
+            frames => $!model.resolve-frames(^$!model.num-frames),
+        )
     }
 }
