@@ -141,7 +141,7 @@ monitor HeapAnalyzerWeb {
 
         $!status-updates.emit: %(
             snapshot_index => $index,
-            snapshot_state => "Preparing");
+            snapshot_state => { state => "Preparing" });
 
         my Supplier $updates .= new;
 
