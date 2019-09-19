@@ -23,10 +23,12 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
         <SnapshotList
             modelState={props.heapanalyzer.modelState}
             loadedSnapshots={props.heapanalyzer.loadedSnapshots}
+            currentSnapshot={props.heapanalyzer.currentSnapshot}
             operations={props.heapanalyzer.runningOperations}
             summaries={props.heapanalyzer.summaries}
             highscores={props.heapanalyzer.highscores}
             onRequestSnapshot={props.onRequestSnapshot}
+            onSwitchSnapshot={props.onSwitchSnapshot}
         />
         <ProgressList operations={props.heapanalyzer.runningOperations} />
     </>

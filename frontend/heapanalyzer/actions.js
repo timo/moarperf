@@ -7,6 +7,7 @@ export const STATUS_UPDATE = 'HEAP_STATUS_UPDATE';
 export const MODEL_OVERVIEW = 'MODEL_OVERVIEW';
 export const PROGRESS_UPDATE = 'HEAP_PROGRESS_UPDATE';
 export const DATA_UPDATE = 'MODEL_DATA_UPDATE';
+export const SELECTION_SWITCH = 'MODEL_SELECTION_SWITCH';
 
 type StatusUpdateAction = { type : "HEAP_STATUS_UPDATE", body: any };
 type ModelOverviewAction = { type : "MODEL_OVERVIEW", suggested_filename: string };
@@ -17,18 +18,20 @@ type ProgressUpdateAction = { type: "HEAP_PROGRESS_UPDATE",
           progress: [number, number, number]
 }
 type ModelDataAction = { type: "MODEL_DATA_UPDATE", body: any }
+type SnapshotSwitchAction = { type: "MODEL_SELECTION_SWITCH", body: number }
 
 export type HeapSnapshotAction =
                           StatusUpdateAction |
                           ModelOverviewAction |
                           ProgressUpdateAction |
-                          ModelDataAction;
+                          ModelDataAction |
+                          SnapshotSwitchAction;
 
 // type DispatchType = (HeapSnapshotAction) => void;
 // type GetStateType = () => HeapSnapshotState;
 
 export function requestSnapshot(index : number) {
-  return (dispatch) => {
+  return (dispatch, getState) => {
     $.ajax({
       url: '/request-snapshot',
       type: 'POST',
@@ -39,11 +42,14 @@ export function requestSnapshot(index : number) {
             type: "HEAP_STATUS_UPDATE",
             body: {
               snapshot_index: index,
-              snapshot_state: "Preparing",
+              snapshot_state: { state: "Preparing" },
               update_key
             }
           })
     });
+    if (typeof getState().currentSnapshot !== "undefined") {
+        dispatch({type: "MODEL_SELECTION_SWITCH", body: index});
+    }
   };
 }
 
@@ -62,4 +68,8 @@ export function requestModelData() {
                 })
         });
     };
+}
+
+export function switchSnapshot(index: number) {
+    return (dispatch) => dispatch({type: "MODEL_SELECTION_SWITCH", body: index});
 }

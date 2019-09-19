@@ -19,6 +19,7 @@ export type HeapSnapshotState = {
     +filePath: string,
     +modelState: string,
     +fileIsLoaded: boolean,
+    currentSnapshot: number,
     summaries: any,
     highscores: any,
 
@@ -92,6 +93,12 @@ export default function heaspAnalyzerReducer(
         }
       }
     }
+    case ActionTypes.SELECTION_SWITCH:
+      console.log("switch selected snapshot");
+      return {
+        ...state,
+        currentSnapshot: action.body,
+      };
     default:
       (action: empty);
       console.log("didn't understand this action");

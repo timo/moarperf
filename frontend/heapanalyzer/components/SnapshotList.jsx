@@ -1,7 +1,6 @@
-import React from 'react';
 import { ResponsiveContainer, CartesianGrid, BarChart, Bar, LineChart, Line, Tooltip, XAxis, YAxis } from 'recharts';
 
-import { useState } from 'react';
+import React, {useState} from 'react';
 
 /* TODO: put this in a proper module of its own */
 export function numberFormatter(number, fractionDigits = 0, thousandSeperator = ',', fractionSeperator = '.') {
@@ -51,8 +50,10 @@ type HighscoreGraphData = {
 
 type SnapshotListProps = {
   modelState: "post-load",
+  currentSnapshot: number,
   loadedSnapshots: Array<HeapSnapshotState>,
   onRequestSnapshot: (number) => void,
+  onSwitchSnapshot: (number) => void,
   operations: Array<any>,
   highscores: any,
 } | {
@@ -136,26 +137,28 @@ export default function SnapshotList(props : SnapshotListProps) {
                 console.log(props.operations[update_key]);
               }
             }
-            let updateWidget = typeof update_key === "string" ?
-               typeof props.operations[update_key] !== "undefined" ?
-                   <ProgressBoxes progress={props.operations[update_key].progress} />
-                   : <></>
-                : <></>;
-            return (
-              <li key={index}><div><span>Snapshot {index}</span>: {state.state}</div>
-                {
-                  state === 'Unprepared' ?
-                    <button onClick={() => props.onRequestSnapshot(index)}>Request</button>
-                      :
-                  state === 'Preparing' ?
-                    <><div>Preparing { updateWidget }</div></>
-                      :
-                  state === "Ready" ?
-                      <></>
-                      :
-                    <div><em>{state.state}</em></div>
-                }
-              </li>)
+            let updateWidget = typeof update_key === "string" && typeof props.operations[update_key] !== "undefined"
+                ? <ProgressBoxes progress={props.operations[update_key].progress} />
+                : <></>
+            if (state !== "Unprepared") {
+              return (
+                  <li key={index}>
+                    <div><span>Snapshot {index}</span>: {state}
+                    {
+                      state === 'Preparing' &&
+                          <>
+                            {" "} {updateWidget}
+                          </>
+                    }
+                    {
+                        index === props.currentSnapshot &&
+                            <> {" "} Selected </>
+                          ||
+                        <><button onClick={() => props.onSwitchSnapshot(index)}>Select</button></>
+                    }
+                    </div>
+                  </li>)
+            }
             })
           }
         </ul>
