@@ -167,7 +167,7 @@ monitor HeapAnalyzerWeb {
             whenever $!model.promise-snapshot($index, :$updates) {
                 $!status-updates.emit: %(
                     snapshot_index => $index,
-                    snapshot_state => %( state => $!model.snapshot-state($index).Str ),
+                    snapshot_state => { state => $!model.snapshot-state($index).Str },
                     is_done => True,
                 )
             }
