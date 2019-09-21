@@ -202,6 +202,20 @@ monitor HeapAnalyzerWeb {
         }
     }
 
+    my constant %kind-map = hash
+        objects => CollectableKind::Object,
+        stables => CollectableKind::STable,
+        frames  => CollectableKind::Frame;
+
+    method toplist($kind, $by, $snapshot, $count = 100, $start = 0) {
+        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
+        die unless %kind-map{$kind}:exists;
+
+        with $!model.promise-snapshot($snapshot).result -> $s {
+            my @tops = $s."top-by-$by"($count + $start, %kind-map{$kind})
+        }
+    }
+
     method request-shared-data {
         %(
             types => $!model.resolve-types(^$!model.num-types),

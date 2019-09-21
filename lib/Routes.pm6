@@ -189,6 +189,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "request-heap-shared-data", { $model.request-shared-data }
         }
 
+        get -> 'toplist', Int $snapshot, Str $kind, Str $by, Int $count = 100, Int $start = 0 {
+            json-content "toplist", { $model.toplist($kind, $by, $snapshot, $count, $start) }
+        }
+
         get -> 'collectable-data', Int $snapshot, Int $index {
             json-content "collectable-data", { $model.collectable-data($snapshot, $index) }
         }

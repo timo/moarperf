@@ -3,11 +3,17 @@ import React, { useState, useEffect } from "react";
 
 import $ from 'jquery';
 
-import { Table, Container, Input } from 'reactstrap';
+import classnames from 'classnames';
+
+import { HashRouter, Link, Redirect, Route, Switch, withRouter } from 'react-router-dom';
+
+import { Table, Container, Form, Input, InputGroup, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import type {HeapSnapshotState, OperationHandle} from '../reducer';
 import SnapshotList from './SnapshotList';
 import { SummaryGraphs, HighscoreGraphs } from './Graphs';
+
+import { numberFormatter } from './SnapshotList';
 
 export function ProgressList(props: { operations: {[string]: OperationHandle}}) {
     var output = [];
@@ -21,6 +27,94 @@ export function ProgressList(props: { operations: {[string]: OperationHandle}}) 
         )
     }
     return output;
+}
+
+export function TypeFrameListing(props: { modelData: any, onRequestModelData: () => void, currentSnapshot : number, highscores: any}) {
+    let [selectedKind, setSelectedKind] = useState("types");
+    let [highscoreData, setHighscoreData] = useState({});
+    let [sortMethod, setSortMethod] = useState("size");
+
+    useEffect(() => {
+        if (typeof props.modelData === "undefined") {
+            props.onRequestModelData();
+        }
+    }, [props.currentSnapshot]);
+
+    const idFunc = {
+        types:  data => (data.name),
+        frames: data => ((data.name === "" ? "<anon>" : data.name) + " " + data.file + ":" + data.line),
+    };
+
+    if (typeof props.modelData === "undefined") {
+        return <div>Loading...</div>
+    }
+
+    const rowFunc = {
+        types:  data => (<tr>
+            <td><small>{data.repr}</small></td>
+            <td>{data.name}</td>
+            <td>{numberFormatter(data.size)}</td>
+            <td>{numberFormatter(data.count)}</td>
+        </tr>),
+        frames: data => (<tr>
+            <td>{data.name}</td>
+            <td>{data.file} : {data.line} <small>({data.cuid})</small></td>
+            <td>{numberFormatter(data.size)}</td>
+            <td>{numberFormatter(data.count)}</td></tr>),
+    };
+
+    let tableContents = <>
+        <thead><tr>{
+            selectedKind === "types"
+            && <>
+                <th style={{width: "20%"}}>REPR</th>
+                <th style={{width: "50%"}}>Name</th>
+                <th style={{width: "15%"}}>Size</th>
+                <th style={{width: "15%"}}>Count</th>
+            </>
+            || <>
+                <th style={{width: "30%"}}>Name</th>
+                <th style={{width: "40%"}}>Location</th>
+                <th style={{width: "15%"}}>Size</th>
+                <th style={{width: "15%"}}>Count</th>
+            </>
+        }</tr></thead>
+        <tbody>
+        {
+            Array.from(props.modelData[selectedKind]).splice(0, 100).map((entry) => {
+                    let data = {...entry};
+                    let bySize = props.highscores[selectedKind + "_by_size"][props.currentSnapshot];
+                    let byCount = props.highscores[selectedKind + "_by_count"][props.currentSnapshot];
+
+                    if (typeof bySize !== "undefined" && typeof byCount !== "undefined") {
+                        if (bySize.hasOwnProperty(idFunc[selectedKind](data))) {
+                            data.size = bySize[idFunc[selectedKind](data)];
+                        }
+                        if (byCount.hasOwnProperty(idFunc[selectedKind](data))) {
+                            data.count = byCount[idFunc[selectedKind](data)];
+                        }
+                    }
+                    return rowFunc[selectedKind](data);
+                }
+            )
+        }
+        </tbody>
+    </>;
+    return (
+        <>
+            <Nav tabs>
+                <NavItem><NavLink className={classnames({active: selectedKind === "types"})}  onClick={() => setSelectedKind("types")}>Types</NavLink></NavItem>
+                <NavItem><NavLink className={classnames({active: selectedKind === "frames"})} onClick={() => setSelectedKind("frames")}>Frames</NavLink></NavItem>
+            </Nav>
+            <TabContent activeTab={"the_one_tab"}>
+                <TabPane tabId={"the_one_tab"}><Container>
+                    <Table style={{ tableLayout: "fixed"}}>
+                        {tableContents}
+                    </Table>
+                </Container></TabPane>
+            </TabContent>
+        </>
+    )
 }
 
 export function CollectableDisplay(props: any) {
@@ -54,7 +148,7 @@ export function CollectableDisplay(props: any) {
                 setCollectableData({ ...data, wantToRequest: 1 });
             }
         })
-    }, [collectableData]);
+    }, [collectableData, props.snapshotIndex]);
 
 
     function navigateTo(id) {
@@ -64,17 +158,30 @@ export function CollectableDisplay(props: any) {
         setNavigateInputText(id);
     }
 
+    const ulStyle = {
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "space-evenly"
+    };
+    const liStyle = {
+        border: "1px solid black",
+        textAlign: "center",
+        background: "#eef",
+    }
+
     return (
         <>
             <div style={props.style}>
-                Collectable
-                <form onSubmit={(ev) => { ev.preventDefault(); navigateTo(navigateInput) }}>
-                <Input
-                    value={navigateInput}
-                    onChange={(ev) => setNavigateInputText(ev.target.value)}
-                    onBlur={(ev) => navigateTo(navigateInput) }/>
-                </form>
-                { collectableData.hasOwnProperty("description") && collectableData.description }
+                <Form inline onSubmit={(ev) => { ev.preventDefault(); navigateTo(navigateInput) }}>
+                    <InputGroup>
+                        <Label>Collectable</Label>
+                        <Input
+                            value={navigateInput}
+                            onChange={(ev) => setNavigateInputText(ev.target.value)}
+                            onBlur={(ev) => navigateTo(navigateInput) }/>
+                        <Label>{ collectableData.hasOwnProperty("description") && collectableData.description }</Label>
+                    </InputGroup>
+                </Form>
                 {
                     typeof collectableData.description !== "undefined" && <>
                         <Table><tbody>
@@ -92,16 +199,6 @@ export function CollectableDisplay(props: any) {
                                             { key }
                                             {
                                                 Object.entries(value).map(([key, value], index) => {
-                                                    const ulStyle = {
-                                                        display: "flex",
-                                                        flexWrap: "wrap",
-                                                        justifyContent: "space-evenly"
-                                                    };
-                                                    const liStyle = {
-                                                        border: "1px solid black",
-                                                        textAlign: "center",
-                                                        background: "#eef",
-                                                    }
                                                     return (
                                                     <Container>
                                                         {key}
@@ -125,14 +222,25 @@ export function CollectableDisplay(props: any) {
     )
 }
 
-export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState, onRequestSnapshot: any, onSwitchSnapshot: any }) {
+const path = (match, extra) => ((match.url.endsWith("/") ? match.url : match.url + "/") + extra);
+
+export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState, onRequestSnapshot: any, onSwitchSnapshot: any, path : any, match : any }) {
     let [numberOfTopSpots, setNumberOfTopSpots] = useState(10);
-    let [showGraphs, setShowGraphs] = useState(true);
     let numberOfSpotChange = e => setNumberOfTopSpots(e.target.value);
 
-    let toggleGraphs = function() { setShowGraphs(!showGraphs)};
-
     return <>
+        <Nav tabs>
+            <NavItem>
+                <NavLink tag={Link} to={props.match.url}>Summary and Highscores</NavLink>
+            </NavItem>
+            <NavItem>
+                <NavLink tag={Link} to={path(props.match, "collectables")}>Explorer</NavLink>
+            </NavItem>
+            <NavItem>
+                <NavLink tag={Link} to={path(props.match, "types-frames")}>Type & Frame Lists</NavLink>
+            </NavItem>
+        </Nav>
+
         <SnapshotList
             modelState={props.heapanalyzer.modelState}
             loadedSnapshots={props.heapanalyzer.loadedSnapshots}
@@ -144,25 +252,43 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
             onRequestSnapshot={props.onRequestSnapshot}
             onSwitchSnapshot={props.onSwitchSnapshot}
         />
-        {
-            typeof props.heapanalyzer.currentSnapshot === "number" &&
-                <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr"}}>
+
+        <Switch>
+            <Route path={props.match.url + "/collectables"} render={({location, match}) => (
+                <div style={{display: "grid", gridTemplateColumns: "1fr 3fr 1fr 3fr"}}>
+
+                    <div><ul><li>Link</li><li>Link</li><li>Link</li><li>Link</li></ul></div>
+
                     <CollectableDisplay snapshotIndex={props.heapanalyzer.currentSnapshot} initialIndex={0}/>
+
+                    <div><ul><li>Link</li><li>Link</li><li>Link</li><li>Link</li></ul></div>
+
                     <CollectableDisplay snapshotIndex={props.heapanalyzer.currentSnapshot} initialIndex={1}/>
-                    <CollectableDisplay snapshotIndex={props.heapanalyzer.currentSnapshot} initialIndex={2}/>
-                </div>
-        }
-        <div><button onClick={toggleGraphs}>{ showGraphs && "Hide" || "Show" }</button>
-            {
-                showGraphs &&
+
+                </div>)} />
+
+            <Route path={props.match.url + "/types-frames"} render={({location, match}) => (
+                <div>
+                    <TypeFrameListing
+                        currentSnapshot={props.heapanalyzer.currentSnapshot}
+                        modelData={props.heapanalyzer.modelData}
+                        onRequestModelData={props.onRequestModelData}
+
+                        highscores={props.heapanalyzer.highscores}
+                    />
+                </div>)} />
+
+            <Route path={props.match.url + "/"} exact>
                 <>
+                <div>
                     <SummaryGraphs data={props.heapanalyzer.summaries}/>
                     <HighscoreGraphs value={numberOfTopSpots} onChange={numberOfSpotChange}
                                      highscores={props.heapanalyzer.highscores}/>
+                </div>
+                <div height={"500px"}></div>
                 </>
-            }
-        </div>
-        <div height={"500px"}></div>
+            </Route>
+        </Switch>
         <ProgressList operations={props.heapanalyzer.runningOperations} />
     </>
 }
