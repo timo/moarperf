@@ -191,6 +191,8 @@ type HeapSnapshotAppProps = {
   modelState: string,
   loadedSnapshots: ?Array<HeapSnapshotState>,
   onRequestSnapshot: ?(number) => void,
+  onSwitchSnapshot: (number) => void,
+  onRequestModelData: () => void,
 };
 
 const App = (props : HeapSnapshotAppProps) => (
@@ -232,8 +234,15 @@ const App = (props : HeapSnapshotAppProps) => (
                       }
                   </React.Fragment>
               </Route>
-              <Route path="/heap">
-                  <HeapSnapshotApp heapanalyzer={props.heapanalyzer} onRequestSnapshot={props.onRequestSnapshot} onSwitchSnapshot={props.onSwitchSnapshot}/>
+              <Route path="/heap" render={({match, location}) => (
+                  <HeapSnapshotApp
+                      heapanalyzer={props.heapanalyzer}
+                      onRequestSnapshot={props.onRequestSnapshot}
+                      onSwitchSnapshot={props.onSwitchSnapshot}
+                      onRequestModelData={props.onRequestModelData}
+                      match={match}
+                      location={location}
+                  />)}>
               </Route>
               <Route path="/prof" render={({match, location}) => (
                   <ProfilerApp
@@ -263,6 +272,7 @@ function mapDispatch(dispatch) {
 
     onRequestSnapshot: index => dispatch(HeapAnalyzerActions.requestSnapshot(index)),
     onSwitchSnapshot: index => dispatch(HeapAnalyzerActions.switchSnapshot(index)),
+    onRequestModelData: () => dispatch(HeapAnalyzerActions.requestModelData()),
 
     onRoutineExpanded: id => dispatch(ProfilerActions.expandRoutine(id)),
     onRequestGCOverview: () => dispatch(ProfilerActions.getGCOverview()),

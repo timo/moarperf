@@ -22,6 +22,7 @@ export type HeapSnapshotState = {
     currentSnapshot: number,
     summaries: any,
     highscores: any,
+    modelData: {types: {[number]: {name: string, repr: string} }, frames: {[number]: any}},
 
     runningOperations: { [string]: OperationHandle },
 }
@@ -101,6 +102,12 @@ export default function heapAnalyzerReducer(
       return {
         ...state,
         currentSnapshot: action.body,
+      };
+    case ActionTypes.DATA_UPDATE:
+      console.log("get heap shared data");
+      return {
+        ...state,
+        modelData: action.body.data,
       };
     default:
       (action: empty);

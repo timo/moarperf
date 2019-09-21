@@ -57,11 +57,9 @@ export function requestModelData() {
     return (dispatch) => {
         $.ajax({
             url: '/request-heap-shared-data',
-            type: 'POST',
-            contentType: 'application/json',
-            success: ({ data }) => dispatch(
+            success: (data) => dispatch(
                 {
-                    type: "MODEL_DATA_ACTION",
+                    type: DATA_UPDATE,
                     body: {
                         data
                     }
