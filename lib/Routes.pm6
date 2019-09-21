@@ -201,6 +201,10 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
             json-content "collectable-outrefs", { $model.collectable-outrefs($snapshot, $index) }
         }
 
+        get -> 'find', Int $snapshot, Str $kind, Str $condition, Str $target, Int $count = 500, Int $start = 0 {
+            json-content "find", { $model.find($snapshot, $kind, $condition, $target, $count, $start) }
+        }
+
         get -> 'heap-status-messages' {
             web-socket -> $incoming {
                 note "subscription to heap status messages";

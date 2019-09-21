@@ -216,6 +216,15 @@ monitor HeapAnalyzerWeb {
         }
     }
 
+    method find(Int $snapshot, Str $kind, $condition, $target, Int $count, Int $start) {
+        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
+        die unless %kind-map{$kind}:exists;
+
+        with $!model.promise-snapshot($snapshot).result -> $s {
+            my @tops = $s.find($count + $start, %kind-map{$kind}, $condition, $target)
+        }
+    }
+
     method request-shared-data {
         %(
             types => $!model.resolve-types(^$!model.num-types),
