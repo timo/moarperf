@@ -7,7 +7,7 @@ import classnames from 'classnames';
 
 import { HashRouter, Link, Redirect, Route, Switch, withRouter } from 'react-router-dom';
 
-import { Table, Container, Form, Input, InputGroup, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
+import { Table, Container, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import type {HeapSnapshotState, OperationHandle} from '../reducer';
 import SnapshotList from './SnapshotList';
@@ -117,11 +117,59 @@ export function TypeFrameListing(props: { modelData: any, onRequestModelData: ()
     )
 }
 
+function CollectableNavButton(props: { onClick: () => void, entry: any }) {
+    const liStyle = {
+        border: "1px solid black",
+        textAlign: "center",
+        background: "#eef",
+    }
+
+    return <button style={liStyle} onClick={props.onClick}>{props.entry}</button>;
+}
+
+export function PathDisplay({pathData, onRequestNavigation, currentCollectable}) {
+    let pairList = [];
+    let i = 0;
+    while (i < pathData.length - 1) {
+        pairList.push([pathData[i++], pathData[i++]]);
+    }
+
+    return (<div><ListGroup flush>
+        {
+            pairList.map(([collectable, reference]) => (
+                currentCollectable === collectable[1]
+                &&
+                <>
+                    <ListGroupItem><small> » {collectable[0]} <CollectableNavButton onClick={() => onRequestNavigation(collectable[1])} entry={collectable[1]}/> « <br /><small>{reference}</small></small></ListGroupItem>
+                </>
+                ||
+                <>
+                    <ListGroupItem><small>{collectable[0]} <CollectableNavButton onClick={() => onRequestNavigation(collectable[1])} entry={collectable[1]}/><br /><small>{reference}</small></small></ListGroupItem>
+                </>
+            ))
+        }
+    </ListGroup>
+    </div>)
+}
+
+const examplePath = [
+    ["Root",0],"VM Instance Roots",
+    ["VM Instance Roots",2],"Specialization log queue",
+    ["BOOTQueue (Object)",488784],"Unknown",
+    ["<anon MVMSpeshLog> (Object)",488833],"Type entry",
+    ["Str::CombN (Type Object)",488604],"<STable>",
+    ["Str::CombN (STable)",488601],"HOW",
+    ["Perl6::Metamodel::ClassHOW (Object)",488609],"Unknown",
+    ["<anon Uninstantiable> (Type Object)",488616]];
+
+
 export function CollectableDisplay(props: any) {
     let [collectableData, setCollectableData] = useState({ index: props.initialIndex });
     let [navigateInput, setNavigateInputText] = useState(props.initialIndex);
     let [outgoingRefs, setOutgoingRefs] = useState(undefined);
     let [incomingRefs, setIncomingRefs] = useState(undefined);
+
+    let [pathData, setPathData] = useState(examplePath);
 
     function requestOutgoingRefs() {
         if (typeof collectableData.outrefs === "undefined") {
@@ -130,6 +178,13 @@ export function CollectableDisplay(props: any) {
                 success: (data) => setCollectableData({...collectableData, outrefs: data})
             });
         }
+    }
+
+    function requestPath() {
+        $.ajax({
+            url: 'path/' + props.snapshotIndex + '/' + collectableData.index,
+            success: (data) => setPathData(data)
+        });
     }
 
     useEffect(() => {
@@ -150,12 +205,25 @@ export function CollectableDisplay(props: any) {
         })
     }, [collectableData, props.snapshotIndex]);
 
+    if (typeof props.snapshotIndex !== "number") {
+        return (<div>Select a snapshot first ...</div>)
+    }
 
     function navigateTo(id) {
+        if (id !== collectableData.index) {
+            setOutgoingRefs(undefined);
+            setIncomingRefs(undefined);
+            setCollectableData({index: id});
+            setNavigateInputText(id);
+        }
+    }
+
+    function navigateViaPath(pathDesc, id) {
         setOutgoingRefs(undefined);
         setIncomingRefs(undefined);
         setCollectableData({index: id});
         setNavigateInputText(id);
+        setPathData(Array.from(pathData).concat([pathDesc, [collectableData.description, collectableData.index]]));
     }
 
     const ulStyle = {
@@ -163,23 +231,63 @@ export function CollectableDisplay(props: any) {
         flexWrap: "wrap",
         justifyContent: "space-evenly"
     };
-    const liStyle = {
-        border: "1px solid black",
-        textAlign: "center",
-        background: "#eef",
+
+    var outerEntries = [];
+
+    if (typeof collectableData.outrefs !== "undefined") {
+        outerEntries = Object.entries(collectableData.outrefs);
+        outerEntries.sort();
+    }
+
+    let outrefsData = (
+        collectableData.hasOwnProperty("outrefs") &&
+        outerEntries.map(([refCategoryKey, refCategoryValue], index) => (
+            <div style={{paddingLeft: "0.2em"}}>
+                { refCategoryKey }
+                {
+                    Object.entries(refCategoryValue).map(([refTypeKey, refTypeValue], index) => {
+                        if (refTypeValue.length === 1) {
+                            let entry = refTypeValue[0];
+                            return (
+                                <Container>
+                                    {refTypeKey} <CollectableNavButton key={entry} onClick={() => navigateViaPath(refCategoryKey, entry)} entry={entry}/>
+                                </Container>)
+                        }
+                        return (
+                            <Container>
+                                {refTypeKey}
+                                <div style={ulStyle}>
+                                    {refTypeValue.map(entry => (<CollectableNavButton key={entry} onClick={() => navigateViaPath(refCategoryKey, entry)} entry={entry}/>))}
+                                </div>
+                            </Container>)
+                    })
+                }
+            </div>
+        ))
+        ||
+        <tr><td><button onClick={() => requestOutgoingRefs()}>Load</button></td></tr>
+    )
+
+    let descr = typeof collectableData.description === "undefined" ? " ()" : collectableData.description;
+    var collectableKind;
+    var collectableName = descr;
+    if (descr.indexOf("(") != -1) {
+        collectableKind = descr.substr(descr.lastIndexOf("("));
+        collectableName = descr.substr(0, descr.lastIndexOf("(") - 1);
     }
 
     return (
         <>
+            <PathDisplay pathData={pathData} onRequestNavigation={navigateTo} currentCollectable={collectableData.index}/>
             <div style={props.style}>
                 <Form inline onSubmit={(ev) => { ev.preventDefault(); navigateTo(navigateInput) }}>
+                    <InputGroup><Label>Collectable {collectableKind}</Label></InputGroup>
                     <InputGroup>
-                        <Label>Collectable</Label>
                         <Input
                             value={navigateInput}
                             onChange={(ev) => setNavigateInputText(ev.target.value)}
                             onBlur={(ev) => navigateTo(navigateInput) }/>
-                        <Label>{ collectableData.hasOwnProperty("description") && collectableData.description }</Label>
+                        <Label>{ collectableName }</Label>
                     </InputGroup>
                 </Form>
                 {
@@ -189,31 +297,11 @@ export function CollectableDisplay(props: any) {
                             <tr><td>Size</td><td>{ collectableData.size } + { collectableData.unmanagedSize }</td></tr>
                             <tr><td rowSpan={2}>References</td><td>{ collectableData['outgoing-refs'] } outgoing</td></tr>
                             <tr><td>{ collectableData['incoming-refs'] } incoming</td></tr>
+                            <tr><td colSpan={2}><button onClick={requestPath}>Show Path</button></td></tr>
                         </tbody></Table>
                         <div>
                             <div style={{textAlign: "center"}}>Outgoing References</div>
-                            {
-                                collectableData.hasOwnProperty("outrefs") &&
-                                    Object.entries(collectableData.outrefs).map(([key, value], index) => (
-                                        <div style={{paddingLeft: "0.2em"}}>
-                                            { key }
-                                            {
-                                                Object.entries(value).map(([key, value], index) => {
-                                                    return (
-                                                    <Container>
-                                                        {key}
-                                                        <div style={ulStyle}>
-                                                            {value.map(entry => (<button key={entry} style={liStyle} onClick={() => navigateTo(entry)}>{entry}</button>))}
-                                                        </div>
-                                                    </Container>)
-                                                })
-                                            }
-                                        </div>
-                                    ))
-                                ||
-                                    <tr><td><button onClick={() => requestOutgoingRefs()}>Load</button></td></tr>
-
-                            }
+                            { outrefsData }
                         </div>
                     </>
                 }
@@ -223,6 +311,15 @@ export function CollectableDisplay(props: any) {
 }
 
 const path = (match, extra) => ((match.url.endsWith("/") ? match.url : match.url + "/") + extra);
+
+export function CollectableNavigator({heapanalyzer}) {
+
+    return (
+        <div style={{display: "grid", gridTemplateColumns: "1fr 3fr 1fr 3fr"}}>
+            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} initialIndex={0}/>
+            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} initialIndex={1}/>
+        </div>)
+}
 
 export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState, onRequestSnapshot: any, onSwitchSnapshot: any, path : any, match : any }) {
     let [numberOfTopSpots, setNumberOfTopSpots] = useState(10);
@@ -255,17 +352,8 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
 
         <Switch>
             <Route path={props.match.url + "/collectables"} render={({location, match}) => (
-                <div style={{display: "grid", gridTemplateColumns: "1fr 3fr 1fr 3fr"}}>
-
-                    <div><ul><li>Link</li><li>Link</li><li>Link</li><li>Link</li></ul></div>
-
-                    <CollectableDisplay snapshotIndex={props.heapanalyzer.currentSnapshot} initialIndex={0}/>
-
-                    <div><ul><li>Link</li><li>Link</li><li>Link</li><li>Link</li></ul></div>
-
-                    <CollectableDisplay snapshotIndex={props.heapanalyzer.currentSnapshot} initialIndex={1}/>
-
-                </div>)} />
+                <CollectableNavigator heapanalyzer={props.heapanalyzer}/>
+                )} />
 
             <Route path={props.match.url + "/types-frames"} render={({location, match}) => (
                 <div>

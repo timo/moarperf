@@ -225,6 +225,14 @@ monitor HeapAnalyzerWeb {
         }
     }
 
+    method path(Int $snapshot, Int $collectable) {
+        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
+
+        with $!model.promise-snapshot($snapshot).result -> $s {
+            $s.path($collectable).duckmap(-> Pair $p { [$p.key, $p.value] });
+        }
+    }
+
     method request-shared-data {
         %(
             types => $!model.resolve-types(^$!model.num-types),
