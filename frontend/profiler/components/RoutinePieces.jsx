@@ -118,8 +118,15 @@ export function allocationInfo({routine}) {
 
 export function RoutineFileInfo({routine}) {
     var link;
-    if (routine.file.startsWith("SETTING::")) {
-        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/master/src/core/" + routine.file.replace("SETTING::", "") + ".pm6#L" + routine.line}>
+    if (routine.file.startsWith("CORE::v6")) {
+        var withoutBeginning = routine.file.replace("CORE::v6", "");
+        var coreVersion = withoutBeginning.substring(1, 2);
+        withoutBeginning = withoutBeginning.substring(4);
+        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/master/src/core." + coreVersion + "/" + withoutBeginning + ".pm6#L" + routine.line}>
+            { routine.file }:{ routine.line }</a>
+    }
+    else if (routine.file.startsWith("CORE::")) {
+        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/master/src/core/" + routine.file.replace("CORE::", "") + ".pm6#L" + routine.line}>
             { routine.file }:{ routine.line }</a>
     }
     else {

@@ -27,7 +27,12 @@ sub concise-name($name) {
 }
 sub concise-file($file is copy) {
     if $file.starts-with("SETTING::src/core/") {
-        $file.=subst("SETTING::src/core/", "SETTING::");
+        $file.=subst("SETTING::src/core/", "CORE::");
+        $file.=subst(".pm6", "");
+    }
+    elsif $file.starts-with("SETTING::src/core.") {
+        $file.=subst("SETTING::src/core", "CORE::v6");
+        $file = $file.substr(0, 10) ~ "::" ~ $file.substr(11);
         $file.=subst(".pm6", "");
     }
     elsif $file.starts-with($*HOME.Str) {
