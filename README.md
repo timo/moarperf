@@ -2,7 +2,9 @@
 
 Moarperf is a tool that takes the output of the Rakudo perl 6 profilers available on MoarVM and makes them viewable with a web browser.
 
-Currently, only the instrumented profiler, which is the default one you get when you run a program with the `--profile` flag. It is important to pass a `--profile-filename` that ends in `.sql`.
+Depending on whether you pass an "instrumented profiler" file (`.sql`) or a "heap snapshot file" (`.mvmheap`), you will get one or the other profiler frontend.
+
+Running your perl6 program with `--profile=foo.sql` or `--profile=bar.mvmheap` will generate a file for you. Additionally, the `Telemetry` module that comes with Rakudo offers a `snap` sub that takes a `:heap` argument that lets you create heap snapshots at specific points in your program, rather than whenever the GC runs.
 
 # Installing and Running the Front-end
 
