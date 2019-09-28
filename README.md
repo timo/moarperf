@@ -10,7 +10,7 @@ You can install all dependencies of moarperf using zef. From inside a `git clone
 
 Some tests might not run right. That's probably not a big problem. If it keeps you from progressing, you can additionally pass `--/test` to zef.
 
-The next step is to build and bundle all the javascript stuff. For that, first install the dependencies to your local `node_modules` using, for example, `npm install .`. Then to actually throw the code bundles together, run `npm run build`. It will start a watcher that immediately recompiles stuff whenever the sources change. That's good for development, but not for usage. You can just ctrl-c it after it spat out its summary of files generated.
+The next step is to build and bundle all the javascript stuff. All the sources and stuff live under `frontend/`, so the `npm` commands have to be run from inside that folder. First install the dependencies to your local `node_modules` using, for example, `npm install .`. Then to actually throw the code bundles together, run `npm run build`. It will start a watcher that immediately recompiles stuff whenever the sources change. That's good for development, but not for usage. You can just ctrl-c it after it spat out its summary of files generated.
 
 After that, you can run `perl6 -I lib service.p6` to start the program. By default it will open a web interface on http://localhost:20000, but environment variables can be used to change that. Passing a filename, either a `.sql` or a `.sqlite3` file, will immediately load the profile data in question.
 
