@@ -202,6 +202,21 @@ monitor HeapAnalyzerWeb {
         }
     }
 
+    method collectable-inrefs($snapshot, $index) {
+        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
+
+        with $!model.promise-snapshot($snapshot).result -> $s {
+            my $rev-refs = $s.reverse-refs($index).squish.cache;
+            my %categories = $rev-refs.classify(*.value, as => *.key);
+
+            use Data::Dump::Tree;
+
+            ddt %categories;
+
+            [%categories.sort({ .value.elems, .value.head }).map({ .key, .value })]
+        }
+    }
+
     my constant %kind-map = hash
         objects => CollectableKind::Object,
         stables => CollectableKind::STable,

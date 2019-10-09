@@ -127,6 +127,17 @@ function CollectableNavButton(props: { onClick: () => void, entry: any }) {
     return <button style={liStyle} onClick={props.onClick}>{props.entry}</button>;
 }
 
+export function splitObjectDescr(descr) {
+    descr = typeof descr === "undefined" ? " ()" : descr;
+    var collectableKind;
+    var collectableName = descr;
+    if (descr.indexOf("(") != -1) {
+        collectableKind = descr.substr(descr.lastIndexOf("("));
+        collectableName = descr.substr(0, descr.lastIndexOf("(") - 1);
+    }
+    return [collectableKind, collectableName];
+}
+
 export function PathDisplay({pathData, onRequestNavigation, currentCollectable}) {
     let pairList = [];
     let i = 0;
@@ -136,17 +147,25 @@ export function PathDisplay({pathData, onRequestNavigation, currentCollectable})
 
     return (<div><ListGroup flush>
         {
-            pairList.map(([collectable, reference]) => (
+            pairList.map(([collectable, reference]) => {
+                let [collectableKind, collectableName] = splitObjectDescr(collectable[0]);
+
+                return (
                 currentCollectable === collectable[1]
                 &&
                 <>
-                    <ListGroupItem><small> » {collectable[0]} <CollectableNavButton onClick={() => onRequestNavigation(collectable[1])} entry={collectable[1]}/> « <br /><small>{reference}</small></small></ListGroupItem>
+                    <ListGroupItem><small> » {collectableName} « <br /><CollectableNavButton
+                        onClick={() => onRequestNavigation(collectable[1])}
+                        entry={collectable[1]}/><br/><small>{reference}</small></small></ListGroupItem>
                 </>
                 ||
                 <>
-                    <ListGroupItem><small>{collectable[0]} <CollectableNavButton onClick={() => onRequestNavigation(collectable[1])} entry={collectable[1]}/><br /><small>{reference}</small></small></ListGroupItem>
+                    <ListGroupItem><small>{collectableName}<br /><CollectableNavButton
+                        onClick={() => onRequestNavigation(collectable[1])}
+                        entry={collectable[1]}/><br/><small>{reference}</small></small></ListGroupItem>
                 </>
-            ))
+                )
+            })
         }
     </ListGroup>
     </div>)
@@ -162,21 +181,38 @@ const examplePath = [
     ["Perl6::Metamodel::ClassHOW (Object)",488609],"Unknown",
     ["<anon Uninstantiable> (Type Object)",488616]];
 
-
 export function CollectableDisplay(props: any) {
     let [collectableData, setCollectableData] = useState({ index: props.initialIndex });
     let [navigateInput, setNavigateInputText] = useState(props.initialIndex);
     let [outgoingRefs, setOutgoingRefs] = useState(undefined);
     let [incomingRefs, setIncomingRefs] = useState(undefined);
 
+    let [selectedRefDirection, setRefDirection] = useState("out");
+
     let [pathData, setPathData] = useState(examplePath);
 
     function requestOutgoingRefs() {
-        if (typeof collectableData.outrefs === "undefined") {
+        if (typeof outgoingRefs === "undefined") {
             $.ajax({
                 url: 'collectable-outrefs/' + props.snapshotIndex + '/' + collectableData.index,
-                success: (data) => setCollectableData({...collectableData, outrefs: data})
+                success: (data) => setOutgoingRefs( data )
             });
+        }
+    }
+
+    function requestIncomingRefs() {
+        if (typeof incomingRefs === "undefined") {
+            $.ajax({
+                url: 'collectable-inrefs/' + props.snapshotIndex + '/' + collectableData.index,
+                success: (data) => setIncomingRefs( data )
+            });
+        }
+    }
+
+    function selectRefDirection(direction) {
+        setRefDirection(direction);
+        if (direction === "in" && collectableData.hasOwnProperty("incoming-refs") && typeof incomingRefs === "undefined") {
+            requestIncomingRefs()
         }
     }
 
@@ -192,6 +228,9 @@ export function CollectableDisplay(props: any) {
             if (collectableData.wantToRequest) {
                 if (collectableData["outgoing-refs"] < 128) {
                     requestOutgoingRefs();
+                }
+                if (collectableData.hasOwnProperty("incoming-refs") && collectableData["incoming-refs"] < 128 && selectedRefDirection === "in") {
+                    requestIncomingRefs();
                 }
                 setCollectableData({ ...collectableData, wantToRequest: 0});
             }
@@ -210,7 +249,7 @@ export function CollectableDisplay(props: any) {
     }
 
     function navigateTo(id) {
-        if (id !== collectableData.index) {
+        if (id != collectableData.index) {
             setOutgoingRefs(undefined);
             setIncomingRefs(undefined);
             setCollectableData({index: id});
@@ -223,6 +262,19 @@ export function CollectableDisplay(props: any) {
         setIncomingRefs(undefined);
         setCollectableData({index: id});
         setNavigateInputText(id);
+
+        let pathCopy = Array.from(pathData);
+
+        /* put the new entry in the path list right after the entry for the current one, if
+         it had been switched to earlier. */
+        pathCopy.map((val, idx) => {
+            if (idx % 2 == 0) {
+                if (val[1] === collectableData.index) {
+                    pathCopy = pathCopy.slice(0, idx);
+                }
+            }
+        });
+
         setPathData(Array.from(pathData).concat([pathDesc, [collectableData.description, collectableData.index]]));
     }
 
@@ -232,49 +284,94 @@ export function CollectableDisplay(props: any) {
         justifyContent: "space-evenly"
     };
 
-    var outerEntries = [];
+    var refEntries = [];
 
-    if (typeof collectableData.outrefs !== "undefined") {
-        outerEntries = Object.entries(collectableData.outrefs);
-        outerEntries.sort();
+    if (selectedRefDirection === "out") {
+        if (typeof outgoingRefs !== "undefined") {
+            refEntries = Object.entries(outgoingRefs);
+            refEntries.sort();
+        }
+    }
+    else if (selectedRefDirection === "in") {
+        if (typeof incomingRefs !== "undefined") {
+            refEntries = Array.from(incomingRefs);
+            refEntries.sort();
+        }
     }
 
-    let outrefsData = (
-        collectableData.hasOwnProperty("outrefs") &&
-        outerEntries.map(([refCategoryKey, refCategoryValue], index) => (
-            <div style={{paddingLeft: "0.2em"}}>
-                { refCategoryKey }
-                {
-                    Object.entries(refCategoryValue).map(([refTypeKey, refTypeValue], index) => {
-                        if (refTypeValue.length === 1) {
-                            let entry = refTypeValue[0];
+    var refsData;
+
+    if (selectedRefDirection === "out") {
+        refsData = (
+            refEntries.length > 0 &&
+            refEntries.map(([refCategoryKey, refCategoryValue], index) => (
+                <div style={{paddingLeft: "0.2em"}}>
+                    {refCategoryKey}
+                    {
+                        Object.entries(refCategoryValue).map(([refTypeKey, refTypeValue], index) => {
+                            if (refTypeValue.length === 1) {
+                                let entry = refTypeValue[0];
+                                return (
+                                    <Container>
+                                        {refTypeKey} <CollectableNavButton key={entry}
+                                                                           onClick={() => navigateViaPath(refCategoryKey, entry)}
+                                                                           entry={entry}/>
+                                    </Container>)
+                            }
                             return (
                                 <Container>
-                                    {refTypeKey} <CollectableNavButton key={entry} onClick={() => navigateViaPath(refCategoryKey, entry)} entry={entry}/>
+                                    {refTypeKey}
+                                    <div style={ulStyle}>
+                                        {refTypeValue.map(entry => (<CollectableNavButton key={entry}
+                                                                                          onClick={() => navigateViaPath(refCategoryKey, entry)}
+                                                                                          entry={entry}/>))}
+                                    </div>
                                 </Container>)
-                        }
-                        return (
-                            <Container>
-                                {refTypeKey}
-                                <div style={ulStyle}>
-                                    {refTypeValue.map(entry => (<CollectableNavButton key={entry} onClick={() => navigateViaPath(refCategoryKey, entry)} entry={entry}/>))}
-                                </div>
-                            </Container>)
-                    })
-                }
-            </div>
-        ))
-        ||
-        <tr><td><button onClick={() => requestOutgoingRefs()}>Load</button></td></tr>
-    )
-
-    let descr = typeof collectableData.description === "undefined" ? " ()" : collectableData.description;
-    var collectableKind;
-    var collectableName = descr;
-    if (descr.indexOf("(") != -1) {
-        collectableKind = descr.substr(descr.lastIndexOf("("));
-        collectableName = descr.substr(0, descr.lastIndexOf("(") - 1);
+                        })
+                    }
+                </div>
+            ))
+            ||
+            <tr>
+                <td>
+                    <button onClick={() => requestOutgoingRefs()}>Load</button>
+                </td>
+            </tr>
+        )
     }
+    else if (selectedRefDirection === "in") {
+        refsData = (
+            refEntries.length > 0 &&
+            refEntries.map(([refTypeKey, refTypeValue], index) => {
+                if (refTypeValue.length === 1) {
+                    let entry = refTypeValue[0];
+                    return (
+                        <Container>
+                            {refTypeKey} <CollectableNavButton key={entry}
+                                                               onClick={() => navigateViaPath("Incoming Ref", entry)}
+                                                               entry={entry}/>
+                        </Container>)
+                }
+                return (
+                    <Container>
+                        {refTypeKey}
+                        <div style={ulStyle}>
+                            {refTypeValue.map(entry => (<CollectableNavButton key={entry}
+                                                                              onClick={() => navigateViaPath("Incoming Ref", entry)}
+                                                                              entry={entry}/>))}
+                        </div>
+                    </Container>)
+            })
+            ||
+            <tr>
+                <td>
+                    <button onClick={() => requestIncomingRefs()}>Load</button>
+                </td>
+            </tr>
+        )
+    }
+
+    let [collectableKind, collectableName] = splitObjectDescr(collectableData.description);
 
     return (
         <>
@@ -300,8 +397,15 @@ export function CollectableDisplay(props: any) {
                             <tr><td colSpan={2}><button onClick={requestPath}>Show Path</button></td></tr>
                         </tbody></Table>
                         <div>
-                            <div style={{textAlign: "center"}}>Outgoing References</div>
-                            { outrefsData }
+                            <Nav tabs>
+                                <NavItem>
+                                    <NavLink onClick={() => selectRefDirection("out")} className={classnames({active: selectedRefDirection === "out"})}>Outgoing Refs</NavLink>
+                                </NavItem>
+                                <NavItem>
+                                    <NavLink onClick={() => selectRefDirection("in")} className={classnames({active: selectedRefDirection === "in"})}>Incoming Refs</NavLink>
+                                </NavItem>
+                            </Nav>
+                            { refsData }
                         </div>
                     </>
                 }
