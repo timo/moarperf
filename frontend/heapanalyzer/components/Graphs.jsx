@@ -27,6 +27,11 @@ export function HighscoreLineChart({highscores, dataKey: key, numberOfLines = 5}
     let data = highscores[key];
     var allKeys = {};
     var scorePerKey = {};
+
+    if (typeof data === "undefined") {
+        return <></>
+    }
+
     for (let entry of data) {
         for (let innerKey in entry) {
             allKeys[innerKey] = 1;
