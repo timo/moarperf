@@ -223,8 +223,8 @@ monitor HeapAnalyzerWeb {
         frames  => CollectableKind::Frame;
 
     method toplist($kind, $by, $snapshot, $count = 100, $start = 0) {
-        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
-        die unless %kind-map{$kind}:exists;
+        die "snapshot not loaded" unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
+        die "invalid kind $kind" unless %kind-map{$kind}:exists;
 
         with $!model.promise-snapshot($snapshot).result -> $s {
             my @tops = $s."top-by-$by"($count + $start, %kind-map{$kind})
@@ -232,8 +232,10 @@ monitor HeapAnalyzerWeb {
     }
 
     method find(Int $snapshot, Str $kind, $condition, $target, Int $count, Int $start) {
-        die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
-        die unless %kind-map{$kind}:exists;
+        die "snapshot not loaded" unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
+        die "invalid kind $kind" unless %kind-map{$kind}:exists;
+
+        dd $count, $start;
 
         with $!model.promise-snapshot($snapshot).result -> $s {
             my $tops = $s.find($count + $start, %kind-map{$kind}, $condition, $target);
