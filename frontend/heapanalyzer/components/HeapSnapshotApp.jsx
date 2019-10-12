@@ -188,7 +188,7 @@ const examplePath = [
     ["<anon Uninstantiable> (Type Object)",488616]];
 
 export function CollectableDisplay(props: any) {
-    let [collectableData, setCollectableData] = useState({ index: props.initialIndex });
+    let [collectableData, setCollectableData] = useState({ index: props.initialIndex, snapshot: props.snapshotIndex });
     let [navigateInput, setNavigateInputText] = useState(props.initialIndex);
     let [outgoingRefs, setOutgoingRefs] = useState(undefined);
     let [incomingRefs, setIncomingRefs] = useState(undefined);
@@ -397,7 +397,7 @@ export function CollectableDisplay(props: any) {
                     typeof collectableData.description !== "undefined" && <>
                         <Table><tbody>
                             <tr><td>Kind</td><td>{ collectableData.kind }</td></tr>
-                            <tr><td>Size</td><td>{ collectableData.size } + { collectableData.unmanagedSize }</td></tr>
+                            <tr><td>Size</td><td>{ collectableData.size } { collectableData['unmanaged-size'] === 0 ? "" : " + " + collectableData['unmanaged-size'] }</td></tr>
                             <tr><td rowSpan={2}>References</td><td>{ collectableData['outgoing-refs'] } outgoing</td></tr>
                             <tr><td>{ collectableData['incoming-refs'] } incoming</td></tr>
                             <tr><td colSpan={2}><button onClick={requestPath}>Show Path</button></td></tr>
@@ -427,6 +427,70 @@ export function CollectableNavigator({heapanalyzer}) {
             <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} initialIndex={0}/>
             <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} initialIndex={1}/>
         </div>)
+}
+
+export function ObjectFinder(props: {modelData: any, onRequestModelData: () => void, currentSnapshot : number, match: any}) {
+    let [objectData, setObjectData] = useState({snapshotNum: -1});
+
+    const match = props.match;
+
+    function categorizeObjectList(data, snapshotNum) {
+        let result = [];
+
+        for (let obj of data) {
+            if (typeof result[obj.size] === "undefined") {
+                result[obj.size] = [];
+            }
+            result[obj.size].push(obj);
+        }
+
+        setObjectData({snapshotNum: snapshotNum, data: result});
+    }
+
+    useEffect(() => {
+        console.log("object finder effect ran for", match.params.target);
+        if (typeof objectData.data === "undefined" || objectData.snapshotNum !== props.currentSnapshot) {
+            let requestedSnapshot = props.currentSnapshot;
+            console.log("sending ajax request");
+            $.ajax({
+                url: '/find/' + props.currentSnapshot + '/' + match.params.kind + '/' + match.params.condition + '/' + match.params.target,
+                success: (data) => {
+                    console.log("ajax success", props.currentSnapshot, requestedSnapshot);
+                    if (props.currentSnapshot === requestedSnapshot)
+                        categorizeObjectList(data, requestedSnapshot);
+                }
+            })
+        }
+
+    }, [props.currentSnapshot, match.params.kind, match.params.condition, match.params.target])
+
+    if (typeof objectData.data === "undefined") {
+        return <>Loading...</>
+    }
+
+    return <Container>
+            <Table>
+                <thead>
+                <tr>
+                    <th>Objects</th>
+                    <th>Size</th>
+                </tr>
+                </thead>
+                <tbody>
+                {
+                    objectData.data.map((val, index) => {
+                        return <tr><td>
+                                { val.map((val => (<CollectableNavButton onClick={() => (1)} entry={val.id}/>))) }
+                            </td>
+                            <td>
+                                { index }
+                            </td>
+                        </tr>
+                    })
+                }
+                </tbody>
+            </Table>
+        </Container>
 }
 
 export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState, onRequestSnapshot: any, onSwitchSnapshot: any, path : any, match : any }) {
@@ -474,6 +538,17 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
                         onRequestModelData={props.onRequestModelData}
 
                         highscores={props.heapanalyzer.highscores}
+
+                        match={match}
+                    />
+                </div>)} />
+
+            <Route path={props.match.url + "/find-collectables/:kind/:condition/:target"} render={({location, match}) => (
+                <div>
+                    <ObjectFinder
+                        currentSnapshot={props.heapanalyzer.currentSnapshot}
+                        modelData={props.heapanalyzer.modelData}
+                        onRequestModelData={props.onRequestModelData}
 
                         match={match}
                     />
