@@ -236,7 +236,9 @@ monitor HeapAnalyzerWeb {
         die unless %kind-map{$kind}:exists;
 
         with $!model.promise-snapshot($snapshot).result -> $s {
-            my @tops = $s.find($count + $start, %kind-map{$kind}, $condition, $target)
+            my $tops = $s.find($count + $start, %kind-map{$kind}, $condition, $target);
+            say $tops.values.elems;
+            $tops.values.map({ %( id => .[0], descr => .[1], size => .[2] ) });
         }
     }
 
