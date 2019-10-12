@@ -26,6 +26,7 @@ sub concise-name($name) {
     $name || "<anon>"
 }
 sub concise-file($file is copy) {
+    say $file;
     if $file.starts-with("SETTING::src/core/") {
         $file.=subst("SETTING::src/core/", "CORE::");
         $file.=subst(".pm6", "");
@@ -47,6 +48,7 @@ sub concise-file($file is copy) {
             (.*)/;
         $file = $/.list.join("");
     }
+    say $file;
     $file
 }
 

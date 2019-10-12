@@ -210,7 +210,10 @@ export function CollectableDisplay(props: any) {
         if (typeof incomingRefs === "undefined") {
             $.ajax({
                 url: 'collectable-inrefs/' + props.snapshotIndex + '/' + collectableData.index,
-                success: (data) => setIncomingRefs( data )
+                success: (data) => {
+                    setIncomingRefs(data);
+                    setCollectableData({ ...collectableData, ["incoming-refs"]: data.length });
+                }
             });
         }
     }
@@ -230,7 +233,14 @@ export function CollectableDisplay(props: any) {
     }
 
     useEffect(() => {
-        if (collectableData.hasOwnProperty("description")) {
+        if (collectableData.snapshot !== props.snapshotIndex) {
+            setCollectableData({ index: collectableData.index, snapshot: props.snapshotIndex });
+            setIncomingRefs(undefined);
+            setOutgoingRefs(undefined);
+            setPathData(examplePath);
+            return;
+        }
+        if (collectableData.hasOwnProperty("description") && collectableData.snapshot === props.snapshotIndex) {
             if (collectableData.wantToRequest) {
                 if (collectableData["outgoing-refs"] < 128) {
                     requestOutgoingRefs();
@@ -245,7 +255,7 @@ export function CollectableDisplay(props: any) {
         $.ajax({
             url: '/collectable-data/' + props.snapshotIndex + '/' + collectableData.index,
             success: (data) => {
-                setCollectableData({ ...data, wantToRequest: 1 });
+                setCollectableData({ ...data, wantToRequest: 1, snapshot: props.snapshotIndex });
             }
         })
     }, [collectableData, props.snapshotIndex]);
