@@ -7,13 +7,15 @@ import classnames from 'classnames';
 
 import { HashRouter, Link, Redirect, Route, Switch, withRouter } from 'react-router-dom';
 
-import { Table, Container, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
+import { Button, Table, Container, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import type {HeapSnapshotState, OperationHandle} from '../reducer';
 import SnapshotList from './SnapshotList';
 import { SummaryGraphs, HighscoreGraphs } from './Graphs';
 
 import { numberFormatter } from './SnapshotList';
+
+const path = (match, extra) => ((match.url.endsWith("/") ? match.url : match.url + "/") + extra);
 
 export function ProgressList(props: { operations: {[string]: OperationHandle}}) {
     var output = [];
@@ -29,7 +31,7 @@ export function ProgressList(props: { operations: {[string]: OperationHandle}}) 
     return output;
 }
 
-export function TypeFrameListing(props: { modelData: any, onRequestModelData: () => void, currentSnapshot : number, highscores: any}) {
+export function TypeFrameListing(props: { modelData: any, onRequestModelData: () => void, currentSnapshot : number, highscores: any }) {
     let [selectedKind, setSelectedKind] = useState("types");
     let [highscoreData, setHighscoreData] = useState({});
     let [sortMethod, setSortMethod] = useState("size");
@@ -48,16 +50,19 @@ export function TypeFrameListing(props: { modelData: any, onRequestModelData: ()
     if (typeof props.modelData === "undefined") {
         return <div>Loading...</div>
     }
-
     const rowFunc = {
         types:  data => (<tr>
             <td><small>{data.repr}</small></td>
-            <td>{data.name}</td>
+            <td><Link to={""}><Button>
+                <i className={"fas fa-search"}/>
+            </Button></Link> {data.name}</td>
             <td>{numberFormatter(data.size)}</td>
             <td>{numberFormatter(data.count)}</td>
         </tr>),
         frames: data => (<tr>
-            <td>{data.name}</td>
+            <td><Link to={""}><Button>
+                <i className={"fas fa-search"}/>
+            </Button> {data.name}</Link></td>
             <td>{data.file} : {data.line} <small>({data.cuid})</small></td>
             <td>{numberFormatter(data.size)}</td>
             <td>{numberFormatter(data.count)}</td></tr>),
@@ -81,6 +86,7 @@ export function TypeFrameListing(props: { modelData: any, onRequestModelData: ()
         }</tr></thead>
         <tbody>
         {
+            typeof props.highscores !== "undefined" &&
             Array.from(props.modelData[selectedKind]).splice(0, 100).map((entry) => {
                     let data = {...entry};
                     let bySize = props.highscores[selectedKind + "_by_size"][props.currentSnapshot];
@@ -414,8 +420,6 @@ export function CollectableDisplay(props: any) {
     )
 }
 
-const path = (match, extra) => ((match.url.endsWith("/") ? match.url : match.url + "/") + extra);
-
 export function CollectableNavigator({heapanalyzer}) {
 
     return (
@@ -452,11 +456,14 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
 
             onRequestSnapshot={props.onRequestSnapshot}
             onSwitchSnapshot={props.onSwitchSnapshot}
+
+            match={props.match}
         />
 
         <Switch>
             <Route path={props.match.url + "/collectables"} render={({location, match}) => (
-                <CollectableNavigator heapanalyzer={props.heapanalyzer}/>
+                <CollectableNavigator heapanalyzer={props.heapanalyzer}
+                                      match={match}/>
                 )} />
 
             <Route path={props.match.url + "/types-frames"} render={({location, match}) => (
@@ -467,6 +474,8 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
                         onRequestModelData={props.onRequestModelData}
 
                         highscores={props.heapanalyzer.highscores}
+
+                        match={match}
                     />
                 </div>)} />
 
