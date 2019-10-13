@@ -185,6 +185,7 @@ const ProfilerApp = props => {
 };
 
 type HeapSnapshotAppProps = {
+  history: any,
   tipText: string,
   onChangeFilePath: ?(string) => void,
   onLoadFile: ?(string) => void,
@@ -242,6 +243,7 @@ const App = (props : HeapSnapshotAppProps) => (
                       onRequestModelData={props.onRequestModelData}
                       match={match}
                       location={location}
+                      history={history}
                   />)}>
               </Route>
               <Route path="/prof" render={({match, location}) => (
@@ -326,7 +328,7 @@ const ConnectedApp = withRouter(connect(mapProps, mapDispatch)(App));
 render(
   <Provider store={store}>
     <HashRouter>
-      <ConnectedApp />
+      <ConnectedApp/>
     </HashRouter>
   </Provider>,
   document.getElementById('app'),

@@ -53,17 +53,19 @@ export function TypeFrameListing(props: { modelData: any, onRequestModelData: ()
     const rowFunc = {
         types:  data => (<tr>
             <td><small>{data.repr}</small></td>
-            <td><Link to={""}><Button>
+            <td><Link to={"/heap/find-collectables/objects/type/" + encodeURIComponent(data.name)}><Button>
                 <i className={"fas fa-search"}/>
             </Button></Link> {data.name}</td>
             <td>{numberFormatter(data.size)}</td>
             <td>{numberFormatter(data.count)}</td>
         </tr>),
         frames: data => (<tr>
-            <td><Link to={""}><Button>
+            <td><Link to={"/heap/find-collectables/frames/name/" + encodeURIComponent(data.name)}><Button>
                 <i className={"fas fa-search"}/>
             </Button> {data.name}</Link></td>
-            <td>{data.file} : {data.line} <small>({data.cuid})</small></td>
+            <td><Link to={"/heap/find-collectables/frames/file/" + encodeURIComponent(data.file)}><Button>
+                <i className={"fas fa-search"}/>
+            </Button>{data.file}</Link> : {data.line} <small>({data.cuid})</small></td>
             <td>{numberFormatter(data.size)}</td>
             <td>{numberFormatter(data.count)}</td></tr>),
     };
@@ -455,6 +457,8 @@ export function CollectableNavigator({heapanalyzer, match}) {
 export function ObjectFinder(props: {modelData: any, onRequestModelData: () => void, currentSnapshot : number, match: any}) {
     let [objectData, setObjectData] = useState({snapshotNum: -1});
 
+    let history = useHistory();
+
     const match = props.match;
 
     function categorizeObjectList(data, snapshotNum) {
@@ -474,7 +478,11 @@ export function ObjectFinder(props: {modelData: any, onRequestModelData: () => v
         if (typeof objectData.data === "undefined" || objectData.snapshotNum !== props.currentSnapshot) {
             let requestedSnapshot = props.currentSnapshot;
             $.ajax({
-                url: '/find/' + props.currentSnapshot + '/' + match.params.kind + '/' + match.params.condition + '/' + match.params.target,
+                url: '/find/'
+                    + encodeURIComponent(props.currentSnapshot) + '/'
+                    + encodeURIComponent(match.params.kind) + '/'
+                    + encodeURIComponent(match.params.condition) + '/'
+                    + encodeURIComponent(match.params.target),
                 success: (data) => {
                     if (props.currentSnapshot === requestedSnapshot)
                         categorizeObjectList(data, requestedSnapshot);
@@ -492,18 +500,19 @@ export function ObjectFinder(props: {modelData: any, onRequestModelData: () => v
             <Table>
                 <thead>
                 <tr>
-                    <th>Objects</th>
                     <th>Size</th>
+                    <th>Objects</th>
                 </tr>
                 </thead>
                 <tbody>
                 {
                     objectData.data.map((val, index) => {
-                        return <tr><td>
-                                { val.map((val => (<CollectableNavButton onClick={() => (1)} entry={val.id}/>))) }
-                            </td>
+                        return <tr>
                             <td>
                                 { index }
+                            </td>
+                            <td>
+                                { val.map((val => (<CollectableNavButton onClick={() => (history.push("/heap/collectables/" + val.id + "/0"))} entry={val.id}/>))) }
                             </td>
                         </tr>
                     })
