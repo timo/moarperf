@@ -87,7 +87,7 @@ const GcTableRow = ({ data, expanded, seq_details, prevData, onGCExpandButtonCli
             };
 
             $.ajax({
-                url: '/deallocations-for-sequence/' + data.sequence_num,
+                url: '/deallocations-for-sequence/' + encodeURIComponent(data.sequence_num),
                 type: 'GET',
                 contentType: 'application/json',
                 success: (types) => stateChangeForTypes(this, types),

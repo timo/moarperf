@@ -46,7 +46,7 @@ export default class Routine extends Component<{ routine: *, metadata: *, column
         }
 
         $.ajax({
-            url: '/routine-allocations/' + this.props.routine.id,
+            url: '/routine-allocations/' + encodeURIComponent(this.props.routine.id),
             type: 'GET',
             contentType: 'application/json',
             success: (allocs) => stateChangeForAlloc(this, allocs),

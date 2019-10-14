@@ -28,7 +28,7 @@ class CallersList extends Component {
         }
 
         $.ajax({
-            url: '/routine-callers/' + this.props.routineId,
+            url: '/routine-callers/' + encodeURIComponent(this.props.routineId),
             type: 'GET',
             contentType: 'application/json',
             success: (callers) => stateChangeForCallers(this, callers),

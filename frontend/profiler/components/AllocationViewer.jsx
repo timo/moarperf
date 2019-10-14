@@ -165,7 +165,7 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
             };
 
             $.ajax({
-                url: '/allocating-routines-per-type/' + this.props.alloc.id,
+                url: '/allocating-routines-per-type/' + encodeURIComponent(this.props.alloc.id),
                 type: 'GET',
                 contentType: 'application/json',
                 success: (routines) => stateChangeForRoutines(this, routines, this.props.alloc),
@@ -216,7 +216,7 @@ export class AllocationType extends Component<{ onClick: () => any, alloc: any }
             };
 
             $.ajax({
-                url: '/deallocations-for-type/' + this.props.alloc.id,
+                url: '/deallocations-for-type/' + encodeURIComponent(this.props.alloc.id),
                 type: 'GET',
                 contentType: 'application/json',
                 success: (routines) => stateChangeForDeallocations(this, routines, this.props.alloc),

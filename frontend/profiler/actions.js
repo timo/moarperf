@@ -47,7 +47,7 @@ export function expandRoutine(id : number) {
         console.log("will we get data about", id, "?", getState().profiler.expanded[id], typeof getState().profiler.allRoutineChildren[id]);
         if (getState().profiler.expanded[id] && typeof getState().profiler.allRoutineChildren[id] === "undefined") {
             $.ajax({
-                url: '/routine-children/' + id,
+                url: '/routine-children/' + encodeURIComponent(id),
                 type: 'GET',
                 contentType: 'application/json',
                 success: (entries) => dispatch({type: ROUTINE_CHILDREN_GET, id, entries}),
@@ -98,7 +98,7 @@ export function getGCDetails(seq_num : number) {
         });
         if (typeof getState().profiler.gcDetails === "undefined") {
             $.ajax({
-                url: '/gc-details/' + seq_num,
+                url: '/gc-details/' + encodeURIComponent(seq_num),
                 type: 'GET',
                 contentType: 'application/json',
                 success: (data) => dispatch({type: 'GC_SEQ_DETAILS_GET', seq_num, data}),

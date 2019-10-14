@@ -179,7 +179,7 @@ export default class OverviewPage extends React.Component {
         }
 
         $.ajax({
-            url: '/call-children/' + callId,
+            url: '/call-children/' + encodeURIComponent(callId),
             type: 'GET',
             contentType: 'application/json',
             success: (children) => stateChangeForChildren(this, children, callId),

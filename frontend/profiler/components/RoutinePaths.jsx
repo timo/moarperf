@@ -40,8 +40,8 @@ export default class RoutinePaths extends Component<{routineId: *, callIdList: *
             return max + 1;
         }
         const url = typeof this.props.routineId === "undefined"
-            ? '/call-paths/' + this.props.callIdList.join(",")
-            : '/routine-paths/' + this.props.routineId;
+            ? '/call-paths/' + encodeURIComponent(this.props.callIdList.join(","))
+            : '/routine-paths/' + encodeURIComponent(this.props.routineId);
         $.ajax({
             url: url,
             type: 'GET',

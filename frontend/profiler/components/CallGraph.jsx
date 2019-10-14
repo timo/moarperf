@@ -103,7 +103,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
 
         $.ajax({
-            url: '/call-path/' + this.props.callId,
+            url: '/call-path/' + encodeURIComponent(this.props.callId),
             type: 'GET',
             contentType: 'application/json',
             success: (path) => stateChangeForPath(this, path, this.props.callId),
@@ -123,7 +123,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
 
         $.ajax({
-            url: '/call-children/' + this.props.callId,
+            url: '/call-children/' + encodeURIComponent(this.props.callId),
             type: 'GET',
             contentType: 'application/json',
             success: (children) => stateChangeForChildren(this, children, this.props.callId),
@@ -140,7 +140,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
 
         $.ajax({
-            url: '/call-allocations/' + this.props.callId,
+            url: '/call-allocations/' + encodeURIComponent(this.props.callId),
             type: 'GET',
             contentType: 'application/json',
             success: (allocs) => stateChangeForAlloc(this, allocs, this.props.callId),
@@ -176,7 +176,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
                 }));
         };
         $.ajax({
-            url: '/flamegraph-for/' + this.props.callId,
+            url: '/flamegraph-for/' + encodeURIComponent(this.props.callId),
             type: 'GET',
             contentType: 'application/json',
             success: (flamegraph) => stateChangeForFlameGraph(this, flamegraph),
@@ -205,7 +205,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
 
         $.ajax({
-            url: '/call-children/' + this.props.callId + "/search/" + encodeURIComponent(searchText),
+            url: '/call-children/' + encodeURIComponent(this.props.callId) + "/search/" + encodeURIComponent(searchText),
             type: 'GET',
             contentType: 'application/json',
             success: (searchResults) => stateChangeForSearch(this, searchResults, this.props.callId, searchText),
@@ -242,7 +242,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
         }
 
         $.ajax({
-            url: '/inclusive-call-allocations/' + this.props.callId,
+            url: '/inclusive-call-allocations/' + encodeURIComponent(this.props.callId),
             type: 'GET',
             contentType: 'application/json',
             success: (allocs) => stateChangeForIncAllocs(this, allocs),
@@ -273,7 +273,7 @@ export default class CallGraph extends Component<{ routines: *, callId: * }> {
 
         this.state.children.forEach((child) => {
             $.ajax({
-                url: '/inclusive-call-allocations/' + child.id,
+                url: '/inclusive-call-allocations/' + encodeURIComponent(child.id),
                 type: 'GET',
                 contentType: 'application/json',
                 success: (allocs) => stateChangeForIncAllocs(this, allocs, child.id),

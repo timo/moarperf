@@ -204,7 +204,7 @@ export function CollectableDisplay(props: any) {
     function requestOutgoingRefs() {
         if (typeof outgoingRefs === "undefined") {
             $.ajax({
-                url: 'collectable-outrefs/' + props.snapshotIndex + '/' + props.index,
+                url: 'collectable-outrefs/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.index),
                 success: (data) => setOutgoingRefs( data )
             });
         }
@@ -213,7 +213,7 @@ export function CollectableDisplay(props: any) {
     function requestIncomingRefs() {
         if (typeof incomingRefs === "undefined") {
             $.ajax({
-                url: 'collectable-inrefs/' + props.snapshotIndex + '/' + props.index,
+                url: 'collectable-inrefs/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.index),
                 success: (data) => {
                     setIncomingRefs(data);
                     setCollectableData({ ...collectableData, ["incoming-refs"]: data.length });
@@ -231,7 +231,7 @@ export function CollectableDisplay(props: any) {
 
     function requestPath() {
         $.ajax({
-            url: 'path/' + props.snapshotIndex + '/' + props.index,
+            url: 'path/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.index),
             success: (data) => setPathData(data)
         });
     }
@@ -258,7 +258,7 @@ export function CollectableDisplay(props: any) {
             return;
         }
         $.ajax({
-            url: '/collectable-data/' + props.snapshotIndex + '/' + props.index,
+            url: '/collectable-data/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.index),
             success: (data) => {
                 setCollectableData({ ...data, index: props.index, wantToRequest: 1, snapshot: props.snapshotIndex });
             }
