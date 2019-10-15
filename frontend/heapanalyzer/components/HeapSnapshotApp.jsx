@@ -125,14 +125,19 @@ export function TypeFrameListing(props: { modelData: any, onRequestModelData: ()
     )
 }
 
-function CollectableNavButton(props: { onClick: () => void, entry: any }) {
+function CollectableNavButton(props: { onClick: () => void, url: ?string, entry: any }) {
     const liStyle = {
         border: "1px solid black",
         textAlign: "center",
         background: "#eef",
     }
 
-    return <button style={liStyle} onClick={props.onClick}>{props.entry}</button>;
+    if (typeof props.url === "undefined") {
+        return <button style={liStyle} onClick={props.onClick}>{props.entry}</button>;
+    }
+    else {
+        return <Link to={props.url}><button style={liStyle} onClick={props.onClick}>{props.entry}</button></Link>;
+    }
 }
 
 export function splitObjectDescr(descr) {
@@ -146,7 +151,7 @@ export function splitObjectDescr(descr) {
     return [collectableKind, collectableName];
 }
 
-export function PathDisplay({pathData, onRequestNavigation, currentCollectable}) {
+export function PathDisplay({pathData, onRequestNavigation, currentCollectable, makeTargetUrl}) {
     let pairList = [];
     let i = 0;
     while (i < pathData.length - 1) {
@@ -164,13 +169,13 @@ export function PathDisplay({pathData, onRequestNavigation, currentCollectable})
                 <>
                     <ListGroupItem><small> » {collectableName} « <br /><CollectableNavButton
                         onClick={() => onRequestNavigation(collectable[1])}
-                        entry={collectable[1]}/><br/><small>{reference}</small></small></ListGroupItem>
+                        entry={collectable[1]} url={makeTargetUrl(collectable[1])}/><br/><small>{reference}</small></small></ListGroupItem>
                 </>
                 ||
                 <>
                     <ListGroupItem><small>{collectableName}<br /><CollectableNavButton
                         onClick={() => onRequestNavigation(collectable[1])}
-                        entry={collectable[1]}/><br/><small>{reference}</small></small></ListGroupItem>
+                        entry={collectable[1]}  url={makeTargetUrl(collectable[1])}/><br/><small>{reference}</small></small></ListGroupItem>
                 </>
                 )
             })
@@ -199,7 +204,11 @@ export function CollectableDisplay(props: any) {
 
     let [pathData, setPathData] = useState(examplePath);
 
-    const pushNavigationToHistory = props.onPushTargetChange;
+    let history = useHistory();
+
+    function pushNavigationToHistory(entry) {
+        history.push(props.makeTargetUrl(entry));
+    }
 
     function requestOutgoingRefs() {
         if (typeof outgoingRefs === "undefined") {
@@ -338,6 +347,7 @@ export function CollectableDisplay(props: any) {
                                     <Container>
                                         {refTypeKey} <CollectableNavButton key={entry}
                                                                            onClick={() => navigateViaPath(refCategoryKey, entry)}
+                                                                           url={props.makeTargetUrl(entry)}
                                                                            entry={entry}/>
                                     </Container>)
                             }
@@ -347,6 +357,7 @@ export function CollectableDisplay(props: any) {
                                     <div style={ulStyle}>
                                         {refTypeValue.map(entry => (<CollectableNavButton key={entry}
                                                                                           onClick={() => navigateViaPath(refCategoryKey, entry)}
+                                                                                          url={props.makeTargetUrl(entry)}
                                                                                           entry={entry}/>))}
                                     </div>
                                 </Container>)
@@ -372,6 +383,7 @@ export function CollectableDisplay(props: any) {
                         <Container>
                             {refTypeKey} <CollectableNavButton key={entry}
                                                                onClick={() => navigateViaPath("Incoming Ref", entry)}
+                                                               url={props.makeTargetUrl(entry)}
                                                                entry={entry}/>
                         </Container>)
                 }
@@ -381,6 +393,7 @@ export function CollectableDisplay(props: any) {
                         <div style={ulStyle}>
                             {refTypeValue.map(entry => (<CollectableNavButton key={entry}
                                                                               onClick={() => navigateViaPath("Incoming Ref", entry)}
+                                                                              url={props.makeTargetUrl(entry)}
                                                                               entry={entry}/>))}
                         </div>
                     </Container>)
@@ -398,7 +411,7 @@ export function CollectableDisplay(props: any) {
 
     return (
         <>
-            <PathDisplay pathData={pathData} onRequestNavigation={navigateTo} currentCollectable={props.index}/>
+            <PathDisplay pathData={pathData} onRequestNavigation={navigateTo} currentCollectable={props.index} makeTargetUrl={props.makeTargetUrl}/>
             <div style={props.style}>
                 <Form inline onSubmit={(ev) => { ev.preventDefault(); navigateTo(navigateInput) }}>
                     <InputGroup><Label>Collectable {collectableKind}</Label></InputGroup>
@@ -441,16 +454,16 @@ export function CollectableNavigator({heapanalyzer, match}) {
     let history = useHistory();
 
     function navigateLeft(target) {
-        history.push("/heap/collectables/" + target + "/" + match.params.rightIndex);
+        return "/heap/collectables/" + encodeURIComponent(heapanalyzer.currentSnapshot) + "/" + encodeURIComponent(target) + "/" + encodeURIComponent(match.params.rightIndex);
     }
     function navigateRight(target) {
-        history.push("/heap/collectables/" + match.params.leftIndex + "/" + target);
+        return "/heap/collectables/" + encodeURIComponent(heapanalyzer.currentSnapshot) + "/" + encodeURIComponent(match.params.leftIndex) + "/" + encodeURIComponent(target);
     }
 
     return (
         <div style={{display: "grid", gridTemplateColumns: "1fr 3fr 1fr 3fr"}}>
-            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} index={match.params.leftIndex}  onPushTargetChange={navigateLeft}/>
-            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} index={match.params.rightIndex} onPushTargetChange={navigateRight}/>
+            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} index={match.params.leftIndex}  makeTargetUrl={navigateLeft}/>
+            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} index={match.params.rightIndex} makeTargetUrl={navigateRight}/>
         </div>)
 }
 
@@ -512,7 +525,7 @@ export function ObjectFinder(props: {modelData: any, onRequestModelData: () => v
                                 { index }
                             </td>
                             <td>
-                                { val.map((val => (<CollectableNavButton onClick={() => (history.push("/heap/collectables/" + val.id + "/0"))} entry={val.id}/>))) }
+                                { val.map((val => (<CollectableNavButton onClick={() => (history.push("/heap/collectables/" + val.id + "/0"))} url={"/heap/collectables/" + val.id + "/0"} entry={val.id}/>))) }
                             </td>
                         </tr>
                     })
@@ -532,7 +545,7 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
                 <NavLink tag={Link} to={props.match.url}>Summary and Highscores</NavLink>
             </NavItem>
             <NavItem>
-                <NavLink tag={Link} to={path(props.match, "collectables/0/1/")}>Explorer</NavLink>
+                <NavLink tag={Link} to={path(props.match, "collectables/" + props.heapanalyzer.currentSnapshot + "/0/1/")}>Explorer</NavLink>
             </NavItem>
             <NavItem>
                 <NavLink tag={Link} to={path(props.match, "types-frames")}>Type & Frame Lists</NavLink>
@@ -554,7 +567,7 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
         />
 
         <Switch>
-            <Route path={props.match.url + "/collectables/:leftIndex/:rightIndex"} render={({location, match}) => (
+            <Route path={props.match.url + "/collectables/:snapshotIndex/:leftIndex/:rightIndex"} render={({location, match}) => (
                 <CollectableNavigator heapanalyzer={props.heapanalyzer}
                                       match={match}/>
                 )} />
