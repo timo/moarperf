@@ -224,8 +224,10 @@ export function CollectableDisplay(props: any) {
             $.ajax({
                 url: 'collectable-inrefs/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.index),
                 success: (data) => {
+                    var sum = 0;
+                    data.forEach((list) => { sum += list[1].length});
                     setIncomingRefs(data);
-                    setCollectableData({ ...collectableData, ["incoming-refs"]: data.length });
+                    setCollectableData({ ...collectableData, ["incoming-refs"]: sum });
                 }
             });
         }
