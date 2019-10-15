@@ -9,7 +9,7 @@ monitor HeapAnalyzerWeb {
 
     has Supplier $!status-updates = Supplier::Preserving.new;
 
-    has $!latest-model-state;
+    has $!latest-model-state = "nothing";
 
     has %.operations-in-progress;
 
@@ -101,6 +101,10 @@ monitor HeapAnalyzerWeb {
             if $!latest-model-state eq "post-load" {
                 Promise.in(0.1).then({ $!status-updates.emit({ model_state => "post-load", |self.model-overview }) });
             }
+            if $!latest-model-state eq "nothing" {
+                Promise.in(0.1).then({ $!status-updates.emit({ model_state => "nothing" }) });
+            }
+            $!status-updates.Supply.tap({ note "heap status message: $_" });
         }
         $!status-updates.Supply
     }

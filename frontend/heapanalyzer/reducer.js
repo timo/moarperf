@@ -28,7 +28,7 @@ export type HeapSnapshotState = {
 }
 
 const initialState = {
-  modelState: 'pre-load',
+  modelState: 'unknown',
   loadedSnapshots: [],
   filePath: '',
   runningOperations: {},

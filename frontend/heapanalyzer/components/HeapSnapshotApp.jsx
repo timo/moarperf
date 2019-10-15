@@ -541,6 +541,10 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
     let [numberOfTopSpots, setNumberOfTopSpots] = useState(10);
     let numberOfSpotChange = e => setNumberOfTopSpots(e.target.value);
 
+    if (props.heapanalyzer.modelState === "nothing") {
+        return <Redirect to={"/"}/>
+    }
+
     return <>
         <Nav tabs>
             <NavItem>
