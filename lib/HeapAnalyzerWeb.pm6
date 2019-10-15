@@ -134,6 +134,10 @@ monitor HeapAnalyzerWeb {
         }
     }
 
+    method !make-update-key {
+        (flat "a".."z", "A".."Z").pick(16).join("");
+    }
+
     method request-snapshot($index) {
         note "requested snapshot at ", DateTime.now;
 
@@ -149,7 +153,7 @@ monitor HeapAnalyzerWeb {
 
         my Supplier $updates .= new;
 
-        my $update-key = (flat "a".."z", "A".."Z").pick(16).join("");
+        my $update-key = self!make-update-key;
 
         $!progress-updates.emit: %(
                     progress => [0, 1, 0],
@@ -209,13 +213,23 @@ monitor HeapAnalyzerWeb {
     method collectable-inrefs($snapshot, $index) {
         die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
 
+        my $updates = Supplier::Preserving.new;
+        my $update-key = self!make-update-key;
+
+        start react whenever $updates.Supply -> $message {
+            if $message<progress>:exists {
+                $!progress-updates.emit: %(
+                        description => "calculating incoming refs for snapshot $snapshot",
+                        uuid => $update-key,
+                        progress => $message<progress>,
+                        :!cancellable,
+                    );
+            }
+        }
+
         with $!model.promise-snapshot($snapshot).result -> $s {
-            my $rev-refs = $s.reverse-refs($index).squish.cache;
+            my $rev-refs = $s.reverse-refs($index, :$updates).squish.cache;
             my %categories = $rev-refs.classify(*.value, as => *.key);
-
-            use Data::Dump::Tree;
-
-            ddt %categories;
 
             [%categories.sort({ .value.elems, .value.head }).map({ .key, .value })]
         }
@@ -251,8 +265,22 @@ monitor HeapAnalyzerWeb {
     method path(Int $snapshot, Int $collectable) {
         die unless $!model.snapshot-state($snapshot) ~~ SnapshotStatus::Ready;
 
+        my $updates = Supplier::Preserving.new;
+        my $update-key = self!make-update-key;
+
+        start react whenever $updates.Supply -> $message {
+            if $message<progress>:exists {
+                $!progress-updates.emit: %(
+                        description => "calculating pathing for snapshot $snapshot",
+                        uuid => $update-key,
+                        progress => $message<progress>,
+                        :!cancellable,
+                    );
+            }
+        }
+
         with $!model.promise-snapshot($snapshot).result -> $s {
-            $s.path($collectable).duckmap(-> Pair $p { [$p.key, $p.value] });
+            $s.path($collectable, :$updates).duckmap(-> Pair $p { [$p.key, $p.value] });
         }
     }
 
