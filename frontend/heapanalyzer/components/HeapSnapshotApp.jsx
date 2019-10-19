@@ -527,7 +527,13 @@ export function ObjectFinder(props: {modelData: any, onRequestModelData: () => v
                                 { index }
                             </td>
                             <td>
-                                { val.map((val => (<CollectableNavButton onClick={() => (history.push("/heap/collectables/" + val.id + "/0"))} url={"/heap/collectables/" + val.id + "/0"} entry={val.id}/>))) }
+                                {
+                                    val.map((val => (
+                                        <CollectableNavButton
+                                            onClick={() => (history.push("/heap/collectables/" + props.currentSnapshot + "/" + val.id + "/0"))}
+                                            url={"/heap/collectables/" + props.currentSnapshot + "/" + val.id + "/0"}
+                                            entry={val.id}/>)))
+                                }
                             </td>
                         </tr>
                     })
