@@ -10,10 +10,7 @@ install:
     - "npm run build"
 # we don't actually do tests here
 script:
-    - true
-cache:
-    directories:
-        - "$HOME/.npm"
+    - "true"
 
 before_deploy:
     - "cd $TRAVIS_BUILD_DIR"
