@@ -48,6 +48,7 @@
     "eslint-plugin-flowtype": "^2.50.3",
     "history": "^4.10.1",
     "jquery": "^3.4.1",
+    "memoize-one": "^5.1.1",
     "memoize-state": "^1.5.1",
     "react": "^16.10.2",
     "react-dimensions": "^2.0.0-alpha2",
@@ -62,6 +63,7 @@
     "recharts": "^1.8.3",
     "redux": "^3.7.2",
     "redux-thunk": "^2.3.0",
-    "redux-websocket-action": "^1.0.5"
+    "redux-websocket-action": "^1.0.5",
+    "safe-buffer": "^5.2.0"
   }
 }
