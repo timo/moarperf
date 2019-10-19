@@ -20,7 +20,6 @@ module.exports = {
     ]
   },
   devtool: "eval-source-map",
-  watch: true,
     output: {
         path: path.resolve(__dirname, '../static/js/'),
         publicPath: "/js/"

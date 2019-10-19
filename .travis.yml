@@ -3,7 +3,7 @@ node_js:
     - stable
 install:
     - "cd frontend"
-    - "npm ci"
+    - "npm run build"
 test:
     - "true"
 cache:
