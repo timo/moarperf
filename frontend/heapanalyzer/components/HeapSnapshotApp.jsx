@@ -136,7 +136,7 @@ function CollectableNavButton(props: { onClick: () => void, url: ?string, entry:
         return <button style={liStyle} onClick={props.onClick}>{props.entry}</button>;
     }
     else {
-        return <Link to={props.url}><button style={liStyle} onClick={props.onClick}>{props.entry}</button></Link>;
+        return <Link to={props.url}><button style={liStyle} onClick={(e) => { props.onClick(e); e.preventDefault() }}>{props.entry}</button></Link>;
     }
 }
 
