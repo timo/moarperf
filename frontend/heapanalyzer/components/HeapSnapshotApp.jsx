@@ -415,6 +415,26 @@ export function CollectableDisplay(props: any) {
         <>
             <PathDisplay pathData={pathData} onRequestNavigation={navigateTo} currentCollectable={props.index} makeTargetUrl={props.makeTargetUrl}/>
             <div style={props.style}>
+                {
+                    props.makeCopyLeftUrl || props.makeCopyRightUrl ?
+                        <div style={{float: "right"}}>
+                            {
+                                props.makeCopyLeftUrl ?
+                                    <Link to={props.makeCopyLeftUrl()}>
+                                        <Button onClick={(e) => { history.push(props.makeCopyLeftUrl()); e.preventDefault() }}>
+                                            <i className={"fas fa-angle-double-left"}/></Button></Link>
+                                    : <></>
+                            }
+                            {
+                                props.makeCopyRightUrl ?
+                                    <Link to={props.makeCopyRightUrl()}>
+                                        <Button onClick={(e) => { history.push(props.makeCopyRightUrl()); e.preventDefault() }}>
+                                            <i className={"fas fa-angle-double-right"}/></Button></Link>
+                                    : <></>
+                            }
+                        </div>
+                        : <></>
+                }
                 <Form inline onSubmit={(ev) => { ev.preventDefault(); navigateTo(navigateInput) }}>
                     <InputGroup><Label>Collectable {collectableKind}</Label></InputGroup>
                     <InputGroup>
@@ -461,11 +481,27 @@ export function CollectableNavigator({heapanalyzer, match}) {
     function navigateRight(target) {
         return "/heap/collectables/" + encodeURIComponent(heapanalyzer.currentSnapshot) + "/" + encodeURIComponent(match.params.leftIndex) + "/" + encodeURIComponent(target);
     }
+    function copyToRight() {
+        return "/heap/collectables/" + encodeURIComponent(heapanalyzer.currentSnapshot) + "/" + encodeURIComponent(match.params.leftIndex) + "/" + encodeURIComponent(match.params.leftIndex);
+    }
+    function copyToLeft() {
+        return "/heap/collectables/" + encodeURIComponent(heapanalyzer.currentSnapshot) + "/" + encodeURIComponent(match.params.rightIndex) + "/" + encodeURIComponent(match.params.rightIndex);
+    }
 
     return (
         <div style={{display: "grid", gridTemplateColumns: "1fr 3fr 1fr 3fr"}}>
-            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} index={match.params.leftIndex}  makeTargetUrl={navigateLeft}/>
-            <CollectableDisplay snapshotIndex={heapanalyzer.currentSnapshot} index={match.params.rightIndex} makeTargetUrl={navigateRight}/>
+            <CollectableDisplay
+                snapshotIndex={heapanalyzer.currentSnapshot}
+                index={match.params.leftIndex}
+                makeTargetUrl={navigateLeft}
+                makeCopyRightUrl={copyToRight}
+            />
+            <CollectableDisplay
+                snapshotIndex={heapanalyzer.currentSnapshot}
+                index={match.params.rightIndex}
+                makeTargetUrl={navigateRight}
+                makeCopyLeftUrl={copyToLeft}
+            />
         </div>)
 }
 
