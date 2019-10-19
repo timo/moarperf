@@ -252,7 +252,7 @@ export function CollectableDisplay(props: any) {
             setCollectableData({ snapshot: props.snapshotIndex, index: props.index });
             setIncomingRefs(undefined);
             setOutgoingRefs(undefined);
-            setPathData(examplePath);
+            //setPathData(examplePath);
             setNavigateInputText(props.index);
             return;
         }

@@ -74,25 +74,25 @@ export default class GreetingsPage extends React.Component {
                   ...
               </h1>
                   <CardDeck>
-                          <Card body>
-                              <CardTitle>Measure performance</CardTitle>
-                              <CardText>Run Perl 6 code and measure performance.</CardText>
-                              <IconButton
-    name="hourglass-half"
-    buttonStyle={{gridArea: '1 / 0'}}
-    selectionValue="measurePerformance"
-    />
-                          </Card>
-                          <Card body>
-                              <CardTitle>Measure memory usage</CardTitle>
-                              <CardText>Run Perl 6 code and measure memory usage.</CardText>
-                              <IconButton name="microchip" buttonStyle={{gridArea: '2 / 0'}} selectionValue="measureMemory"></IconButton>
-                          </Card>
-                        <Card body>
-                            <CardTitle>Analyze results</CardTitle>
-                            <CardText>Open the result file from an earlier run for inspection</CardText>
-                            <IconButton name="file-alt" buttonStyle={{gridArea: '3 / 0'}} selectionValue="loadProfile"></IconButton>
-                        </Card>
+                      <Card body>
+                          <CardTitle>Measure performance</CardTitle>
+                          <CardText>Run Perl 6 code and measure performance.</CardText>
+                          <IconButton
+                                name="hourglass-half"
+                                buttonStyle={{gridArea: '1 / 0'}}
+                                selectionValue="measurePerformance"
+                                />
+                      </Card>
+                      <Card body>
+                          <CardTitle>Measure memory usage</CardTitle>
+                          <CardText>Run Perl 6 code and measure memory usage.</CardText>
+                          <IconButton name="microchip" buttonStyle={{gridArea: '2 / 0'}} selectionValue="measureMemory"></IconButton>
+                      </Card>
+                    <Card body>
+                        <CardTitle>Analyze results</CardTitle>
+                        <CardText>Open the result file from an earlier run for inspection</CardText>
+                        <IconButton name="file-alt" buttonStyle={{gridArea: '3 / 0'}} selectionValue="loadProfile"></IconButton>
+                    </Card>
                   </CardDeck>
               </Col>)
               : (<Col>Nope</Col>);
