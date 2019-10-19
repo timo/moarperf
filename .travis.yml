@@ -3,9 +3,8 @@ node_js:
     - stable
 install:
     - "cd frontend"
+    - "npm install"
     - "npm run build"
-test:
-    - "true"
 cache:
     directories:
         - "$HOME/.npm"
