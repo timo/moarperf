@@ -5,6 +5,9 @@ install:
     - "cd frontend"
     - "npm install"
     - "npm run build"
+# we don't actually do tests here
+script:
+    - true
 cache:
     directories:
         - "$HOME/.npm"
