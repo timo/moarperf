@@ -442,8 +442,8 @@ export function CollectableDisplay(props: any) {
                             value={navigateInput}
                             onChange={(ev) => setNavigateInputText(ev.target.value)}
                             onBlur={(ev) => navigateTo(navigateInput) }/>
-                        <Label>{ collectableName }</Label>
                     </InputGroup>
+                    <Label>{ collectableName }</Label>
                 </Form>
                 {
                     typeof collectableData.description !== "undefined" && <>
