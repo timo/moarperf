@@ -19,3 +19,4 @@ deploy:
   provider: releases
   file: moarperf-*.tar.bz2
   edge: true
+  draft: true
