@@ -19,8 +19,6 @@ const path = (match, extra) => ((match.url.endsWith("/") ? match.url : match.url
 
 export function ProgressList(props: { operations: {[string]: OperationHandle}}) {
     var output = [];
-    console.log("showing progress list!");
-    console.log(props.operations);
     for (let key in props.operations) {
         let val = props.operations[key];
         console.log(key);
@@ -422,14 +420,14 @@ export function CollectableDisplay(props: any) {
                                 props.makeCopyLeftUrl ?
                                     <Link to={props.makeCopyLeftUrl()}>
                                         <Button onClick={(e) => { history.push(props.makeCopyLeftUrl()); e.preventDefault() }}>
-                                            <i className={"fas fa-angle-double-left"}/></Button></Link>
+                                            <i className={"fas fa-angle-double-left fa-2x"}/></Button></Link>
                                     : <></>
                             }
                             {
                                 props.makeCopyRightUrl ?
                                     <Link to={props.makeCopyRightUrl()}>
                                         <Button onClick={(e) => { history.push(props.makeCopyRightUrl()); e.preventDefault() }}>
-                                            <i className={"fas fa-angle-double-right"}/></Button></Link>
+                                            <i className={"fas fa-angle-double-right fa-2x"}/></Button></Link>
                                     : <></>
                             }
                         </div>
@@ -452,7 +450,10 @@ export function CollectableDisplay(props: any) {
                             <tr><td>Size</td><td>{ collectableData.size } { collectableData['unmanaged-size'] === 0 ? "" : " + " + collectableData['unmanaged-size'] }</td></tr>
                             <tr><td rowSpan={2}>References</td><td>{ collectableData['outgoing-refs'] } outgoing</td></tr>
                             <tr><td>{ collectableData['incoming-refs'] } incoming</td></tr>
-                            <tr><td colSpan={2}><button onClick={requestPath}>Show Path</button></td></tr>
+                            <tr><td colSpan={2}>
+                                <Button onClick={requestPath}><i className={"fas fa-route fa-lg"}/> Path</Button> {" "}
+                                <Button onClick={requestPath}><i className={"fas fa-project-diagram fa-lg"}/> Network</Button>
+                            </td></tr>
                         </tbody></Table>
                         <div>
                             <Nav tabs>
@@ -472,7 +473,7 @@ export function CollectableDisplay(props: any) {
     )
 }
 
-export function CollectableNavigator({heapanalyzer, match}) {
+export function CollectableNavigator({heapanalyzer, match, onSwitchSnapshot}) {
     let history = useHistory();
 
     function navigateLeft(target) {
@@ -487,6 +488,13 @@ export function CollectableNavigator({heapanalyzer, match}) {
     function copyToLeft() {
         return "/heap/collectables/" + encodeURIComponent(heapanalyzer.currentSnapshot) + "/" + encodeURIComponent(match.params.rightIndex) + "/" + encodeURIComponent(match.params.rightIndex);
     }
+
+    useEffect(() => {
+        console.log(match.params.snapshotIndex, heapanalyzer.currentSnapshot);
+        if (match.params.snapshotIndex != heapanalyzer.currentSnapshot) {
+            requestIdleCallback(() => onSwitchSnapshot(parseInt(match.params.snapshotIndex)));
+        }
+    }, [match.params.snapshotIndex, heapanalyzer.currentSnapshot]);
 
     return (
         <div style={{display: "grid", gridTemplateColumns: "1fr 3fr 1fr 3fr"}}>
@@ -617,6 +625,7 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
         <Switch>
             <Route path={props.match.url + "/collectables/:snapshotIndex/:leftIndex/:rightIndex"} render={({location, match}) => (
                 <CollectableNavigator heapanalyzer={props.heapanalyzer}
+                                      onSwitchSnapshot={props.onSwitchSnapshot}
                                       match={match}/>
                 )} />
 

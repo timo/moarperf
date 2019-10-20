@@ -1,29 +1,28 @@
 import React, {useState} from 'react';
 
+import { Button, ButtonGroup } from 'reactstrap';
+
 /* TODO: put this in a proper module of its own */
 export function numberFormatter(number, fractionDigits = 0, thousandSeperator = ',', fractionSeperator = '.') {
-  if (number!==0 && !number || !Number.isFinite(number)) return number
-  const frDigits = Number.isFinite(fractionDigits)? Math.min(Math.max(fractionDigits, 0), 7) : 0
-  const num = number.toFixed(frDigits).toString()
+  if (number!==0 && !number || !Number.isFinite(number)) return number;
+  const frDigits = Number.isFinite(fractionDigits)? Math.min(Math.max(fractionDigits, 0), 7) : 0;
+  const num = number.toFixed(frDigits).toString();
 
-  const parts = num.split('.')
-  let digits = parts[0].split('').reverse()
-  let sign = ''
+  const parts = num.split('.');
+  let digits = parts[0].split('').reverse();
+  let sign = '';
   if (num < 0) {sign = digits.pop()}
-  let final = []
-  let pos = 0
+  let final = [];
+  let pos = 0;
 
   while (digits.length > 1) {
-    final.push(digits.shift())
-    pos++
+    final.push(digits.shift());
+    pos++;
     if (pos % 3 === 0) {final.push(thousandSeperator)}
   }
-  final.push(digits.shift())
+  final.push(digits.shift());
   return `${sign}${final.reverse().join('')}${frDigits > 0 ? fractionSeperator : ''}${frDigits > 0 && parts[1] ? parts[1] : ''}`
 }
-
-
-type SnapshotIndex = number;
 
 type SnapshotListProps = {
   modelState: "post-load",
@@ -57,15 +56,10 @@ export default function SnapshotList(props : SnapshotListProps) {
           </form>
         <ul> {
           props.loadedSnapshots.map(({ state, update_key }, index) => {
-            if (props.operations.length > 0 && typeof update_key === "string") {
-              if (typeof props.operations[update_key] !== "undefined") {
-                console.log("here's a snapshot with an update in it!");
-                console.log(props.operations[update_key]);
-              }
-            }
+
             let updateWidget = typeof update_key === "string" && typeof props.operations[update_key] !== "undefined"
                 ? <ProgressBoxes progress={props.operations[update_key].progress} />
-                : <></>
+                : <></>;
             if (state !== "Unprepared") {
               return (
                   <li key={index}>
@@ -80,7 +74,7 @@ export default function SnapshotList(props : SnapshotListProps) {
                         index === props.currentSnapshot &&
                             <> {" "} Selected </>
                           ||
-                        <><button onClick={() => props.onSwitchSnapshot(index)}>Select</button></>
+                        <>{" "}<Button onClick={() => props.onSwitchSnapshot(index)}>Select</Button></>
                     }
                     </div>
                   </li>)
