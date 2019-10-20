@@ -143,7 +143,7 @@ monitor HeapAnalyzerWeb {
 
         die "the model needs to load up first" without $!model;
         die "Snapshot ID $index out of range (0..$!model.num-snapshots())"
-          unless $index ~~ 0..$!model.num-snapshots();
+          unless $index ~~ 0..^$!model.num-snapshots();
 
         die unless $!model.snapshot-state($index) ~~ SnapshotStatus::Unprepared;
 
