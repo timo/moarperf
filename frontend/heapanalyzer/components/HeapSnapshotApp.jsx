@@ -7,7 +7,7 @@ import classnames from 'classnames';
 
 import { HashRouter, Link, Redirect, Route, Switch, withRouter, useHistory } from 'react-router-dom';
 
-import { Button, Table, Container, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
+import { Button, Table, Container, Row, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import type {HeapSnapshotState, OperationHandle} from '../reducer';
 import SnapshotList from './SnapshotList';
@@ -591,6 +591,8 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
     let [numberOfTopSpots, setNumberOfTopSpots] = useState(10);
     let numberOfSpotChange = e => setNumberOfTopSpots(e.target.value);
 
+    let history = useHistory();
+
     if (props.heapanalyzer.modelState === "nothing") {
         return <Redirect to={"/"}/>
     }
@@ -608,28 +610,50 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
             </NavItem>
         </Nav>
 
-        <SnapshotList
-            modelState={props.heapanalyzer.modelState}
-            loadedSnapshots={props.heapanalyzer.loadedSnapshots}
-            currentSnapshot={props.heapanalyzer.currentSnapshot}
-            operations={props.heapanalyzer.runningOperations}
-            summaries={props.heapanalyzer.summaries}
-            highscores={props.heapanalyzer.highscores}
-
-            onRequestSnapshot={props.onRequestSnapshot}
-            onSwitchSnapshot={props.onSwitchSnapshot}
-
-            match={props.match}
-        />
-
         <Switch>
-            <Route path={props.match.url + "/collectables/:snapshotIndex/:leftIndex/:rightIndex"} render={({location, match}) => (
-                <CollectableNavigator heapanalyzer={props.heapanalyzer}
+            <Route path={props.match.url + "/collectables/:snapshotIndex/:leftIndex/:rightIndex"} render={({location, match}) => {
+                function switchSnapshotWithUrlChange(target) {
+                    props.onSwitchSnapshot(target);
+                    history.push(props.match.url + "/collectables/" + target + "/" + match.params.leftIndex + "/" + match.params.rightIndex);
+                }
+                return (
+                <Container><Row><SnapshotList
+                    modelState={props.heapanalyzer.modelState}
+                    loadedSnapshots={props.heapanalyzer.loadedSnapshots}
+                    currentSnapshot={props.heapanalyzer.currentSnapshot}
+                    operations={props.heapanalyzer.runningOperations}
+                    summaries={props.heapanalyzer.summaries}
+                    highscores={props.heapanalyzer.highscores}
+
+                    onRequestSnapshot={props.onRequestSnapshot}
+                    onSwitchSnapshot={switchSnapshotWithUrlChange}
+
+                    match={props.match}
+                />
+                </Row>
+                <Row>
+                    <CollectableNavigator heapanalyzer={props.heapanalyzer}
                                       onSwitchSnapshot={props.onSwitchSnapshot}
                                       match={match}/>
-                )} />
+                </Row>
+                </Container>);
+                }} />
 
-            <Route path={props.match.url + "/types-frames"} render={({location, match}) => (
+            <Route path={props.match.url + "/types-frames"} render={({location, match}) => {
+                return [
+                <SnapshotList
+                    modelState={props.heapanalyzer.modelState}
+                    loadedSnapshots={props.heapanalyzer.loadedSnapshots}
+                    currentSnapshot={props.heapanalyzer.currentSnapshot}
+                    operations={props.heapanalyzer.runningOperations}
+                    summaries={props.heapanalyzer.summaries}
+                    highscores={props.heapanalyzer.highscores}
+
+                    onRequestSnapshot={props.onRequestSnapshot}
+                    onSwitchSnapshot={props.onSwitchSnapshot}
+
+                    match={props.match}
+                />,
                 <div>
                     <TypeFrameListing
                         currentSnapshot={props.heapanalyzer.currentSnapshot}
@@ -640,9 +664,22 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
 
                         match={match}
                     />
-                </div>)} />
+                </div>]}} />
 
             <Route path={props.match.url + "/find-collectables/:kind/:condition/:target"} render={({location, match}) => (
+                [<SnapshotList
+                    modelState={props.heapanalyzer.modelState}
+                    loadedSnapshots={props.heapanalyzer.loadedSnapshots}
+                    currentSnapshot={props.heapanalyzer.currentSnapshot}
+                    operations={props.heapanalyzer.runningOperations}
+                    summaries={props.heapanalyzer.summaries}
+                    highscores={props.heapanalyzer.highscores}
+
+                    onRequestSnapshot={props.onRequestSnapshot}
+                    onSwitchSnapshot={props.onSwitchSnapshot}
+
+                    match={props.match}
+                />,
                 <div>
                     <ObjectFinder
                         currentSnapshot={props.heapanalyzer.currentSnapshot}
@@ -651,7 +688,7 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
 
                         match={match}
                     />
-                </div>)} />
+                </div>])} />
 
             <Route path={props.match.url + "/"} exact>
                 <>
