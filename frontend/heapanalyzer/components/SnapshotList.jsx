@@ -54,34 +54,27 @@ export default function SnapshotList(props : SnapshotListProps) {
           <form onSubmit={ev => { props.onRequestSnapshot(parseInt(requestedSnapshot)); ev.preventDefault() }}>
             <input onChange={ev => setRequestedSnapshot(ev.target.value)} value={requestedSnapshot}/>
           </form>
-        <ul> {
+        <ButtonGroup>
+          {
           props.loadedSnapshots.map(({ state, update_key }, index) => {
-
-            let updateWidget = typeof update_key === "string" && typeof props.operations[update_key] !== "undefined"
-                ? <ProgressBoxes progress={props.operations[update_key].progress} />
+            let hasUpdateWidget = typeof update_key === "string"
+                && typeof props.operations[update_key] !== "undefined";
+            let interestingProgress = hasUpdateWidget && props.operations[update_key].progress[2] < 100;
+            let updateWidget = interestingProgress
+                ? <span><i className={"fas fa-spinner fa-pulse"} /> { props.operations[update_key].progress[2].toFixed(0) }%</span>
                 : <></>;
+
             if (state !== "Unprepared") {
               return (
-                  <li key={index}>
-                    <div><span>Snapshot {index}</span>: {state}
-                    {
-                      state === 'Preparing' &&
-                          <>
-                            {" "} {updateWidget}
-                          </>
-                    }
-                    {
-                        index === props.currentSnapshot &&
-                            <> {" "} Selected </>
-                          ||
-                        <>{" "}<Button onClick={() => props.onSwitchSnapshot(index)}>Select</Button></>
-                    }
-                    </div>
-                  </li>)
+                  <Button
+                      onClick={() => props.onSwitchSnapshot(index)}
+                      active={props.currentSnapshot === index}
+                      disabled={interestingProgress}>Snapshot {index} {updateWidget}</Button>
+              );
             }
-            })
+          })
           }
-        </ul>
+        </ButtonGroup>
       </div>
       </div>
     ];
