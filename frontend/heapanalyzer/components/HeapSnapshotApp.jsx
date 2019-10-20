@@ -1,5 +1,5 @@
 //@flow
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
 
 import $ from 'jquery';
 
@@ -513,6 +513,84 @@ export function CollectableNavigator({heapanalyzer, match, onSwitchSnapshot}) {
         </div>)
 }
 
+const initialNetworkState = {collectables: {}, layers: {}};
+function networkReducer(state, action) {
+    switch (action.type) {
+        case "collectable-data":
+            let distance = action.data["distance-from-root"];
+            var layerData = state.layers[distance];
+            var deleteFromUndefinedLayer = false;
+            if (typeof layerData === "undefined") {
+                layerData = {}
+            }
+            if (typeof distance !== "undefined") {
+                if (layerData.hasOwnProperty(distance) && state.collectables.hasOwnProperty(action.index)) {
+                    return state;
+                }
+                if (layerData.hasOwnProperty("undefined") && layerData["undefined"].hasOwnProperty(action.index)) {
+                    deleteFromUndefinedLayer = true;
+                }
+            }
+            return {
+                ...state,
+                collectables: {
+                    ...state.collectables, [action.index]: action.data
+                },
+                layers: {
+                    ... state.layers,
+                    [distance]: (
+                        deleteFromUndefinedLayer
+                            ? { ...layerData, [action.index]: action.data }
+                            : { ...layerData, ["undefined"]: { ...layerData["undefined"], [action.index]: undefined } }
+                    )
+                }
+            }
+        default:
+            throw new Error("unknown action type " + action.type + " in the NetworkView reducer");
+    }
+}
+
+export function NetworkView(props: {modelData: any, snapshotIndex: number, startingPoint: number, match: any }) {
+    let [networkState, dispatch] = useReducer(networkReducer, initialNetworkState);
+
+    useEffect(() => {
+        if (!networkState.collectables.hasOwnProperty(props.startingPoint)) {
+            function getStartingPointData(mayRedo = true) {
+                $.ajax({
+                    url: '/collectable-data/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.startingPoint),
+                    success: (data) => {
+                        dispatch({
+                            type: "collectable-data",
+                            data,
+                            index: props.startingPoint
+                        });
+                        if (typeof data["distance-from-root"] === "undefined" && mayRedo) {
+                            $.ajax({
+                                url: 'path/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.startingPoint),
+                                success: (data) => {
+                                    getStartingPointData(false);
+                                }
+                            });
+                        }
+                    }
+                })
+            }
+            getStartingPointData();
+        }
+    });
+
+    return <Container>
+        <Row>
+            <h1>Network view</h1>
+        </Row>
+        {
+            Object.entries(networkState.layers).map(([key, layer]) => {
+                return <Row>Layer { key }: {layer.length} elements</Row>
+            })
+        }
+    </Container>
+}
+
 export function ObjectFinder(props: {modelData: any, onRequestModelData: () => void, currentSnapshot : number, match: any}) {
     let [objectData, setObjectData] = useState({snapshotNum: -1});
 
@@ -638,6 +716,14 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
                 </Row>
                 </Container>);
                 }} />
+
+            <Route path={props.match.url + "/network-view/:snapshotIndex/:startingIndex"} render={({location, match}) => {
+                return <NetworkView
+                    modelData={props.heapanalyzer.modelData}
+                    snapshotIndex={match.params.snapshotIndex}
+                    startingPoint={match.params.startingIndex}
+                    match={match}/>
+            }} />
 
             <Route path={props.match.url + "/types-frames"} render={({location, match}) => {
                 return [
