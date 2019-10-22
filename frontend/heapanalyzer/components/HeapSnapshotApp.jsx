@@ -7,7 +7,7 @@ import classnames from 'classnames';
 
 import { HashRouter, Link, Redirect, Route, Switch, withRouter, useHistory } from 'react-router-dom';
 
-import { Button, Table, Container, Row, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
+import { Button, ButtonGroup, Table, Container, Row, Col, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
 
 import type {HeapSnapshotState, OperationHandle} from '../reducer';
 import SnapshotList from './SnapshotList';
@@ -452,7 +452,7 @@ export function CollectableDisplay(props: any) {
                             <tr><td>{ collectableData['incoming-refs'] } incoming</td></tr>
                             <tr><td colSpan={2}>
                                 <Button onClick={requestPath}><i className={"fas fa-route fa-lg"}/> Path</Button> {" "}
-                                <Button onClick={requestPath}><i className={"fas fa-project-diagram fa-lg"}/> Network</Button>
+                                <Link tag={Button} url={"/heap/network-view/" + props.snapshotIndex + "/" + collectableData.index}><i className={"fas fa-project-diagram fa-lg"}/> Network</Link>
                             </td></tr>
                         </tbody></Table>
                         <div>
@@ -513,7 +513,7 @@ export function CollectableNavigator({heapanalyzer, match, onSwitchSnapshot}) {
         </div>)
 }
 
-const initialNetworkState = {collectables: {}, layers: {}};
+const initialNetworkState = {collectables: {}, layers: {}, inrefs: {}};
 function networkReducer(state, action) {
     switch (action.type) {
         case "collectable-data":
@@ -534,15 +534,29 @@ function networkReducer(state, action) {
             return {
                 ...state,
                 collectables: {
-                    ...state.collectables, [action.index]: action.data
+                    ...state.collectables, [action.index]: { ...action.data, index: action.index }
                 },
-                layers: {
-                    ... state.layers,
-                    [distance]: (
-                        deleteFromUndefinedLayer
-                            ? { ...layerData, [action.index]: action.data }
-                            : { ...layerData, ["undefined"]: { ...layerData["undefined"], [action.index]: undefined } }
-                    )
+                layers: (!deleteFromUndefinedLayer
+                    ? {
+                        ... state.layers,
+                        [distance]: {
+                            ...layerData, [action.index]: action.data
+                        }
+                    }
+                    : {
+                        ... state.layers,
+                        [distance]: {
+                            ...layerData, [action.index]: action.data
+                        },
+                        "undefined": { ...layerData[undefined], [action.index]: undefined }
+                    })
+                }
+        case "collectable-inrefs":
+            return {
+                ...state,
+                inrefs: {
+                    ...state.inrefs,
+                    [action.index]: action.data,
                 }
             }
         default:
@@ -550,42 +564,125 @@ function networkReducer(state, action) {
     }
 }
 
+export function NetworkCollectableButton(props: {entry: any, symbol: string}) {
+    return (
+        <ButtonGroup><Button>{props.entry.index}</Button><Button><i className={"fas fa-" + props.symbol} /></Button></ButtonGroup>
+    )
+}
+
 export function NetworkView(props: {modelData: any, snapshotIndex: number, startingPoint: number, match: any }) {
     let [networkState, dispatch] = useReducer(networkReducer, initialNetworkState);
+    let [selectionState, setSelectionState] = useState({index: props.startingPoint});
 
     useEffect(() => {
         if (!networkState.collectables.hasOwnProperty(props.startingPoint)) {
-            function getStartingPointData(mayRedo = true) {
+            function requestIndividualCollectableData(snapshotIndex, index, callback) {
                 $.ajax({
-                    url: '/collectable-data/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.startingPoint),
+                    url: '/collectable-data/' + encodeURIComponent(snapshotIndex) + '/' + encodeURIComponent(index),
                     success: (data) => {
                         dispatch({
                             type: "collectable-data",
                             data,
-                            index: props.startingPoint
+                            index: index
                         });
-                        if (typeof data["distance-from-root"] === "undefined" && mayRedo) {
-                            $.ajax({
-                                url: 'path/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.startingPoint),
-                                success: (data) => {
-                                    getStartingPointData(false);
+                        if (typeof callback === "function") { callback(data, snapshotIndex, index); }
+                    }
+                });
+            }
+            function requestPathObjects(snapshotIndex, index, perObjectCallback, onceFinishedCallback) {
+                $.ajax({
+                    url: 'path/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.startingPoint),
+                    success: (data) => {
+                        let i = 0;
+                        console.log("path data received");
+                        while (i < data.length - 1) {
+                            let [descr, objIdx] = data[i++];
+                            let linkname = data[i++];
+                            if (typeof networkState.collectables[objIdx] === "undefined") {
+                                requestIndividualCollectableData(snapshotIndex, objIdx);
+                            }
+                            if (typeof perObjectCallback === "function") { perObjectCallback(snapshotIndex, objIdx, descr) }
+                        }
+                        if (typeof onceFinishedCallback === "function") { onceFinishedCallback(snapshotIndex, index) }
+                    }
+                });
+            }
+            function getStartingPointData(mayRedo = true) {
+                requestIndividualCollectableData(props.snapshotIndex, props.startingPoint,
+                (data, snapshotIndex, index) => {
+                    let needsToRedoInitial = typeof data["distance-from-root"] === "undefined" && mayRedo;
+                    if (mayRedo) {
+                        requestPathObjects(props.snapshotIndex, props.startingPoint,
+                                () => 1,
+                                () => {
+                                    if (needsToRedoInitial) {
+                                        getStartingPointData(false)
+                                    }
                                 }
-                            });
+                            );
                         }
                     }
-                })
+                );
+                $.ajax({
+                    url: '/collectable-inrefs/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.startingPoint),
+                    success: (data) => {
+                        var allKeys = [];
+                        data.map(([category, entries]) => {
+                            entries.map((objIdx) => {
+                                requestIndividualCollectableData(props.snapshotIndex, objIdx);
+                                requestPathObjects(props.snapshotIndex, objIdx);
+                                allKeys.push(objIdx);
+                            })
+                        });
+                        dispatch({
+                            type: "collectable-inrefs",
+                            index: props.startingPoint,
+                            data: allKeys,
+                        });
+                    }
+                });
             }
             getStartingPointData();
         }
     });
+
+    let allPathObjects = {};
+    let next = props.startingPoint;
+    while (next != 0) {
+        allPathObjects[next] = true;
+        const collectableInfo = networkState.collectables[next];
+        if (typeof collectableInfo !== "undefined") {
+            next = collectableInfo["towards-root"];
+        } else {
+            next = 0
+        }
+    }
 
     return <Container>
         <Row>
             <h1>Network view</h1>
         </Row>
         {
-            Object.entries(networkState.layers).map(([key, layer]) => {
-                return <Row>Layer { key }: {layer.length} elements</Row>
+            Object.entries(networkState.layers).reverse().map(([key, layer]) => {
+                return <Row><Col>
+                    <h2>Layer { key }</h2><br />
+                    {
+                        Object.entries(layer).map(([collKey, obj]) => {
+                            var symbol;
+                            if (collKey === props.startingPoint) {
+                                symbol = "map-marker-alt"
+                            }
+                            else if (allPathObjects.hasOwnProperty(collKey)) {
+                                symbol = "route";
+                            }
+                            else if (networkState.inrefs.hasOwnProperty(props.startingPoint)
+                                && networkState.inrefs[props.startingPoint].includes(parseInt(collKey))) {
+                                symbol = "sign-in-alt";
+                            }
+                            return [<NetworkCollectableButton entry={obj} symbol={symbol}/>, " "]
+                        })
+                    }
+                </Col></Row>
             })
         }
     </Container>
@@ -681,7 +778,7 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
                 <NavLink tag={Link} to={props.match.url}>Summary and Highscores</NavLink>
             </NavItem>
             <NavItem>
-                <NavLink tag={Link} to={path(props.match, "collectables/" + props.heapanalyzer.currentSnapshot + "/0/1/")}>Explorer</NavLink>
+                <NavLink tag={Link} to={path(props.match, "collectables/" + (props.heapanalyzer.currentSnapshot || 2) + "/0/1/")}>Explorer</NavLink>
             </NavItem>
             <NavItem>
                 <NavLink tag={Link} to={path(props.match, "types-frames")}>Type & Frame Lists</NavLink>
