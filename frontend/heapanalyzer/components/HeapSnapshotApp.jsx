@@ -7,7 +7,28 @@ import classnames from 'classnames';
 
 import { HashRouter, Link, Redirect, Route, Switch, withRouter, useHistory } from 'react-router-dom';
 
-import { Button, ButtonGroup, Table, Container, Row, Col, Form, Input, InputGroup, ListGroup, ListGroupItem, Label, Nav, NavItem, NavLink, TabContent, TabPane } from 'reactstrap';
+import {
+    Button,
+    ButtonGroup,
+    UncontrolledButtonDropdown, DropdownMenu, DropdownItem, DropdownToggle,
+    Table,
+    Container,
+    Row,
+    Col,
+    Form,
+    Input,
+    InputGroup,
+    ListGroup,
+    ListGroupItem,
+    ListGroupItemHeading,
+    ListGroupItemText,
+    Label,
+    Nav,
+    NavItem,
+    NavLink,
+    TabContent,
+    TabPane
+} from 'reactstrap';
 
 import type {HeapSnapshotState, OperationHandle} from '../reducer';
 import SnapshotList from './SnapshotList';
@@ -16,6 +37,9 @@ import { SummaryGraphs, HighscoreGraphs } from './Graphs';
 import { numberFormatter } from './SnapshotList';
 
 const path = (match, extra) => ((match.url.endsWith("/") ? match.url : match.url + "/") + extra);
+
+// stolen from https://stackoverflow.com/a/52171480/804005
+const stringHash = s => {for(var i=0,h=6;i<s.length;)h=Math.imul(h^s.charCodeAt(i++),9**9);return h^h>>>9}
 
 export function ProgressList(props: { operations: {[string]: OperationHandle}}) {
     var output = [];
@@ -531,22 +555,29 @@ function networkReducer(state, action) {
                     deleteFromUndefinedLayer = true;
                 }
             }
+            let [kind, name] = splitObjectDescr(action.data.description);
+            const dataToInstall = {
+                ...action.data,
+                index: action.index,
+                descrOnly: name,
+                kindOnly: kind,
+            };
             return {
                 ...state,
                 collectables: {
-                    ...state.collectables, [action.index]: { ...action.data, index: action.index }
+                    ...state.collectables, [action.index]: dataToInstall,
                 },
                 layers: (!deleteFromUndefinedLayer
                     ? {
                         ... state.layers,
                         [distance]: {
-                            ...layerData, [action.index]: action.data
+                            ...layerData, [action.index]: dataToInstall,
                         }
                     }
                     : {
                         ... state.layers,
                         [distance]: {
-                            ...layerData, [action.index]: action.data
+                            ...layerData, [action.index]: dataToInstall,
                         },
                         "undefined": { ...layerData[undefined], [action.index]: undefined }
                     })
@@ -564,15 +595,174 @@ function networkReducer(state, action) {
     }
 }
 
-export function NetworkCollectableButton(props: {entry: any, symbol: string}) {
+export function NetworkCollectableButton(props: {entry: any, symbol: string, style: any, leftSymbol: string}) {
     return (
-        <ButtonGroup><Button>{props.entry.index}</Button><Button><i className={"fas fa-" + props.symbol} /></Button></ButtonGroup>
+        <ButtonGroup style={props.style}>
+            {
+                typeof props.leftSymbol === "string" ? <Button color={props.color}><i className={"fas fa-" + props.leftSymbol} /></Button> : <></>
+            }
+            <Button color={props.color}>{props.entry.index}</Button>
+            <Button color={props.color}><i className={"fas fa-" + props.symbol} /></Button>
+        </ButtonGroup>
+    )
+}
+
+const buttonList = [
+    "cat",
+    "crow",
+    "dog",
+    "dove",
+    "dragon",
+    "feather-alt",
+    "fish",
+    "frog",
+    "hippo",
+    "horse",
+    "horse-head",
+    "kiwi-bird",
+    "otter",
+    "paw",
+    "spider",
+    "apple-alt",
+    "bacon",
+    "bone",
+    "bread-slice",
+    "candy-cane",
+    "carrot",
+    "cheese",
+    "cloud-meatball",
+    "cookie",
+    "drumstick-bite",
+    "egg",
+    "fish",
+    "hamburger",
+    "hotdog",
+    "ice-cream",
+    "lemon",
+    "pepper-hot",
+    "pizza-slice",
+    "seedling",
+    "stroopwafel",
+];
+
+const buttonsInGrid = [
+    [0, 1, 2, 3],
+    [4, 5, 6, 7],
+    [8, 9, 10, 11],
+    [12, 13, 14, 15],
+    [16, 17, 18, 19],
+    [20, 21, 22, 23],
+    [24, 25, 26, 27],
+    [28, 29, 30, 31],
+    [32]
+];
+
+function ObjectTypeConfigurator(props: { keyText: string, value: unknown, suggestedColor: string, suggestedIcon: string, onChangeColor: function, onChangeSymbol: function }) {
+    let [color, setColorState] = useState(props.suggestedColor);
+    let [symbolState, setSymbolState] = useState(undefined)
+
+    let symbol = typeof symbolState === "undefined" ? props.suggestedIcon : symbolState;
+
+    const setColor = (color) => { setColorState(color); if (typeof props.onChangeColor !== "undefined") { props.onChangeColor(color) } };
+    const setSymbol = (symbol) => {
+        setSymbolState(symbol);
+        console.log("configurator for " + props.keyText + " had " + props.suggestedIcon + " but user set it to " + symbol);
+        if (typeof props.onChangeSymbol !== "undefined") { props.onChangeSymbol(symbol) }
+    };
+
+    const colorlist = ["primary", "secondary", "success", "info", "warning", "danger"];
+
+    const actualColor   = color === "hidden" ? "primary" : color;
+    const buttonOutline = color === "hidden";
+
+    return <ListGroupItem>
+        <ListGroupItemHeading>{props.keyText}</ListGroupItemHeading>
+        <ListGroupItemText>
+            <ButtonGroup>
+                <Button color={actualColor} outline={buttonOutline}>
+                    {props.value.objects.length + props.value.typeobjects.length + props.value.other.length} <small>items</small>
+                </Button>
+                <UncontrolledButtonDropdown>
+                    <DropdownToggle color={actualColor} outline={buttonOutline}>Color</DropdownToggle>
+                    <DropdownMenu>
+                        <ButtonGroup style={{width: "100%"}} vertical>
+                        <Button onClick={(e) => (setColor("hidden"))} outline>Hidden</Button>
+                        {
+                            colorlist.map(color => (
+                                <Button color={color} onClick={(e) => (setColor(color))}>{ color }</Button>
+                            ))
+                        }
+                        </ButtonGroup>
+                    </DropdownMenu>
+                </UncontrolledButtonDropdown>
+                <UncontrolledButtonDropdown>
+                    <DropdownToggle color={actualColor} outline={buttonOutline}><i className={"fas fa-2x fa-" + symbol}/></DropdownToggle>
+                    <DropdownMenu>
+                        <ButtonGroup style={{width: "100%"}} vertical>
+                            {
+                                buttonsInGrid.map((row) => (
+                                    <ButtonGroup>
+                                        {
+                                        row.map((idx) => {
+                                            const symbol = buttonList[idx];
+                                            return <Button color={actualColor} outline={buttonOutline} onClick={(e) => (setSymbol(symbol))}><i
+                                                className={"fas fa-2x fa-" + symbol}/></Button>
+                                        })
+                                        }
+                                    </ButtonGroup>
+                                ))
+                            }
+                        </ButtonGroup>
+                    </DropdownMenu>
+                </UncontrolledButtonDropdown>
+            </ButtonGroup>
+        </ListGroupItemText>
+    </ListGroupItem>;
+}
+
+function configReducer(state, action) {
+    if (state[action.kind][action.descr] === action.value) {
+        console.log("value of " + action.kind + " " + action.descr + " is already " + action.value);
+        return state;
+    }
+    console.log("reducer set " + action.kind + " " + action.descr + " to " + action.value);
+    return (
+        {
+            ...state,
+            [action.kind]: {
+                ...state[action.kind],
+                [action.descr]: action.value
+            }
+        }
     )
 }
 
 export function NetworkView(props: {modelData: any, snapshotIndex: number, startingPoint: number, match: any }) {
     let [networkState, dispatch] = useReducer(networkReducer, initialNetworkState);
     let [selectionState, setSelectionState] = useState({index: props.startingPoint});
+
+    let [configurationState, dispatchConfigAction] = useReducer(configReducer,{color: {}, symbol: {}});
+
+    function getConfiguration(descr, kind) {
+        if (typeof descr === "undefined") {
+            return ""
+        }
+        if (typeof configurationState[kind][descr] === "undefined") {
+            if (kind === "symbol") {
+                let stringHash1 = stringHash(descr);
+                const suggestedSymbol = buttonList[Math.abs(stringHash1 % buttonList.length)];
+                dispatchConfigAction({kind: kind, descr: descr, value: suggestedSymbol});
+                console.log("setting symbol of " + descr + " to " + suggestedSymbol);
+                return suggestedSymbol;
+            }
+            else {
+                return "secondary";
+            }
+        }
+        else {
+            return configurationState[kind][descr];
+        }
+    }
 
     useEffect(() => {
         if (!networkState.collectables.hasOwnProperty(props.startingPoint)) {
@@ -658,33 +848,75 @@ export function NetworkView(props: {modelData: any, snapshotIndex: number, start
         }
     }
 
+    let objectPerDescription = {};
+    Object.entries(networkState.collectables).forEach(([key, value]) => {
+        let [kind, name] = splitObjectDescr(value.description);
+        if (!objectPerDescription.hasOwnProperty(name)) {
+            objectPerDescription[name] = {objects: [], typeobjects: [], other: []};
+        }
+        let keyForKind = kind === "(Object)" ? "objects" : kind === "(Typeobject)" ? "typeobjects" : "other";
+        objectPerDescription[name][keyForKind].push(value);
+    });
+
     return <Container>
         <Row>
-            <h1>Network view</h1>
-        </Row>
-        {
-            Object.entries(networkState.layers).reverse().map(([key, layer]) => {
-                return <Row><Col>
-                    <h2>Layer { key }</h2><br />
+            <Col xs={3}>
+                <h1>Overview</h1>
+                <ListGroup>
                     {
-                        Object.entries(layer).map(([collKey, obj]) => {
-                            var symbol;
-                            if (collKey === props.startingPoint) {
-                                symbol = "map-marker-alt"
-                            }
-                            else if (allPathObjects.hasOwnProperty(collKey)) {
-                                symbol = "route";
-                            }
-                            else if (networkState.inrefs.hasOwnProperty(props.startingPoint)
-                                && networkState.inrefs[props.startingPoint].includes(parseInt(collKey))) {
-                                symbol = "sign-in-alt";
-                            }
-                            return [<NetworkCollectableButton entry={obj} symbol={symbol}/>, " "]
+                        Object.entries(objectPerDescription).map(([key, value]) => {
+                            let symbol = getConfiguration(key, "symbol");
+                            let color = getConfiguration(key, "color");
+                            return <ObjectTypeConfigurator
+                                keyText={key}
+                                value={value}
+                                suggestedColor={color}
+                                suggestedIcon={symbol}
+
+                                onChangeColor={(color) => dispatchConfigAction({ kind: "color", descr: key, value: color })}
+                                onChangeSymbol={(symbol) => dispatchConfigAction({ kind: "symbol", descr: key, value: symbol })}
+                            />
                         })
                     }
-                </Col></Row>
-            })
-        }
+                </ListGroup>
+            </Col>
+            <Col>
+                <Row>
+                    <h1>Network view</h1>
+                </Row>
+                {
+                    Object.entries(networkState.layers).reverse().map(([key, layer]) => {
+                        return <Row><Col>
+                            <h2>Layer { key }</h2>
+                            {
+                                Object.entries(layer).map(([collKey, obj]) => {
+                                    var symbol;
+                                    if (collKey === props.startingPoint) {
+                                        symbol = "map-marker-alt"
+                                    }
+                                    else if (allPathObjects.hasOwnProperty(collKey)) {
+                                        symbol = "route";
+                                    }
+                                    else if (networkState.inrefs.hasOwnProperty(props.startingPoint)
+                                        && networkState.inrefs[props.startingPoint].includes(parseInt(collKey))) {
+                                        symbol = "sign-in-alt";
+                                    }
+                                    let leftSymbol = getConfiguration(obj.descrOnly, "symbol");
+                                    let color = getConfiguration(obj.descrOnly, "color");
+                                    if (color === "hidden") {
+                                        return <></>
+                                    }
+                                    return [
+                                        <NetworkCollectableButton entry={obj} color={color} leftSymbol={leftSymbol} symbol={symbol} style={{paddingTop:"0.2em"}}/>,
+                                        " "
+                                    ]
+                                })
+                            }
+                        </Col></Row>
+                    })
+                }
+            </Col>
+        </Row>
     </Container>
 }
 
