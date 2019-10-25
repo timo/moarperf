@@ -77,17 +77,17 @@ export function TypeFrameListing(props: { modelData: any, onRequestModelData: ()
             <td><small>{data.repr}</small></td>
             <td><Link to={"/heap/find-collectables/objects/type/" + encodeURIComponent(data.name)}><Button>
                 <i className={"fas fa-search"}/>
-            </Button></Link> {data.name}</td>
+            </Button>{" " }</Link> {data.name}</td>
             <td>{numberFormatter(data.size)}</td>
             <td>{numberFormatter(data.count)}</td>
         </tr>),
         frames: data => (<tr>
             <td><Link to={"/heap/find-collectables/frames/name/" + encodeURIComponent(data.name)}><Button>
                 <i className={"fas fa-search"}/>
-            </Button> {data.name}</Link></td>
+            </Button>{" "} {data.name}</Link></td>
             <td><Link to={"/heap/find-collectables/frames/file/" + encodeURIComponent(data.file)}><Button>
                 <i className={"fas fa-search"}/>
-            </Button>{data.file}</Link> : {data.line} <small>({data.cuid})</small></td>
+            </Button>{" "}{data.file}</Link> : {data.line} <small>({data.cuid})</small></td>
             <td>{numberFormatter(data.size)}</td>
             <td>{numberFormatter(data.count)}</td></tr>),
     };
@@ -963,6 +963,7 @@ export function ObjectFinder(props: {modelData: any, onRequestModelData: () => v
     }
 
     return <Container>
+        <h1>{match.params.kind} with a {match.params.condition} of {match.params.target}</h1>
             <Table>
                 <thead>
                 <tr>
@@ -1039,6 +1040,7 @@ export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState
                 />
                 </Row>
                 <Row>
+                    <h1>Explorer</h1>
                     <CollectableNavigator heapanalyzer={props.heapanalyzer}
                                       onSwitchSnapshot={props.onSwitchSnapshot}
                                       match={match}/>

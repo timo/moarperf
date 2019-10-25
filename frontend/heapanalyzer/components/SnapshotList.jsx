@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 
-import { Button, ButtonGroup } from 'reactstrap';
+import { FormGroup, Form, Label, Input, Button, ButtonGroup } from 'reactstrap';
 
 /* TODO: put this in a proper module of its own */
 export function numberFormatter(number, fractionDigits = 0, thousandSeperator = ',', fractionSeperator = '.') {
@@ -36,25 +36,20 @@ type SnapshotListProps = {
   modelState: "pre-load"
 }
 
-function ProgressBoxes({ progress }) {
-    var elements = [];
-    for (let i = 0; i < progress[1]; i++) {
-      elements.push(<span key={i} style={{paddingLeft: "1em", height: "1em", backgroundColor: i > progress[0] ? "#999" : "#4b4"}} />);
-    }
-    return <span style={{border: "1px solid #000" }}>{ elements }</span>
-}
-
 export default function SnapshotList(props : SnapshotListProps) {
   let [requestedSnapshot, setRequestedSnapshot] = useState("");
 
   if (props.modelState === 'post-load') {
     return [
-      <div> <h2>Snapshots</h2>
-        <div>Request Snapshot
-          <form onSubmit={ev => { props.onRequestSnapshot(parseInt(requestedSnapshot)); ev.preventDefault() }}>
-            <input onChange={ev => setRequestedSnapshot(ev.target.value)} value={requestedSnapshot}/>
-          </form>
-        <ButtonGroup>
+      <div>
+        <Form inline onSubmit={ev => { props.onRequestSnapshot(parseInt(requestedSnapshot)); ev.preventDefault() }}>
+          <FormGroup>
+            <Label>Request Snapshot</Label>
+            <Input onChange={ev => setRequestedSnapshot(ev.target.value)} value={requestedSnapshot}/>
+          </FormGroup>
+        </Form>
+        <div>
+          Snapshots: <ButtonGroup>
           {
           props.loadedSnapshots.map(({ state, update_key }, index) => {
             let hasUpdateWidget = typeof update_key === "string"
@@ -69,7 +64,7 @@ export default function SnapshotList(props : SnapshotListProps) {
                   <Button
                       onClick={() => props.onSwitchSnapshot(index)}
                       active={props.currentSnapshot === index}
-                      disabled={interestingProgress}>Snapshot {index} {updateWidget}</Button>
+                      disabled={interestingProgress}>{index} {updateWidget}</Button>
               );
             }
           })
