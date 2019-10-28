@@ -1,5 +1,5 @@
 //@flow
-import React, { useState, useEffect, useReducer } from "react";
+import React, { useState, useEffect, useReducer, useRef } from "react";
 
 import $ from 'jquery';
 
@@ -657,11 +657,103 @@ const buttonsInGrid = [
     [32]
 ];
 
+var lastReturnTarget = null;
+function matrixNavigation(e : KeyboardEvent) {
+    const target = e.target;
+    const theRow = target.closest(".btn-group");
+
+    let numPrevSiblings = -1;
+    let cursor = target;
+    while (cursor !== null) {
+        cursor = cursor.previousElementSibling;
+        numPrevSiblings++;
+    }
+
+    let numRowPrevSiblings = -1;
+    cursor = theRow;
+    while (cursor !== null) {
+        cursor = cursor.previousElementSibling;
+        numRowPrevSiblings++;
+    }
+
+    console.log("event code is ", e.key);
+
+    if (e.key === "ArrowUp") {
+        let targetRow = theRow.previousElementSibling;
+        if (targetRow !== null) {
+            targetRow.children[numPrevSiblings].focus();
+            e.preventDefault();
+        }
+    }
+    else if (e.key === "ArrowDown") {
+        let targetRow = theRow.nextElementSibling;
+        if (targetRow !== null) {
+            if (targetRow.children.length > numPrevSiblings) {
+                targetRow.children[numPrevSiblings].focus();
+            }
+            else {
+                targetRow.children[targetRow.children.length - 1].focus();
+            }
+            e.preventDefault();
+        }
+    }
+    else if (e.key === "ArrowLeft") {
+        let targetElement = target.previousElementSibling;
+        if (targetElement !== null) {
+            targetElement.focus();
+            e.preventDefault();
+        }
+        else {
+            let targetRow = theRow.previousElementSibling;
+            if (targetRow !== null) {
+                targetRow.children[targetRow.children.length - 1].focus()
+                e.preventDefault();
+            }
+        }
+    }
+    else if (e.key === "ArrowRight") {
+        let targetElement = target.nextElementSibling;
+        if (targetElement !== null) {
+            targetElement.focus();
+            e.preventDefault();
+        }
+        else {
+            let targetRow = theRow.nextElementSibling;
+            if (targetRow !== null) {
+                targetRow.children[0].focus()
+                e.preventDefault();
+            }
+        }
+    }
+    else if (e.key === "Enter") {
+        if (lastReturnTarget === target) {
+            let menuElement = target.closest("div.dropdown-menu");
+            if (menuElement !== null) {
+                let openButton = menuElement.previousElementSibling;
+                if (openButton !== null) {
+                    openButton.focus();
+                    openButton.click();
+                    e.preventDefault();
+                    lastReturnTarget = null;
+                    return;
+                }
+            }
+        }
+        target.click();
+        e.preventDefault();
+        lastReturnTarget = target;
+        return;
+    }
+    lastReturnTarget = null;
+}
+
 function ObjectTypeConfigurator(props: { keyText: string, value: unknown, suggestedColor: string, suggestedIcon: string, onChangeColor: function, onChangeSymbol: function }) {
     let [color, setColorState] = useState(props.suggestedColor);
     let [symbolState, setSymbolState] = useState(undefined)
 
     let symbol = typeof symbolState === "undefined" ? props.suggestedIcon : symbolState;
+
+    let rightButton = useRef(null);
 
     const setColor = (color) => { setColorState(color); if (typeof props.onChangeColor !== "undefined") { props.onChangeColor(color) } };
     const setSymbol = (symbol) => {
@@ -674,6 +766,14 @@ function ObjectTypeConfigurator(props: { keyText: string, value: unknown, sugges
 
     const actualColor   = color === "hidden" ? "primary" : color;
     const buttonOutline = color === "hidden";
+
+    function focusRightButton(e) {
+        console.log("focusRightButton with ", e.target, " and ", e.relatedTarget, " ; ", e.relatedTarget.getAttribute("aria-haspopup"));
+        if (e.relatedTarget.getAttribute("aria-haspopup")) {
+            console.log(rightButton);
+            rightButton.current.parentElement.focus()
+        }
+    }
 
     return <ListGroupItem>
         <ListGroupItemHeading>{props.keyText}</ListGroupItemHeading>
@@ -697,16 +797,16 @@ function ObjectTypeConfigurator(props: { keyText: string, value: unknown, sugges
                 </UncontrolledButtonDropdown>
                 <UncontrolledButtonDropdown>
                     <DropdownToggle color={actualColor} outline={buttonOutline}><i className={"fas fa-2x fa-" + symbol}/></DropdownToggle>
-                    <DropdownMenu>
+                    <DropdownMenu onFocus={focusRightButton} style={{margin: "0px", padding: "0px", border: "0px"}}>
                         <ButtonGroup style={{width: "100%"}} vertical>
                             {
                                 buttonsInGrid.map((row) => (
                                     <ButtonGroup>
                                         {
                                         row.map((idx) => {
-                                            const symbol = buttonList[idx];
-                                            return <Button color={actualColor} outline={buttonOutline} onClick={(e) => (setSymbol(symbol))}><i
-                                                className={"fas fa-2x fa-" + symbol}/></Button>
+                                            const displaySymbol = buttonList[idx];
+                                            return <Button color={actualColor} outline={buttonOutline} onKeyDown={matrixNavigation} onClick={(e) => (setSymbol(displaySymbol))}><i
+                                                ref={symbol === displaySymbol ? rightButton : undefined} className={"fas fa-2x fa-" + displaySymbol}/></Button>
                                         })
                                         }
                                     </ButtonGroup>
