@@ -4,6 +4,9 @@ import {Bytes} from "./AllocationViewer";
 
 export const isFromRakudoCore = (scdesc, name) => (
     (scdesc === "gen/moar/CORE.setting"
+        || scdesc === "gen/moar/CORE.c.setting"
+        || scdesc === "gen/moar/CORE.d.setting"
+        || scdesc === "gen/moar/CORE.e.setting"
         || scdesc === "gen/moar/BOOTSTRAP.nqp"
         || scdesc === "gen/moar/stage2/NQPHLL.nqp"
         || scdesc === "gen/moar/stage2/NQPCORE.nqp"
