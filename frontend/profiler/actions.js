@@ -11,7 +11,6 @@ export const ROUTINE_CHILDREN_GET = 'ROUTINE_CHILDREN_GET';
 export const GC_OVERVIEW_GET = 'GC_OVERVIEW_GET';
 export const EXPAND_GC_SEQ= 'EXPAND_GC_SEQ';
 export const GC_SEQ_DETAILS_GET = 'GC_SEQ_DETAILS_GET';
-export const APP_SET_FULLSCREEN = 'APP_SET_FULLSCREEN';
 
 
 type FilePathChangedAction    = { type: "CHANGE_FILE_PATH", text: string };
@@ -20,15 +19,13 @@ type ExpandRoutineAction      = { type: "EXPAND_ROUTINE", id: number };
 type GcOverviewGetAction      = { type: "GC_OVERVIEW_GET", data: any};
 type GcSeqExpandAction        = { type: "EXPAND_GC_SEQ", seq_num: number };
 type GcSeqDetailsGetAction    = { type: "GC_SEQ_DETAILS_GET", seq_num: number, data: any };
-type AppSetFullscreenAction   = { type: "APP_SET_FULLSCREEN", fullscreen: boolean };
 
 export type ProfilerAction = FilePathChangedAction |
                              RoutineChildrenGetAction |
                              ExpandRoutineAction |
                              GcOverviewGetAction |
                              GcSeqExpandAction |
-                             GcSeqDetailsGetAction |
-                             AppSetFullscreenAction
+                             GcSeqDetailsGetAction
     ;
                           //StatusUpdateAction |
                           //ModelOverviewAction |
@@ -104,14 +101,5 @@ export function getGCDetails(seq_num : number) {
                 success: (data) => dispatch({type: 'GC_SEQ_DETAILS_GET', seq_num, data}),
             });
         }
-    }
-}
-
-export function toggleFullscreen() {
-    return (dispatch : DispatchType, getState : GetStateType) => {
-        dispatch({
-            type: APP_SET_FULLSCREEN,
-            fullscreen: !getState().profiler.fullscreen
-        })
     }
 }

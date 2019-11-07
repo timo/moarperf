@@ -81,9 +81,6 @@ export default function profilerReducer(
         newstate.gc.seq_details[action.seq_num] = action.data.stats_of_sequence;
         return newstate;
     }
-      case APP_SET_FULLSCREEN: {
-          return { ...state, fullscreen: action.fullscreen };
-      }
     default: {
       return { ...state };
     }

@@ -1,5 +1,5 @@
 import $ from 'jquery';
-import React from 'react';
+import React, {useReducer} from 'react';
 import {render} from 'react-dom';
 import {applyMiddleware, combineReducers, createStore} from 'redux';
 import {connect, Provider} from 'react-redux';
@@ -196,73 +196,87 @@ type HeapSnapshotAppProps = {
   onRequestModelData: () => void,
 };
 
-const App = (props : HeapSnapshotAppProps) => (
-  <React.Fragment>
-      {
-          props.profiler.fullscreen && <style>
-              {
-                  `
-                  .container {
-                    max-width: unset;
-                  }
+function togglerReducer(state, action) {
+    return !state;
+}
+function useToggle(startValue) {
+    const [currentState, dispatchAction] = useReducer(togglerReducer, false);
+    return [
+        currentState, () => dispatchAction("toggle")
+    ]
+}
 
-                  .container .container {
-                    max-width: 90%;
-                  }
-                  `
-              }
-          </style>
-      }
-      <Container>
-          <h1>
-              <Button onClick={props.onAppFullscreenClicked}><i className="fas fa-arrows-alt-h"></i></Button>
-              {" "}
-              <Button tag={Link} to={"/"}><i className="fas fa-home"/></Button>
-              {" "} MoarVM Performance Tool
-          </h1>
-          <Switch>
-              <Route exact path="/">
-                  <React.Fragment>
-                      { /* <GreetingsPage interest="everything" step="start"/> */}
-                      <SelectFile
-                          filePath={props.tipText}
-                          onChangeFilePath={props.onChangeFilePath}
-                          onLoadFile={props.onLoadFile}
-                      />
-                      {
-                          props.welcome.frontendMode === "heapsnapshot" ? (<Redirect to='/heap/'/>) :
-                              props.welcome.frontendMode === "profile" ? (<Redirect to='/prof/'/>) : null
+const App = (props : HeapSnapshotAppProps) => {
+    const [isFullscreen, toggleFullscreen] = useToggle(false);
+
+    return (
+        <React.Fragment>
+            {
+                isFullscreen && <style>
+                    {
+                        `
+                      .container {
+                        max-width: unset;
                       }
-                  </React.Fragment>
-              </Route>
-              <Route path="/heap" render={({match, location}) => (
-                  <HeapSnapshotApp
-                      heapanalyzer={props.heapanalyzer}
-                      onRequestSnapshot={props.onRequestSnapshot}
-                      onSwitchSnapshot={props.onSwitchSnapshot}
-                      onRequestModelData={props.onRequestModelData}
-                      match={match}
-                      location={location}
-                      history={history}
-                  />)}>
-              </Route>
-              <Route path="/prof" render={({match, location}) => (
-                  <ProfilerApp
-                      profilerState={props.profiler}
-                      onRoutineExpanded={props.onRoutineExpanded}
-                      onRequestGCOverview={props.onRequestGCOverview}
-                      onRequestRoutineOverview={props.onRequestRoutineOverview}
-                      onGCExpandButtonClicked={props.onGCExpandButtonClicked}
-                      match={match}
-                      location={location}/>
-              )}/>
-              <Route>
-                  <Row><Col>There is nothing at this URL. <Link to="/">Return</Link></Col></Row>
-              </Route>
-          </Switch>
-      </Container>
-  </React.Fragment>
-);
+    
+                      .container .container {
+                        max-width: 90%;
+                      }
+                      `
+                    }
+                </style>
+            }
+            <Container>
+                <h1>
+                    <Button onClick={toggleFullscreen}><i className="fas fa-arrows-alt-h"></i></Button>
+                    {" "}
+                    <Button tag={Link} to={"/"}><i className="fas fa-home"/></Button>
+                    {" "} MoarVM Performance Tool
+                </h1>
+                <Switch>
+                    <Route exact path="/">
+                        <React.Fragment>
+                            { /* <GreetingsPage interest="everything" step="start"/> */}
+                            <SelectFile
+                                filePath={props.tipText}
+                                onChangeFilePath={props.onChangeFilePath}
+                                onLoadFile={props.onLoadFile}
+                            />
+                            {
+                                props.welcome.frontendMode === "heapsnapshot" ? (<Redirect to='/heap/'/>) :
+                                    props.welcome.frontendMode === "profile" ? (<Redirect to='/prof/'/>) : null
+                            }
+                        </React.Fragment>
+                    </Route>
+                    <Route path="/heap" render={({match, location}) => (
+                        <HeapSnapshotApp
+                            heapanalyzer={props.heapanalyzer}
+                            onRequestSnapshot={props.onRequestSnapshot}
+                            onSwitchSnapshot={props.onSwitchSnapshot}
+                            onRequestModelData={props.onRequestModelData}
+                            match={match}
+                            location={location}
+                            history={history}
+                        />)}>
+                    </Route>
+                    <Route path="/prof/:file" render={({match, location}) => (
+                        <ProfilerApp
+                            profilerState={props.profiler}
+                            onRoutineExpanded={props.onRoutineExpanded}
+                            onRequestGCOverview={props.onRequestGCOverview}
+                            onRequestRoutineOverview={props.onRequestRoutineOverview}
+                            onGCExpandButtonClicked={props.onGCExpandButtonClicked}
+                            match={match}
+                            location={location}/>
+                    )}/>
+                    <Route>
+                        <Row><Col>There is nothing at this URL. <Link to="/">Return</Link></Col></Row>
+                    </Route>
+                </Switch>
+            </Container>
+        </React.Fragment>
+    );
+};
 
 function mapProps(state) {
   return state;
@@ -280,8 +294,6 @@ function mapDispatch(dispatch) {
     onRequestGCOverview: () => dispatch(ProfilerActions.getGCOverview()),
     onRequestRoutineOverview: () => dispatch(ProfilerActions.getRoutineOverview()),
     onGCExpandButtonClicked: (seq_nr) => dispatch(ProfilerActions.getGCDetails(seq_nr)),
-
-    onAppFullscreenClicked: () => dispatch(ProfilerActions.toggleFullscreen())
   };
 }
 
