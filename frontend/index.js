@@ -244,7 +244,7 @@ const App = (props : HeapSnapshotAppProps) => {
                             />
                             {
                                 props.welcome.frontendMode === "heapsnapshot" ? (<Redirect to='/heap/'/>) :
-                                    props.welcome.frontendMode === "profile" ? (<Redirect to='/prof/'/>) : null
+                                    props.welcome.frontendMode === "profile" ? (<Redirect to='/prof/home'/>) : null
                             }
                         </React.Fragment>
                     </Route>
@@ -325,7 +325,7 @@ $.ajax({
   success: body => {
       if (body.filetype === "profile") {
           if (window.location.hash === "#/") {
-              window.location.replace("#/prof/");
+              window.location.replace("#/prof/home");
           }
       }
       else if (body.filetype === "heap") {
