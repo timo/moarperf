@@ -476,7 +476,7 @@ export function CollectableDisplay(props: any) {
                             <tr><td>{ collectableData['incoming-refs'] } incoming</td></tr>
                             <tr><td colSpan={2}>
                                 <Button onClick={requestPath}><i className={"fas fa-route fa-lg"}/> Path</Button> {" "}
-                                <Link tag={Button} url={"/heap/network-view/" + props.snapshotIndex + "/" + collectableData.index}><i className={"fas fa-project-diagram fa-lg"}/> Network</Link>
+                                <Link tag={Button} to={"/heap/network-view/" + props.snapshotIndex + "/" + collectableData.index}><i className={"fas fa-project-diagram fa-lg"}/> Network</Link>
                             </td></tr>
                         </tbody></Table>
                         <div>
