@@ -1092,132 +1092,155 @@ export function ObjectFinder(props: {modelData: any, onRequestModelData: () => v
                 }
                 </tbody>
             </Table>
-        </Container>
+    </Container>
 }
 
-export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState, onRequestSnapshot: any, onSwitchSnapshot: any, path : any, match : any }) {
+function MainNavBar(props: { match: any, selectedTab: any, currentSnapshot: any }) {
+    return <Nav tabs>
+        <NavItem>
+            <NavLink tag={Link} to={props.match.url}
+                     className={classnames({ active: props.selectedTab === 'summary' })}>Summary and
+                Highscores</NavLink>
+        </NavItem>
+        <NavItem>
+            <NavLink tag={Link}
+                     to={path(props.match, 'collectables/' + (props.currentSnapshot || 2) + '/0/1/')}
+                     className={classnames({ active: props.selectedTab === 'explorer' })}>Explorer</NavLink>
+        </NavItem>
+        <NavItem>
+            <NavLink tag={Link} to={path(props.match, 'types-frames')}
+                     className={classnames({ active: props.selectedTab === 'type-frame-list' })}>Type
+                & Frame Lists</NavLink>
+        </NavItem>
+    </Nav>;
+}
+
+export default function HeapSnapshotApp(props: { heapanalyzer: HeapSnapshotState, onRequestSnapshot: any, onSwitchSnapshot: any, path: any, match: any }) {
     let [numberOfTopSpots, setNumberOfTopSpots] = useState(10);
     let numberOfSpotChange = e => setNumberOfTopSpots(e.target.value);
 
     let history = useHistory();
 
-    if (props.heapanalyzer.modelState === "nothing") {
-        return <Redirect to={"/"}/>
+    if (props.heapanalyzer.modelState === 'nothing') {
+        return <Redirect to={'/'}/>;
     }
 
     return <>
-        <Nav tabs>
-            <NavItem>
-                <NavLink tag={Link} to={props.match.url}>Summary and Highscores</NavLink>
-            </NavItem>
-            <NavItem>
-                <NavLink tag={Link} to={path(props.match, "collectables/" + (props.heapanalyzer.currentSnapshot || 2) + "/0/1/")}>Explorer</NavLink>
-            </NavItem>
-            <NavItem>
-                <NavLink tag={Link} to={path(props.match, "types-frames")}>Type & Frame Lists</NavLink>
-            </NavItem>
-        </Nav>
-
         <Switch>
-            <Route path={props.match.url + "/collectables/:snapshotIndex/:leftIndex/:rightIndex"} render={({location, match}) => {
-                function switchSnapshotWithUrlChange(target) {
-                    props.onSwitchSnapshot(target);
-                    history.push(props.match.url + "/collectables/" + target + "/" + match.params.leftIndex + "/" + match.params.rightIndex);
-                }
-                return (
-                <Container><Row><SnapshotList
-                    modelState={props.heapanalyzer.modelState}
-                    loadedSnapshots={props.heapanalyzer.loadedSnapshots}
-                    currentSnapshot={props.heapanalyzer.currentSnapshot}
-                    operations={props.heapanalyzer.runningOperations}
-                    summaries={props.heapanalyzer.summaries}
-                    highscores={props.heapanalyzer.highscores}
+            <Route path={props.match.url + '/collectables/:snapshotIndex/:leftIndex/:rightIndex'}
+                   render={({ location, match }) => {
+                       function switchSnapshotWithUrlChange(target) {
+                           props.onSwitchSnapshot(target);
+                           history.push(props.match.url + '/collectables/' + target + '/' + match.params.leftIndex + '/' + match.params.rightIndex);
+                       }
 
-                    onRequestSnapshot={props.onRequestSnapshot}
-                    onSwitchSnapshot={switchSnapshotWithUrlChange}
+                       return [
+                           <MainNavBar match={props.match} selectedTab={'explorer'}
+                                       currentSnapshot={props.heapanalyzer.currentSnapshot}/>,
 
-                    match={props.match}
-                />
-                </Row>
-                <Row>
-                    <h1>Explorer</h1>
-                    <CollectableNavigator heapanalyzer={props.heapanalyzer}
-                                      onSwitchSnapshot={props.onSwitchSnapshot}
-                                      match={match}/>
-                </Row>
-                </Container>);
-                }} />
+                           <Container><Row><SnapshotList
+                             modelState={props.heapanalyzer.modelState}
+                             loadedSnapshots={props.heapanalyzer.loadedSnapshots}
+                             currentSnapshot={props.heapanalyzer.currentSnapshot}
+                             operations={props.heapanalyzer.runningOperations}
+                             summaries={props.heapanalyzer.summaries}
+                             highscores={props.heapanalyzer.highscores}
 
-            <Route path={props.match.url + "/network-view/:snapshotIndex/:startingIndex"} render={({location, match}) => {
-                return <NetworkView
-                    modelData={props.heapanalyzer.modelData}
-                    snapshotIndex={match.params.snapshotIndex}
-                    startingPoint={match.params.startingIndex}
-                    match={match}/>
-            }} />
+                             onRequestSnapshot={props.onRequestSnapshot}
+                             onSwitchSnapshot={switchSnapshotWithUrlChange}
 
-            <Route path={props.match.url + "/types-frames"} render={({location, match}) => {
+                             match={props.match}
+                           />
+                           </Row>
+                               <Row>
+                                   <h1>Explorer</h1>
+                                   <CollectableNavigator heapanalyzer={props.heapanalyzer}
+                                                         onSwitchSnapshot={props.onSwitchSnapshot}
+                                                         match={match}/>
+                               </Row>
+                           </Container>];
+                   }}/>
+
+            <Route path={props.match.url + '/network-view/:snapshotIndex/:startingIndex'}
+                   render={({ location, match }) => {
+                       return [
+                           <MainNavBar match={props.match} selectedTab={'networkview'}
+                                       currentSnapshot={props.heapanalyzer.currentSnapshot}/>,
+                           <NetworkView
+                             modelData={props.heapanalyzer.modelData}
+                             snapshotIndex={match.params.snapshotIndex}
+                             startingPoint={match.params.startingIndex}
+                             match={match}/>];
+                   }}/>
+
+            <Route path={props.match.url + '/types-frames'} render={({ location, match }) => {
                 return [
-                <SnapshotList
-                    modelState={props.heapanalyzer.modelState}
-                    loadedSnapshots={props.heapanalyzer.loadedSnapshots}
-                    currentSnapshot={props.heapanalyzer.currentSnapshot}
-                    operations={props.heapanalyzer.runningOperations}
-                    summaries={props.heapanalyzer.summaries}
-                    highscores={props.heapanalyzer.highscores}
+                    <MainNavBar match={props.match} selectedTab={'type-frame-list'}
+                                currentSnapshot={props.heapanalyzer.currentSnapshot}/>,
+                    <SnapshotList
+                      modelState={props.heapanalyzer.modelState}
+                      loadedSnapshots={props.heapanalyzer.loadedSnapshots}
+                      currentSnapshot={props.heapanalyzer.currentSnapshot}
+                      operations={props.heapanalyzer.runningOperations}
+                      summaries={props.heapanalyzer.summaries}
+                      highscores={props.heapanalyzer.highscores}
 
-                    onRequestSnapshot={props.onRequestSnapshot}
-                    onSwitchSnapshot={props.onSwitchSnapshot}
+                      onRequestSnapshot={props.onRequestSnapshot}
+                      onSwitchSnapshot={props.onSwitchSnapshot}
 
-                    match={props.match}
-                />,
-                <div>
-                    <TypeFrameListing
-                        currentSnapshot={props.heapanalyzer.currentSnapshot}
-                        modelData={props.heapanalyzer.modelData}
-                        onRequestModelData={props.onRequestModelData}
+                      match={props.match}
+                    />,
+                    <div>
+                        <TypeFrameListing
+                          currentSnapshot={props.heapanalyzer.currentSnapshot}
+                          modelData={props.heapanalyzer.modelData}
+                          onRequestModelData={props.onRequestModelData}
 
-                        highscores={props.heapanalyzer.highscores}
+                          highscores={props.heapanalyzer.highscores}
 
-                        match={match}
-                    />
-                </div>]}} />
+                          match={match}
+                        />
+                    </div>];
+            }}/>
 
-            <Route path={props.match.url + "/find-collectables/:kind/:condition/:target"} render={({location, match}) => (
-                [<SnapshotList
-                    modelState={props.heapanalyzer.modelState}
-                    loadedSnapshots={props.heapanalyzer.loadedSnapshots}
-                    currentSnapshot={props.heapanalyzer.currentSnapshot}
-                    operations={props.heapanalyzer.runningOperations}
-                    summaries={props.heapanalyzer.summaries}
-                    highscores={props.heapanalyzer.highscores}
+            <Route path={props.match.url + '/find-collectables/:kind/:condition/:target'}
+                   render={({ location, match }) => (
+                     [<SnapshotList
+                       modelState={props.heapanalyzer.modelState}
+                       loadedSnapshots={props.heapanalyzer.loadedSnapshots}
+                       currentSnapshot={props.heapanalyzer.currentSnapshot}
+                       operations={props.heapanalyzer.runningOperations}
+                       summaries={props.heapanalyzer.summaries}
+                       highscores={props.heapanalyzer.highscores}
 
-                    onRequestSnapshot={props.onRequestSnapshot}
-                    onSwitchSnapshot={props.onSwitchSnapshot}
+                       onRequestSnapshot={props.onRequestSnapshot}
+                       onSwitchSnapshot={props.onSwitchSnapshot}
 
-                    match={props.match}
-                />,
-                <div>
-                    <ObjectFinder
-                        currentSnapshot={props.heapanalyzer.currentSnapshot}
-                        modelData={props.heapanalyzer.modelData}
-                        onRequestModelData={props.onRequestModelData}
+                       match={props.match}
+                     />,
+                         <div>
+                             <ObjectFinder
+                               currentSnapshot={props.heapanalyzer.currentSnapshot}
+                               modelData={props.heapanalyzer.modelData}
+                               onRequestModelData={props.onRequestModelData}
 
-                        match={match}
-                    />
-                </div>])} />
+                               match={match}
+                             />
+                         </div>])}/>
 
             <Route path={props.match.url + "/"} exact>
                 <>
-                <div>
-                    <SummaryGraphs data={props.heapanalyzer.summaries}/>
-                    <HighscoreGraphs value={numberOfTopSpots} onChange={numberOfSpotChange}
-                                     highscores={props.heapanalyzer.highscores}/>
-                </div>
-                <div height={"500px"}></div>
+                    <MainNavBar match={props.match} selectedTab={'summary'}
+                                currentSnapshot={props.heapanalyzer.currentSnapshot}/>
+                    <div>
+                        <SummaryGraphs data={props.heapanalyzer.summaries}/>
+                        <HighscoreGraphs value={numberOfTopSpots} onChange={numberOfSpotChange}
+                                         highscores={props.heapanalyzer.highscores}/>
+                    </div>
+                    <div height={'500px'}></div>
                 </>
             </Route>
         </Switch>
-        <ProgressList operations={props.heapanalyzer.runningOperations} />
+        <ProgressList operations={props.heapanalyzer.runningOperations}/>
     </>
 }
