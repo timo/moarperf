@@ -222,21 +222,21 @@ export function CollectableDisplay(props: any) {
     let [outgoingRefs, setOutgoingRefs] = useState(undefined);
     let [incomingRefs, setIncomingRefs] = useState(undefined);
 
-    let [selectedRefDirection, setRefDirection] = useState("out");
+    let [selectedRefDirection, setRefDirection] = useState('out');
 
     let [pathData, setPathData] = useState(examplePath);
 
     let history = useHistory();
 
-    function pushNavigationToHistory(entry) {
-        history.push(props.makeTargetUrl(entry));
+    function pushNavigationToHistory(entry, alternative) {
+        history.push(alternative ? props.shiftedTargetUrl(entry) : props.makeTargetUrl(entry));
     }
 
     function requestOutgoingRefs() {
-        if (typeof outgoingRefs === "undefined") {
+        if (typeof outgoingRefs === 'undefined') {
             $.ajax({
                 url: 'collectable-outrefs/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.index),
-                success: (data) => setOutgoingRefs( data )
+                success: (data) => setOutgoingRefs(data)
             });
         }
     }
@@ -293,31 +293,45 @@ export function CollectableDisplay(props: any) {
         $.ajax({
             url: '/collectable-data/' + encodeURIComponent(props.snapshotIndex) + '/' + encodeURIComponent(props.index),
             success: (data) => {
-                setCollectableData({ ...data, index: props.index, wantToRequest: 1, snapshot: props.snapshotIndex });
+                setCollectableData({
+                    ...data,
+                    index: props.index,
+                    wantToRequest: 1,
+                    snapshot: props.snapshotIndex
+                });
             }
         })
     }, [props.index, collectableData, props.snapshotIndex]);
 
-    if (typeof props.snapshotIndex !== "number") {
-        return (<div>Select a snapshot first ...</div>)
+    if (typeof props.snapshotIndex !== 'number') {
+        return (<div>Select a snapshot first ...</div>);
     }
 
-    function navigateTo(id) {
-        if (id != props.index) {
-            setOutgoingRefs(undefined);
-            setIncomingRefs(undefined);
-            setCollectableData({index: id});
-            setNavigateInputText(id);
-            pushNavigationToHistory(id);
+    function navigateTo(id, alternative = false) {
+        if (alternative) {
+            pushNavigationToHistory(id, alternative);
+        } else {
+            if (id != props.index) {
+                setOutgoingRefs(undefined);
+                setIncomingRefs(undefined);
+                setCollectableData({ index: id });
+                setNavigateInputText(id);
+                pushNavigationToHistory(id, alternative);
+            }
         }
     }
 
-    function navigateViaPath(pathDesc, id) {
-        setOutgoingRefs(undefined);
-        setIncomingRefs(undefined);
-        setCollectableData({index: id});
-        setNavigateInputText(id);
-        pushNavigationToHistory(id);
+    function navigateViaPath(pathDesc, id, alternative = false) {
+        if (alternative) {
+            pushNavigationToHistory(id, alternative);
+            return;
+        } else {
+            setOutgoingRefs(undefined);
+            setIncomingRefs(undefined);
+            setCollectableData({ index: id });
+            setNavigateInputText(id);
+            pushNavigationToHistory(id, alternative);
+        }
 
         let pathCopy = Array.from(pathData);
 
@@ -370,7 +384,10 @@ export function CollectableDisplay(props: any) {
                                 return (
                                     <Container>
                                         {refTypeKey} <CollectableNavButton key={entry}
-                                                                           onClick={() => navigateViaPath(refCategoryKey, entry)}
+                                                                           onClick={(e) => {
+                                                                               navigateViaPath(refCategoryKey, entry, e.shiftKey);
+                                                                               e.preventDefault();
+                                                                           }}
                                                                            url={props.makeTargetUrl(entry)}
                                                                            entry={entry}/>
                                     </Container>)
@@ -379,10 +396,14 @@ export function CollectableDisplay(props: any) {
                                 <Container>
                                     {refTypeKey}
                                     <div style={ulStyle}>
-                                        {refTypeValue.map(entry => (<CollectableNavButton key={entry}
-                                                                                          onClick={() => navigateViaPath(refCategoryKey, entry)}
-                                                                                          url={props.makeTargetUrl(entry)}
-                                                                                          entry={entry}/>))}
+                                        {refTypeValue.map(entry => (
+                                          <CollectableNavButton key={entry}
+                                                                onClick={(e) => {
+                                                                    navigateViaPath(refCategoryKey, entry, e.shiftKey);
+                                                                    e.preventDefault();
+                                                                }}
+                                                                url={props.makeTargetUrl(entry)}
+                                                                entry={entry}/>))}
                                     </div>
                                 </Container>)
                         })
@@ -523,16 +544,18 @@ export function CollectableNavigator({heapanalyzer, match, onSwitchSnapshot}) {
     return (
         <div style={{display: "grid", gridTemplateColumns: "1fr 3fr 1fr 3fr"}}>
             <CollectableDisplay
-                snapshotIndex={heapanalyzer.currentSnapshot}
-                index={match.params.leftIndex}
-                makeTargetUrl={navigateLeft}
-                makeCopyRightUrl={copyToRight}
+              snapshotIndex={heapanalyzer.currentSnapshot}
+              index={match.params.leftIndex}
+              makeTargetUrl={navigateLeft}
+              shiftedTargetUrl={navigateRight}
+              makeCopyRightUrl={copyToRight}
             />
             <CollectableDisplay
-                snapshotIndex={heapanalyzer.currentSnapshot}
-                index={match.params.rightIndex}
-                makeTargetUrl={navigateRight}
-                makeCopyLeftUrl={copyToLeft}
+              snapshotIndex={heapanalyzer.currentSnapshot}
+              index={match.params.rightIndex}
+              makeTargetUrl={navigateRight}
+              shiftedTargetUrl={navigateLeft}
+              makeCopyLeftUrl={copyToLeft}
             />
         </div>)
 }
