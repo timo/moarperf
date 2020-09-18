@@ -6,7 +6,7 @@
 # For more information, see http://appimage.org/
 ########################################################################
 
-set -e
+set -xe
 
 export ARCH="$(arch)"
 export VERSION="v0.0.1"
@@ -31,7 +31,7 @@ cd zef
 "$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" -I . bin/zef install .
 cd $BUILD_PATH
 
-"$HOME/$APP/$APP.AppDir/usr/rakudo/install/share/perl6/site/bin/zef" install --/test \
+"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" "$HOME/$APP/$APP.AppDir/usr/rakudo/install/share/perl6/site/bin/zef" install --/test \
     "JSON::Fast" \
     "OO::Monitors" \
     "Cro::HTTP" \
@@ -40,7 +40,7 @@ cd $BUILD_PATH
     "Digest::SHA1::Native" \
     "DBIish"
 
-"$HOME/$APP/$APP.AppDir/usr/rakudo/install/share/perl6/site/bin/zef" install .
+"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" "$HOME/$APP/$APP.AppDir/usr/rakudo/install/share/perl6/site/bin/zef" install .
 
 cd "$HOME/$APP/"
 
