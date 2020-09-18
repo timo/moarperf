@@ -19,7 +19,7 @@ BUILD_PATH="$(pwd)"
 
 git clone https://github.com/rakudo/rakudo
 cd rakudo
-git checkout 2020.08.02
+git checkout 2020.08.2
 perl Configure.pl --prefix=/usr/rakudo/install/ --gen-moar
 make -j2 install
 
