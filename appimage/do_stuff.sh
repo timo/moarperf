@@ -25,9 +25,14 @@ make -j2 install
 
 cd ../
 
+"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" -e '(run ["tar", "--help"], :!out, :!err).so.say'
+
 git clone https://github.com/ugexe/zef
 
 cd zef
+
+export ZEF_PLUGIN_DEBUG=1
+
 "$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" -I . bin/zef install .
 cd $BUILD_PATH
 
