@@ -10,6 +10,8 @@ install:
     - "npm run build"
 # we don't actually do tests here
 script:
+    - "cd $TRAVIS_BUILD_DIR"
+    - "sh ./appimage/do_stuff.sh"
     - "true"
 
 before_deploy:
@@ -18,7 +20,10 @@ before_deploy:
 
 deploy:
   provider: releases
-  file: moarperf-*.tar.bz2
+  file_glob: true
+  file: 
+    - "moarperf-*.tar.bz2"
+    - "out/**/*"
   edge: true
   draft: true
   skip_cleanup: true
