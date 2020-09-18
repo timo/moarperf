@@ -20,12 +20,12 @@ BUILD_PATH="$(pwd)"
 git clone https://github.com/rakudo/rakudo
 cd rakudo
 git checkout 2020.08.2
-perl Configure.pl --prefix="$HOME/$APP/$APP.AppDir/usr/rakudo/install/" --gen-moar
-make -j2 install
+sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
+sudo make -j2 install
 
 cd ../
 
-"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" -e '(run ["tar", "--help"], :!out, :!err).so.say'
+"/usr/rakudo/bin/raku" -e '(run ["tar", "--help"], :!out, :!err).so.say'
 
 git clone https://github.com/ugexe/zef
 
@@ -33,10 +33,10 @@ cd zef
 
 export ZEF_PLUGIN_DEBUG=1
 
-"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" -I . bin/zef install .
+"/usr/rakudo/bin/raku" -I . bin/zef install .
 cd $BUILD_PATH
 
-"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" "$HOME/$APP/$APP.AppDir/usr/rakudo/install/share/perl6/site/bin/zef" install --/test \
+"/usr/rakudo/bin/raku" "/usr/rakudo/share/perl6/site/bin/zef" install --/test \
     "JSON::Fast" \
     "OO::Monitors" \
     "Cro::HTTP" \
@@ -45,54 +45,13 @@ cd $BUILD_PATH
     "Digest::SHA1::Native" \
     "DBIish"
 
-"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" "$HOME/$APP/$APP.AppDir/usr/rakudo/install/share/perl6/site/bin/zef" install .
+"/usr/rakudo/bin/raku" "/usr/rakudo/share/perl6/site/bin/zef" install .
 
 cd "$HOME/$APP/"
 
-wget -q https://github.com/probonopd/AppImages/raw/master/functions.sh -O ./functions.sh
-. ./functions.sh
-
-cd $APP.AppDir
-
-cat >> AppRun <<"EOF"
-#!/bin/sh
-./install/bin/raku ./rakuapp/service.p6
-EOF
-
-mkdir rakuapp
-cp    $BUILD_PATH/META6.json rakuapp
-cp    $BUILD_PATH/service.p6 rakuapp
-cp -r $BUILD_PATH/static rakuapp
-cp -r $BUILD_PATH/lib rakuapp
-
-########################################################################
-# Copy desktop and icon file to AppDir for AppRun to pick them up
-########################################################################
-
-#cp "${BUILD_PATH}/appimage/${LOWERAPP}.desktop" .
-#cp "${BUILD_PATH}/appimage/${LOWERAPP}.png" .
-
-########################################################################
-# Copy in the dependencies that cannot be assumed to be available
-# on all target systems
-########################################################################
-
-copy_deps
-
-
-########################################################################
-# Patch away absolute paths; it would be nice if they were relative
-########################################################################
-
-find . -type f -exec sed -i -e 's|/usr|././|g' {} \;
-find . -type f -exec sed -i -e 's@././/bin/env@/usr/bin/env@g' {} \;
-
-########################################################################
-# AppDir complete
-# Now packaging it as an AppImage
-########################################################################
-
-cd .. # Go out of AppImage
+wget -q https://github.com/AppImage/pkg2appimage/releases/download/continuous/pkg2appimage-1788-x86_64.AppImage -O ./pkg2appimage.AppImage
+chmod +x ./pkg2appimage.AppImage
 
 mkdir -p ../out/
-generate_type2_appimage
+./pkg2appimage.AppImage MoarPerf.yml
+cp MoarPerf.AppImage ../out/

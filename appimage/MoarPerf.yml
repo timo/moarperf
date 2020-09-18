@@ -1,0 +1,12 @@
+app: MoarPerf
+
+ingredients:
+  script:
+    - mkdir usr
+    - cp -r /usr/rakudo/ usr/
+    - mkdir usr/rakuapp
+    - cp    ../META6.json usr/rakuapp
+    - cp    ../service.p6 usr/rakuapp
+    - cp -r ../static usr/rakuapp
+    - cp -r ../lib usr/rakuapp
+    - cp AppRun usr/
