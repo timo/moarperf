@@ -28,10 +28,10 @@ cd ../
 git clone https://github.com/ugexe/zef
 
 cd zef
-"$HOME/$APP/$App.AppDir/usr/rakudo/install/bin/raku" -I . bin/zef install .
+"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/raku" -I . bin/zef install .
 cd $BUILD_PATH
 
-"$HOME/$APP/$App.AppDir/usr/rakudo/install/bin/zef" install --/test \
+"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/zef" install --/test \
     "JSON::Fast" \
     "OO::Monitors" \
     "Cro::HTTP" \
@@ -40,7 +40,7 @@ cd $BUILD_PATH
     "Digest::SHA1::Native" \
     "DBIish"
 
-"$HOME/$APP/$App.AppDir/usr/rakudo/install/bin/zef" install .
+"$HOME/$APP/$APP.AppDir/usr/rakudo/install/bin/zef" install .
 
 cd "$HOME/$APP/"
 
