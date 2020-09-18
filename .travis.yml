@@ -5,6 +5,7 @@ branches:
 node_js:
     - stable
 install:
+    - "tar --help"
     - "cd frontend"
     - "npm install"
     - "npm run build"
