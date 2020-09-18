@@ -20,7 +20,7 @@ BUILD_PATH="$(pwd)"
 git clone https://github.com/rakudo/rakudo
 cd rakudo
 git checkout 2020.08.2
-perl Configure.pl --prefix=/usr/rakudo/install/ --gen-moar
+perl Configure.pl --prefix="$HOME/$APP/$APP.AppDir/usr/rakudo/install/" --gen-moar
 make -j2 install
 
 cd ../
@@ -28,10 +28,10 @@ cd ../
 git clone https://github.com/ugexe/zef
 
 cd zef
-/usr/rakudo/install/bin/raku -I . bin/zef install .
+"$HOME/$APP/$App.AppDir/usr/rakudo/install/bin/raku" -I . bin/zef install .
 cd $BUILD_PATH
 
-/usr/rakudo/install/bin/zef install --/test \
+"$HOME/$APP/$App.AppDir/usr/rakudo/install/bin/zef" install --/test \
     "JSON::Fast" \
     "OO::Monitors" \
     "Cro::HTTP" \
@@ -40,7 +40,7 @@ cd $BUILD_PATH
     "Digest::SHA1::Native" \
     "DBIish"
 
-/usr/rakudo/install/bin/zef install .
+"$HOME/$APP/$App.AppDir/usr/rakudo/install/bin/zef" install .
 
 cd "$HOME/$APP/"
 
@@ -59,7 +59,6 @@ cp    $BUILD_PATH/META6.json rakuapp
 cp    $BUILD_PATH/service.p6 rakuapp
 cp -r $BUILD_PATH/static rakuapp
 cp -r $BUILD_PATH/lib rakuapp
-cp -r "/usr/rakudo/install/" .
 
 ########################################################################
 # Copy desktop and icon file to AppDir for AppRun to pick them up
