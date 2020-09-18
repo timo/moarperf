@@ -12,7 +12,7 @@ export ARCH="$(arch)"
 export VERSION="v0.0.1"
 
 APP=moarperf
-LOWERAPP=${APP,,}
+LOWERAPP=$APP
 
 mkdir -p "$HOME/$APP/$APP.AppDir/usr/"
 BUILD_PATH="$(pwd)"
