@@ -1,5 +1,14 @@
 app: MoarPerf
 
+ingredients:
+  dist: bionic
+  sources:
+    - deb http://ftp.fau.de/ubuntu/ bionic main universe
+  packages:
+    - libsqlite3-dev
+    - libssl-dev
+    - openssl
+
 script:
   - mkdir usr
   - cp -r /usr/rakudo/ usr/
