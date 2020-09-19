@@ -12,7 +12,7 @@ ingredients:
 script:
   - echo "start of recipe script"
   - pwd
-  - ls
+  - ls -l
   - echo "will copy rakudo over"
   - cp -r /usr/rakudo/ usr/
   - echo "folder for the app itself"

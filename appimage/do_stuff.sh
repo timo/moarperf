@@ -20,27 +20,27 @@ BUILD_PATH="$(pwd)"
 git clone https://github.com/rakudo/rakudo
 cd rakudo
 pwd
-ls
+ls -l
 git checkout 2020.08.2
 sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
 sudo make -j2 install
 
 cd ../
 pwd
-ls
+ls -l
 
 git clone https://github.com/ugexe/zef
 
 cd zef
 pwd
-ls
+ls -l
 
 "/usr/rakudo/bin/raku" -I . bin/zef install .
 
 cd $BUILD_PATH
 
 pwd
-ls
+ls -l
 
 "/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
     "JSON::Fast" \
