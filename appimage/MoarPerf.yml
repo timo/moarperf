@@ -18,6 +18,7 @@ script:
   - echo "desktop entry"
   - mkdir -p usr/share/applications/
   - cp    ../../MoarPerf.desktop usr/share/applications/
+  - cp    ../../MoarPerf.desktop .
   - sudo mkdir -p /usr/share/applications/
   - sudo cp    ../../MoarPerf.desktop /usr/share/applications/
   - echo "folder for the app itself"
