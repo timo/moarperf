@@ -15,6 +15,9 @@ script:
   - ls -l
   - echo "will copy rakudo over"
   - cp -r /usr/rakudo/ usr/
+  - echo "desktop entry"
+  - mkdir -p usr/share/applications/
+  - cp    ../../MoarPerf.desktop usr/share/applications/
   - echo "folder for the app itself"
   - mkdir usr/rakuapp
   - cp    ../../../META6.json usr/rakuapp
