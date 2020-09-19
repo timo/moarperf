@@ -22,8 +22,8 @@ cd rakudo
 pwd
 ls
 git checkout 2020.08.2
-#sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
-#sudo make -j2 install
+sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
+sudo make -j2 install
 
 cd ../
 pwd
@@ -35,35 +35,25 @@ cd zef
 pwd
 ls
 
-#"/usr/rakudo/bin/raku" -I . bin/zef install .
+"/usr/rakudo/bin/raku" -I . bin/zef install .
 
 cd $BUILD_PATH
 
 pwd
 ls
 
-#"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
-    #"JSON::Fast" \
-    #"OO::Monitors" \
-    #"Cro::HTTP" \
-    #"Cro::WebSocket" \
-    #"App::MoarVM::HeapAnalyzer" \
-    #"Digest::SHA1::Native" \
-    #"DBIish"
+"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
+    "JSON::Fast" \
+    "OO::Monitors" \
+    "Cro::HTTP" \
+    "Cro::WebSocket" \
+    "App::MoarVM::HeapAnalyzer" \
+    "Digest::SHA1::Native" \
+    "DBIish"
 
-#"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install .
+"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install .
 
-echo "content of home"
-ls "$HOME"
-
-echo ""
-echo "content of home/app ($HOME and $APP)"
-ls "$HOME/$APP"
-
-pwd
-ls
-
-cd "$HOME/$APP/appimage"
+cd "$BUILD_PATH/appimage"
 
 wget -q https://github.com/AppImage/pkg2appimage/releases/download/continuous/pkg2appimage-1788-x86_64.AppImage -O ./pkg2appimage.AppImage
 chmod +x ./pkg2appimage.AppImage
