@@ -36,7 +36,7 @@ export ZEF_PLUGIN_DEBUG=1
 "/usr/rakudo/bin/raku" -I . bin/zef install .
 cd $BUILD_PATH
 
-"/usr/rakudo/bin/raku" "/usr/rakudo/share/perl6/site/bin/zef" install --/test \
+"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
     "JSON::Fast" \
     "OO::Monitors" \
     "Cro::HTTP" \
@@ -45,7 +45,7 @@ cd $BUILD_PATH
     "Digest::SHA1::Native" \
     "DBIish"
 
-"/usr/rakudo/bin/raku" "/usr/rakudo/share/perl6/site/bin/zef" install .
+"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install .
 
 cd "$HOME/$APP/"
 
