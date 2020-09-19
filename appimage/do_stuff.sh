@@ -29,7 +29,7 @@ cd ../
 pwd
 ls
 
-#git clone https://github.com/ugexe/zef
+git clone https://github.com/ugexe/zef
 
 cd zef
 pwd
