@@ -35,14 +35,14 @@ cd zef
 pwd
 ls -l
 
-"/usr/rakudo/bin/raku" -I . bin/zef install .
+sudo "/usr/rakudo/bin/raku" -I . bin/zef install .
 
 cd $BUILD_PATH
 
 pwd
 ls -l
 
-"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
+sudo "/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
     "JSON::Fast" \
     "OO::Monitors" \
     "Cro::HTTP" \
@@ -51,7 +51,7 @@ ls -l
     "Digest::SHA1::Native" \
     "DBIish"
 
-"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install .
+sudo "/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install .
 
 cd "$BUILD_PATH/appimage"
 
