@@ -31,8 +31,6 @@ git clone https://github.com/ugexe/zef
 
 cd zef
 
-export ZEF_PLUGIN_DEBUG=1
-
 "/usr/rakudo/bin/raku" -I . bin/zef install .
 cd $BUILD_PATH
 
