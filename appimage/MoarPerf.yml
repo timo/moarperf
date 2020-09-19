@@ -18,8 +18,8 @@ script:
   - echo "desktop entry"
   - mkdir -p usr/share/applications/
   - cp    ../../MoarPerf.desktop usr/share/applications/
-  - mkdir -p /usr/share/applications/
-  - cp    ../../MoarPerf.desktop /usr/share/applications/
+  - sudo mkdir -p /usr/share/applications/
+  - sudo cp    ../../MoarPerf.desktop /usr/share/applications/
   - echo "folder for the app itself"
   - mkdir usr/rakuapp
   - cp    ../../../META6.json usr/rakuapp
