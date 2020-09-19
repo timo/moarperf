@@ -19,6 +19,9 @@ script:
   - mkdir -p usr/share/applications/
   - cp    ../../MoarPerf.desktop usr/share/applications/
   - cp    ../../MoarPerf.desktop .
+  - cp    ../../MoarPerf.desktop /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/
+  - cp    ../../MoarPerf.desktop /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/usr/
+  - tree || true
   - sudo mkdir -p /usr/share/applications/
   - sudo cp    ../../MoarPerf.desktop /usr/share/applications/
   - echo "folder for the app itself"
