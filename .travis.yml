@@ -15,6 +15,8 @@ script:
     - "cd $TRAVIS_BUILD_DIR"
     - "sh ./appimage/do_stuff.sh"
     - "true"
+    - "pwd"
+    - "ls -l"
 
 before_deploy:
     - "cd $TRAVIS_BUILD_DIR"
