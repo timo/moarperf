@@ -10,7 +10,6 @@ ingredients:
     - openssl
 
 script:
-  - mkdir usr
   - cp -r /usr/rakudo/ usr/
   - mkdir usr/rakuapp
   - cp    ../META6.json usr/rakuapp
