@@ -19,31 +19,49 @@ BUILD_PATH="$(pwd)"
 
 git clone https://github.com/rakudo/rakudo
 cd rakudo
+pwd
+ls
 git checkout 2020.08.2
-sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
-sudo make -j2 install
+#sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
+#sudo make -j2 install
 
 cd ../
+pwd
+ls
 
-"/usr/rakudo/bin/raku" -e '(run ["tar", "--help"], :!out, :!err).so.say'
-
-git clone https://github.com/ugexe/zef
+#git clone https://github.com/ugexe/zef
 
 cd zef
+pwd
+ls
 
-"/usr/rakudo/bin/raku" -I . bin/zef install .
+#"/usr/rakudo/bin/raku" -I . bin/zef install .
+
 cd $BUILD_PATH
 
-"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
-    "JSON::Fast" \
-    "OO::Monitors" \
-    "Cro::HTTP" \
-    "Cro::WebSocket" \
-    "App::MoarVM::HeapAnalyzer" \
-    "Digest::SHA1::Native" \
-    "DBIish"
+pwd
+ls
 
-"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install .
+#"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install --/test \
+    #"JSON::Fast" \
+    #"OO::Monitors" \
+    #"Cro::HTTP" \
+    #"Cro::WebSocket" \
+    #"App::MoarVM::HeapAnalyzer" \
+    #"Digest::SHA1::Native" \
+    #"DBIish"
+
+#"/usr/rakudo/bin/raku" "$HOME/.raku/bin/zef" install .
+
+echo "content of home"
+ls "$HOME"
+
+echo ""
+echo "content of home/app ($HOME and $APP)"
+ls "$HOME/$APP"
+
+pwd
+ls
 
 cd "$HOME/$APP/appimage"
 
