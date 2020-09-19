@@ -17,9 +17,9 @@ script:
   - cp -r /usr/rakudo/ usr/
   - echo "folder for the app itself"
   - mkdir usr/rakuapp
-  - cp    ../META6.json usr/rakuapp
-  - cp    ../service.p6 usr/rakuapp
-  - cp -r ../static usr/rakuapp
-  - cp -r ../lib usr/rakuapp
+  - cp    ../../../META6.json usr/rakuapp
+  - cp    ../../../service.p6 usr/rakuapp
+  - cp -r ../../../static usr/rakuapp
+  - cp -r ../../../lib usr/rakuapp
   - echo "AppRun script"
-  - cp ../AppRun usr/
+  - cp    ../../AppRun usr/
