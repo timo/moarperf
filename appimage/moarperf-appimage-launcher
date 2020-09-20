@@ -1,4 +1,4 @@
 #!/bin/bash
 HERE="$(dirname "$(readlink -f "${0}")")"
 cd $HERE/../rakuapp
-env RAKUDO_HOME="$HERE/../rakudo/share/perl6" NQP_HOME="$HERE/../rakudo/share/nqp" LD_LIBRARY_PATH="$HERE/../rakudo/lib" "$HERE/../rakudo/bin/raku" "$MOARPERF_RAKU_OPTIONS" service.p6 "$@"
+env RAKUDO_HOME="$HERE/../rakudo/share/perl6" NQP_HOME="$HERE/../rakudo/share/nqp" LD_LIBRARY_PATH="$HERE/../rakudo/lib" "$HERE/../rakudo/bin/raku" service.p6 "$@"
