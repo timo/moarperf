@@ -19,8 +19,11 @@ script:
     - "ls -l"
 
 before_deploy:
+    - "pwd"
     - "cd $TRAVIS_BUILD_DIR"
+    - "pwd"
     - "tar cjvf moarperf-$(git rev-parse --short HEAD).tar.bz2 lib/*pm6 META6.json README.md service.p6 frontend/node_modules/bootstrap/dist/js/bootstrap.bundle.js{,.map} frontend/node_modules/bootstrap/dist/css/bootstrap{,-reboot,-grid}.css static/*"
+    - "find . -iname 'MoarPerf*AppImage'"
 
 deploy:
   provider: releases
@@ -28,6 +31,7 @@ deploy:
   file: 
     - "moarperf-*.tar.bz2"
     - "out/**/*"
+    - "out/*"
   edge: true
   draft: true
   skip_cleanup: true
