@@ -1,0 +1,20 @@
+diff --git a/src/core.c/CompUnit/RepositoryRegistry.pm6 b/src/core.c/CompUnit/RepositoryRegistry.pm6
+index 165c5918e..a6da409fc 100644
+--- a/src/core.c/CompUnit/RepositoryRegistry.pm6
++++ b/src/core.c/CompUnit/RepositoryRegistry.pm6
+@@ -140,6 +140,7 @@ class CompUnit::RepositoryRegistry {
+         my str $home;
+         my str $home-spec;
+ 
++        #`«
+         if nqp::ifnull(
+              nqp::atkey($ENV,'HOME'),
+              nqp::concat(
+@@ -150,6 +151,7 @@ class CompUnit::RepositoryRegistry {
+             $home = $home-path ~ $sep ~ '.raku';
+             $home-spec = 'inst#' ~ $home;
+         }
++        »
+ 
+         unless $precomp-specs {
+             nqp::bindkey($custom-lib,'core',
