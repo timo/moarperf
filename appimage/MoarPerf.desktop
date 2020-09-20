@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=MoarPerf
 Comment=Front-end for MoarVM's / Rakudo's profilers
-Exec=moarperf
+Exec=AppRun
 Icon=moarperf_stolen_icon
 Terminal=false
 Type=Application
