@@ -24,6 +24,7 @@ before_deploy:
     - "pwd"
     - "tar cjvf moarperf-$(git rev-parse --short HEAD).tar.bz2 lib/*pm6 META6.json README.md service.p6 frontend/node_modules/bootstrap/dist/js/bootstrap.bundle.js{,.map} frontend/node_modules/bootstrap/dist/css/bootstrap{,-reboot,-grid}.css static/*"
     - "find . -iname 'MoarPerf*AppImage'"
+    - "cp ./appimage/out/MoarPerf*.AppImage out/"
 
 deploy:
   provider: releases
