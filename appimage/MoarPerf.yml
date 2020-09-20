@@ -21,7 +21,7 @@ script:
   - cp    ../../MoarPerf.desktop .
   - cp    ../../MoarPerf.desktop /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/
   - cp    ../../MoarPerf.desktop /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/usr/
-  - cp    ../../moarperf_stolen_icon.png /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/
+  - cp    ../../stolen_icon.png /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/moarperf_stolen_icon.png
   - tree || true
   - sudo mkdir -p /usr/share/applications/
   - sudo cp    ../../MoarPerf.desktop /usr/share/applications/
