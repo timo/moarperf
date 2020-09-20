@@ -8,6 +8,8 @@ ingredients:
     - libsqlite3-dev
     - libssl-dev
     - openssl
+    - libzstd-dev
+    - libzstd
 
 script:
   - echo "start of recipe script"
