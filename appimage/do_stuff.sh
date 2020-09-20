@@ -60,4 +60,4 @@ chmod +x ./pkg2appimage.AppImage
 
 mkdir -p ../out/
 ./pkg2appimage.AppImage ./MoarPerf.yml
-cp MoarPerf.AppImage ../out/
+cp MoarPerf*.AppImage ../out/
