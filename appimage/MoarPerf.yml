@@ -31,6 +31,5 @@ script:
   - cp    ../../../service.p6 usr/rakuapp
   - cp -r ../../../static usr/rakuapp
   - cp -r ../../../lib usr/rakuapp
-  - echo "AppRun script and desktop entry"
-  - cp    ../../AppRun usr/
+  - echo "Desktop entry"
   - cp    ../../MoarPerf.desktop usr/
