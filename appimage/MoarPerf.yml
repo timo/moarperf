@@ -23,6 +23,9 @@ script:
   - cp    ../../MoarPerf.desktop /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/usr/
   - cp    ../../stolen_icon.png /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/moarperf_stolen_icon.png
   - tree || true
+  - echo "bin directory and launcher binary"
+  - mkdir -p usr/bin
+  - cp    ../../moarperf-appimage-launcher /home/travis/build/timo/moarperf/appimage/MoarPerf/MoarPerf.AppDir/usr/bin/
   - sudo mkdir -p /usr/share/applications/
   - sudo cp    ../../MoarPerf.desktop /usr/share/applications/
   - echo "folder for the app itself"
