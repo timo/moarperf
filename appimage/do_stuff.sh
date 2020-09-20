@@ -22,7 +22,7 @@ cd rakudo
 pwd
 ls -l
 git checkout 2020.08.2
-patch -p1 < ../raku_skip_home_compunit_repository.patch
+patch -p1 < ../appimage/raku_skip_home_compunit_repository.patch
 sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
 sudo make -j2 install
 
