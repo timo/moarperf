@@ -34,5 +34,9 @@ script:
   - cp    ../../../service.p6 usr/rakuapp
   - cp -r ../../../static usr/rakuapp
   - cp -r ../../../lib usr/rakuapp
+  - mkidr -p usr/rakuapp/frontend/node_modules/bootstrap/dist/js/
+  - mkidr -p usr/rakuapp/frontend/node_modules/bootstrap/dist/css/
+  - cp    ../../../frontend_node_modules/bootstrap/dist/js/*.bundle.js* usr/rakuapp/frontend/node_modules/bootstrap/dist/js/
+  - cp    ../../../frontend_node_modules/bootstrap/dist/css/*.css usr/rakuapp/frontend/node_modules/bootstrap/dist/css/
   - echo "Desktop entry"
   - cp    ../../MoarPerf.desktop usr/
