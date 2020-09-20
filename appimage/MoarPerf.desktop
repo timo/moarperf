@@ -2,7 +2,7 @@
 Name=MoarPerf
 Comment=Front-end for MoarVM's / Rakudo's profilers
 Exec=moarperf
-Icon=view-sort-ascending
+Icon=moarperf_stolen_icon
 Terminal=false
 Type=Application
 StartupNotify=false
