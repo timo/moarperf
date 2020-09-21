@@ -8,6 +8,12 @@ Running your perl6 program with `--profile=foo.sql` or `--profile=bar.mvmheap` w
 
 # Installing the Front-end
 
+## AppImage
+
+There is a version of moarperf for linux that is packaged as an AppImage, which is a single file that can be executed directly. It contains a full rakudo of its own and does not require any kind of installation. You can find it on [the "releases" page of the moarperf repo](https://github.com/timo/moarperf/releases/).
+
+## Traditional Installation
+
 The Perl 6/Raku part of the program has some dependencies that can be installed with `zef`. The command to do that is `zef install --depsonly .` - but if you want it a bit faster, you can `--/tests` to skip testing modules before installation.
 
 The javascript portion of the program has - like any javascript application seems to, nowadays - a boatload of dependencies. That's why there's pre-built packages up on github that have the javascript portion already "compiled". You can find them on [the "releases" page of the moarperf repo](https://github.com/timo/moarperf/releases/) 
