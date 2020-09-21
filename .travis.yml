@@ -35,4 +35,5 @@ deploy:
     - "out/*"
   edge: true
   draft: true
+  overwrite: true
   skip_cleanup: true
