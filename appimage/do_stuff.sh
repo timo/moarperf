@@ -23,7 +23,7 @@ pwd
 ls -l
 git checkout 2020.08.2
 patch -p1 < ../appimage/raku_skip_home_compunit_repository.patch
-sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar
+sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar --relocatable
 sudo make -j2 install
 
 cd ../
