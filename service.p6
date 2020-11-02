@@ -6,35 +6,37 @@ use Routes;
 use HeapAnalyzerWeb;
 use ProfilerWeb;
 
-if @*ARGS[0] && @*ARGS[0] eq "-h" or @*ARGS[0] eq "--help" {
-    print q:to/CAMELIA/;
-             ⣀⣴⣶⣿⣿⣿⣷⣶⣤⡀
-           ⢀⣼⣿⠟⠋⠁⠀⣀⡀⠈⠻⣿⣦⡀
-           ⣾⣿⠁⠀⣤⡶⠛⠉⠛⢷⡄⠈⣿⣿⡄
-          ⢸⣿⣿⠀⠀⣿⠀⢠⣶⡄⠘⡿⠀⢸⡿⣿⡄
-          ⢸⣿⣿⡀⠀⢸⣦⣘⠛⣃⠜⠁⢠⣿⣷⠘⡇
-          ⠘⣿⣿⣧⠀⠀⠛⠉⠉⠀⢀⣴⣿⣿⠇⢠⡇ ⡀         ⢀⣀⣀
-           ⠹⣿⣿⣷⡀⠀⠐⣾⣟⠿⠟⠛⢁⣠⣿⠇⠚⡟ ⢀⡄  ⣠⣴⣾⣿⣿⠿⢿⣿⣿⣶⣄⡀
-            ⠙⣿⣿⣿⣦⡀⠈⢿⣿⣿⣿⣿⣿⠏ ⢠⠇⡴⠋⠃⣰⣿⡿⠋⠁⠀⠀⠀⠀⠀⠈⠙⠻⣿⣄
-             ⣈⣛⣿⣿⣿⣦⣈⡟⢉⣈⡉⢣⣄⣠⠏⣰⠃ ⣼⣿⠋⠀⢀⣤⣶⡄⠈⠻⣿⣷⣦⡄⠈⢻⡆
-          ⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⡀⢺⣿⡗⢸⠇⠀⠉⠳⣄⣰⣿⡟⠀⢰⠏⢉⡉⠹⡄⠀⠹⣝⠻⣿⡀⠈⣿
-        ⢀⣾⣿⡿⠛⠉⠉⠉⠙⢿⣿⡏⠳⢤⣤⠴⠋⠀⠀⢠⠎⢁⣤⡙⢧⠀⢸⠰⣿⡿⠀⣷⠀⠀⣿⡇⠹⣧⣼⣿
-        ⣾⣿⡟⠀⠀⣠⣶⣿⣶⠀⢿⡇⠀⠀⢀⠀⠀⠀⠀⢸⠀⢿⣿⠇⣸⡀⠘⠷⠤⣴⣾⠟⠀⢰⣿⡏⠀⣿⣿⠇
-        ⣿⣿⡅⠀⠀⢿⣿⡿⠛⠀⣿⣷⡀⠀⠹⡄⠀⠀⡀⠈⠳⠤⡤⣴⣿⣷⣤⣀⡀⠀⠀⠀⣰⣿⠟⠁⣼⡿⠋
-        ⠹⣿⣷⣀⠀⠀⠀⠀⣠⣾⣿⣿⣿⢦⡀⠙⠳⠶⠋⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣶⠿⠋
-         ⠙⢿⣿⣿⣶⣾⣿⣿⣿⣿⠟⠁⡞⠈⡷⠲⢤⣤⣤⣶⠟⠛⠉⠛⢿⣿⣿⣿⡉⠉⠉⠉⠉
-           ⠈⠉⠛⠛⠛⠋⠉   ⠇ ⡇ ⣿⣿⣿⠏⢰⣿⣷⡄⠀⠹⣿⣿⣧
-                       ⠁ ⣿⣿⣿⠀⠘⣿⣿⡇⠀⠀⣿⣿⣿
-                         ⠸⣿⣿⣇⠀⠈⠉⠁⠀⢀⣿⣿⡿
-                          ⠙⢿⣿⣷⣄⣀⣀⣤⣾⣿⡿⠁
-                            ⠙⠻⢿⣿⣿⣿⠿⠋
-        CAMELIA
-    print q:to/ABOUT/;
-        MoarPerf performance analyzer for MoarVM's heap snapshots and profiler sql files
-        Pass a filename to this script or select the file from the web interface.
-        See the README at https://github.com/timo/moarperf for more information.
-        ABOUT
-    exit;
+with @*ARGS {
+    if @*ARGS > 0 and (@*ARGS[0] eq "-h" or @*ARGS[0] eq "--help") {
+        print q:to/CAMELIA/;
+                 ⣀⣴⣶⣿⣿⣿⣷⣶⣤⡀
+               ⢀⣼⣿⠟⠋⠁⠀⣀⡀⠈⠻⣿⣦⡀
+               ⣾⣿⠁⠀⣤⡶⠛⠉⠛⢷⡄⠈⣿⣿⡄
+              ⢸⣿⣿⠀⠀⣿⠀⢠⣶⡄⠘⡿⠀⢸⡿⣿⡄
+              ⢸⣿⣿⡀⠀⢸⣦⣘⠛⣃⠜⠁⢠⣿⣷⠘⡇
+              ⠘⣿⣿⣧⠀⠀⠛⠉⠉⠀⢀⣴⣿⣿⠇⢠⡇ ⡀         ⢀⣀⣀
+               ⠹⣿⣿⣷⡀⠀⠐⣾⣟⠿⠟⠛⢁⣠⣿⠇⠚⡟ ⢀⡄  ⣠⣴⣾⣿⣿⠿⢿⣿⣿⣶⣄⡀
+                ⠙⣿⣿⣿⣦⡀⠈⢿⣿⣿⣿⣿⣿⠏ ⢠⠇⡴⠋⠃⣰⣿⡿⠋⠁⠀⠀⠀⠀⠀⠈⠙⠻⣿⣄
+                 ⣈⣛⣿⣿⣿⣦⣈⡟⢉⣈⡉⢣⣄⣠⠏⣰⠃ ⣼⣿⠋⠀⢀⣤⣶⡄⠈⠻⣿⣷⣦⡄⠈⢻⡆
+              ⣠⣾⣿⣿⣿⣿⣿⣿⣿⣿⡀⢺⣿⡗⢸⠇⠀⠉⠳⣄⣰⣿⡟⠀⢰⠏⢉⡉⠹⡄⠀⠹⣝⠻⣿⡀⠈⣿
+            ⢀⣾⣿⡿⠛⠉⠉⠉⠙⢿⣿⡏⠳⢤⣤⠴⠋⠀⠀⢠⠎⢁⣤⡙⢧⠀⢸⠰⣿⡿⠀⣷⠀⠀⣿⡇⠹⣧⣼⣿
+            ⣾⣿⡟⠀⠀⣠⣶⣿⣶⠀⢿⡇⠀⠀⢀⠀⠀⠀⠀⢸⠀⢿⣿⠇⣸⡀⠘⠷⠤⣴⣾⠟⠀⢰⣿⡏⠀⣿⣿⠇
+            ⣿⣿⡅⠀⠀⢿⣿⡿⠛⠀⣿⣷⡀⠀⠹⡄⠀⠀⡀⠈⠳⠤⡤⣴⣿⣷⣤⣀⡀⠀⠀⠀⣰⣿⠟⠁⣼⡿⠋
+            ⠹⣿⣷⣀⠀⠀⠀⠀⣠⣾⣿⣿⣿⢦⡀⠙⠳⠶⠋⠀⠀⠀⣰⣿⣿⣿⣿⣿⣿⣿⣿⣿⣶⣶⣶⠿⠋
+             ⠙⢿⣿⣿⣶⣾⣿⣿⣿⣿⠟⠁⡞⠈⡷⠲⢤⣤⣤⣶⠟⠛⠉⠛⢿⣿⣿⣿⡉⠉⠉⠉⠉
+               ⠈⠉⠛⠛⠛⠋⠉   ⠇ ⡇ ⣿⣿⣿⠏⢰⣿⣷⡄⠀⠹⣿⣿⣧
+                           ⠁ ⣿⣿⣿⠀⠘⣿⣿⡇⠀⠀⣿⣿⣿
+                             ⠸⣿⣿⣇⠀⠈⠉⠁⠀⢀⣿⣿⡿
+                              ⠙⢿⣿⣷⣄⣀⣀⣤⣾⣿⡿⠁
+                                ⠙⠻⢿⣿⣿⣿⠿⠋
+            CAMELIA
+        print q:to/ABOUT/;
+            MoarPerf performance analyzer for MoarVM's heap snapshots and profiler sql files
+            Pass a filename to this script or select the file from the web interface.
+            See the README at https://github.com/timo/moarperf for more information.
+            ABOUT
+        exit;
+    }
 }
 
 my $heapanalyzer = HeapAnalyzerWeb.new;
