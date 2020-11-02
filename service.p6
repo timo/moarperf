@@ -6,7 +6,7 @@ use Routes;
 use HeapAnalyzerWeb;
 use ProfilerWeb;
 
-if @*ARGS[0] eq "-h" or @*ARGS[0] eq "--help" {
+if @*ARGS[0] && @*ARGS[0] eq "-h" or @*ARGS[0] eq "--help" {
     print q:to/CAMELIA/;
              ⣀⣴⣶⣿⣿⣿⣷⣶⣤⡀
            ⢀⣼⣿⠟⠋⠁⠀⣀⡀⠈⠻⣿⣦⡀
