@@ -56,7 +56,7 @@ sudo "/usr/rakudo/bin/raku" "/usr/rakudo/share/perl6/site/bin/zef" install .
 
 cd "$BUILD_PATH/appimage"
 
-wget -q https://github.com/AppImage/pkg2appimage/releases/download/continuous/pkg2appimage-1788-x86_64.AppImage -O ./pkg2appimage.AppImage
+wget -q https://github.com/AppImage/pkg2appimage/releases/download/continuous/pkg2appimage-1795-x86_64.AppImage -O ./pkg2appimage.AppImage
 chmod +x ./pkg2appimage.AppImage
 
 export VERSION=0.1
