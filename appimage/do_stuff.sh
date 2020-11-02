@@ -21,7 +21,7 @@ git clone https://github.com/rakudo/rakudo
 cd rakudo
 pwd
 ls -l
-git checkout 2020.08.2
+git checkout 2020.10
 patch -p1 < ../appimage/raku_skip_home_compunit_repository.patch
 sudo perl Configure.pl --prefix="/usr/rakudo/" --gen-moar --relocatable
 sudo make -j2 install
@@ -59,7 +59,7 @@ cd "$BUILD_PATH/appimage"
 wget -q https://github.com/AppImage/pkg2appimage/releases/download/continuous/pkg2appimage-1795-x86_64.AppImage -O ./pkg2appimage.AppImage
 chmod +x ./pkg2appimage.AppImage
 
-export VERSION=0.1
+export VERSION=0.1.1
 
 mkdir -p ../out/
 ./pkg2appimage.AppImage ./MoarPerf.yml
