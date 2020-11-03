@@ -31,7 +31,18 @@ sub routes(HeapAnalyzerWeb $model, ProfilerWeb $profiler, $filename?) is export 
         }
     }
 
-    load-file($_) with $filename;
+    try {
+        load-file($_) with $filename;
+        CATCH {
+            default {
+                say "Could not load $filename from disk:";
+                say "";
+                .message.say;
+                say "";
+                say "Continuing without a loaded file.";
+            }
+        }
+    }
 
     route {
         get -> {

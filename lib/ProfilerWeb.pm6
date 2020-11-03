@@ -72,11 +72,13 @@ class ProfilerWeb {
         return $!filename;
     }
 
-    method load-file(
-        $databasefile is copy where all(
+    subset existing-sql-or-sqlite3-file of Str where all(
             *.ends-with('sqlite3' | 'sql'),
             *.IO.f,
-            *.IO.e)) {
+            *.IO.e);
+
+    method load-file(
+        existing-sql-or-sqlite3-file $databasefile is copy ) {
 
         if $databasefile.ends-with('sql') {
             $databasefile = create-database($databasefile);
