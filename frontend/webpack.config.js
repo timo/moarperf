@@ -2,8 +2,6 @@ const path = require("path");
 
 module.exports = {
   entry: [
-    "core-js/modules/es6.promise",
-    "core-js/modules/es6.array.iterator",
     './index.js'
   ],
   context: path.resolve(__dirname),
