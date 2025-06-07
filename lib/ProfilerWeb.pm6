@@ -58,6 +58,8 @@ class ProfilerWeb {
 
     has Supplier $!status-updates = Supplier::Preserving.new;
 
+    has Lock $!routine_overview_lock .= new;
+
     has @.routine_overview;
     has %.all_routines;
 
@@ -76,6 +78,10 @@ class ProfilerWeb {
             *.ends-with('sqlite3' | 'sql'),
             *.IO.f,
             *.IO.e);
+
+    method !gimme-a-dbh {
+        DBIish.connect("SQLite", :database($!filename), :readonly);
+    }
 
     method load-file(
         existing-sql-or-sqlite3-file $databasefile is copy ) {
@@ -130,7 +136,10 @@ class ProfilerWeb {
     }
 
     method overview-data() {
-        my $query = $!dbh.prepare(q:to/STMT/);
+	my $dbh = self!gimme-a-dbh;
+	LEAVE { $dbh.dispose }
+
+        my $query = $dbh.prepare(q:to/STMT/);
             select
                 total_time,
                 first_entry_time,
@@ -144,44 +153,59 @@ class ProfilerWeb {
               order by thread_id asc;
             STMT
 
+        note "  getting threads";
+
         $query.execute;
         my @threads = $query.allrows(:array-of-hash);
         $query.finish;
+        note "    ... results";
 
-        $query = self!gc-stats-per-sequence;
+        my $gcstats-prom = Promise.new();
+        my $allgcstats-prom = Promise.new();
+        
+        my $worker-one = start {
+            my $dbh = self!gimme-a-dbh;
+            LEAVE { $dbh.dispose }
 
-        my @gcstats = $query.allrows(:array-of-hash);
-        $query.finish;
+            note "  gc stats per sequence";
+            $query = self!gc-stats-per-sequence($dbh);
+            LEAVE { $query.finish with $query };
+            note "    ... results";
 
-        $query = $!dbh.prepare(q:to/STMT/);
-            select
-                avg(case when full == 0 then latest_end - earliest end) as avg_minor_time,
-                min(case when full == 0 then latest_end - earliest end) as min_minor_time,
-                max(case when full == 0 then latest_end - earliest end) as max_minor_time,
+            $gcstats-prom.keep: $query.allrows(:array-of-hash).eager;
 
-                avg(case when full == 1 then latest_end - earliest end) as avg_major_time,
-                min(case when full == 1 then latest_end - earliest end) as min_major_time,
-                max(case when full == 1 then latest_end - earliest end) as max_major_time,
+            $query = $dbh.prepare(q:to/STMT/);
+                select
+                    avg(case when full == 0 then latest_end - earliest end) as avg_minor_time,
+                    min(case when full == 0 then latest_end - earliest end) as min_minor_time,
+                    max(case when full == 0 then latest_end - earliest end) as max_minor_time,
 
-                total(case when full == 0 then latest_end - earliest end) as total_minor,
-                total(case when full == 1 then latest_end - earliest end) as total_major,
-                total(latest_end - earliest) as total
+                    avg(case when full == 1 then latest_end - earliest end) as avg_major_time,
+                    min(case when full == 1 then latest_end - earliest end) as min_major_time,
+                    max(case when full == 1 then latest_end - earliest end) as max_major_time,
 
-                from (select
-                        min(start_time) as earliest,
-                        max(start_time + time) as latest_end,
-                        full
+                    total(case when full == 0 then latest_end - earliest end) as total_minor,
+                    total(case when full == 1 then latest_end - earliest end) as total_major,
+                    total(latest_end - earliest) as total
 
-                    from gcs
-                        group by sequence_num
-                        order by sequence_num asc)
-            STMT
+                    from (select
+                            min(start_time) as earliest,
+                            max(start_time + time) as latest_end,
+                            full
 
-        $query.execute;
-        my %allgcstats = $query.allrows(:array-of-hash).head;
-        $query.finish;
+                        from gcs
+                            group by sequence_num
+                            order by sequence_num asc)
+                STMT
 
-        $query = $!dbh.prepare(q:to/STMT/);
+            note "  all gc stats";
+            $query.execute;
+            note "    ... results";
+            $allgcstats-prom.keep: $query.allrows(:array-of-hash).head;
+            $query.finish;
+        }
+
+        $query = $dbh.prepare(q:to/STMT/);
             select
                 total(entries) as entries_total,
                 total(spesh_entries) as spesh_entries_total,
@@ -196,24 +220,30 @@ class ProfilerWeb {
             from calls;
             STMT
 
+        note "  callframe stats";
+
         $query.execute;
+        note "    ... results";
         my %callframestats = $query.row(:hash);
         $query.finish;
 
         state $replaced-exists = do {
-            $query = $!dbh.prepare(q:to/STMT/);
+            $query = $dbh.prepare(q:to/STMT/);
                         select count(*) from pragma_table_info('allocations')
                 where name = 'replaced'
             STMT
 
+            note "  creating replaced";
+
             $query.execute;
 
+            note "    ... replaced results";
             my $result = $query.row(:array).head;
             $query.finish;
             $result;
         }
 
-        $query = $!dbh.prepare(qq:to/STMT/);
+        $query = $dbh.prepare(qq:to/STMT/);
             select
                 total(a.jit + a.spesh + a.count) as allocated
                 { $replaced-exists ?? ", total(a.replaced) as replaced" !! "" }
@@ -221,14 +251,19 @@ class ProfilerWeb {
             from allocations a;
         STMT
 
+        note "  allocation stats";
+
         $query.execute;
+        note "    ... results";
         my %allocationstats = $query.row(:hash);
         $query.finish;
 
+        await $worker-one;
+
         return %(
                 :@threads,
-                :@gcstats,
-                :%allgcstats,
+                :gcstats(await $gcstats-prom),
+                :allgcstats(await $allgcstats-prom),
                 :%callframestats,
                 :%allocationstats,
                 );
@@ -295,7 +330,7 @@ class ProfilerWeb {
                 where childcount == 0)
                 update calls set highest_child_id = id where calls.id in no_children;
             STMT
-
+        
         note ($calls-done = $query.execute), " rows have an initial highest_child_id";
         $query.finish;
 
@@ -427,39 +462,41 @@ class ProfilerWeb {
     }
 
     method routine-overview() {
-        @!routine_overview ||= do {
-            note "building routine overview";
-            my $query = $!dbh.prepare(q:to/STMT/);
-                select
-                    c.routine_id as id,
+        $!routine_overview_lock.protect: {
+            @!routine_overview ||= do {
+                note "building routine overview";
+                my $query = $!dbh.prepare(q:to/STMT/);
+                    select
+                        c.routine_id as id,
 
-                    total(entries) as entries,
-                    total(case when rec_depth = 0 then inclusive_time else 0 end) as inclusive_time,
-                    total(exclusive_time) as exclusive_time,
+                        total(entries) as entries,
+                        total(case when rec_depth = 0 then inclusive_time else 0 end) as inclusive_time,
+                        total(exclusive_time) as exclusive_time,
 
-                    total(spesh_entries) as spesh_entries,
-                    total(jit_entries) as jit_entries,
-                    total(inlined_entries) as inlined_entries,
+                        total(spesh_entries) as spesh_entries,
+                        total(jit_entries) as jit_entries,
+                        total(inlined_entries) as inlined_entries,
 
-                    total(osr) as osr,
-                    total(deopt_one) as deopt_one,
-                    total(deopt_all) as deopt_all,
+                        total(osr) as osr,
+                        total(deopt_one) as deopt_one,
+                        total(deopt_all) as deopt_all,
 
-                    count(c.id) as sitecount
+                        count(c.id) as sitecount
 
-                    from calls c
+                        from calls c
 
-                    group by c.routine_id
-                    order by inclusive_time desc;
-                STMT
+                        group by c.routine_id
+                        order by inclusive_time desc;
+                    STMT
 
-            $query.execute();
-            my @results = $query.allrows(:array-of-hash);
-            $query.finish;
+                $query.execute();
+                my @results = $query.allrows(:array-of-hash);
+                $query.finish;
 
-            note "routine overview in " ~ (now - ENTER now);
+                note "routine overview in " ~ (now - ENTER now);
 
-            @results;
+                @results;
+            }
         }
     }
 
@@ -1118,8 +1155,11 @@ class ProfilerWeb {
         $query.allrows(:array-of-hash).eager;
     }
 
-    method data-for-flamegraph(Int $call-id, Int $maxdepth = 15) {
-        my $query = $!dbh.prepare(q:to/STMT/);
+    method data-for-flamegraph(Int $call-id, Int $maxdepth = 10) {
+        my $dbh = self!gimme-a-dbh();
+        LEAVE { $dbh.dispose with $dbh }
+
+        my $query = $dbh.prepare(q:to/STMT/);
                 select
                     c.id as id,
                     c.inclusive_time   as inclusive,
@@ -1132,26 +1172,40 @@ class ProfilerWeb {
                 where (c.parent_id = ?001 and c.inclusive_time > 1) or c.id = ?001
 
                 order by c.id asc
+                limit 10
                 ;
             STMT
 
         my @incomplete;
         my $highestCId = -Inf;
 
+        note "creating data for flamegraph ($call-id)";
+
+        my $lastreport = now;
+        my $totals = 0;
+
         sub children-of(Int $call-id, $depth = 0) {
             $query.execute($call-id);
 
-            my @results = $query.allrows(:array-of-hash);
+            my @results = $query.allrows(:array-of-hash).cache;
             my $parent = @results.shift;
+
+            $totals++;
+            if now > $lastreport + 30 {
+                note "  flamegraph data: call $call-id at depth $depth, $totals nodes queried so far";
+                $lastreport = now;
+            }
 
             $highestCId max= $call-id;
 
             if $depth < $maxdepth {
                 my @return = [
-                    do for @results {
+                    do for @results.head(10) {
                         children-of(.<id>.Int, $depth + 1)
                     }
                 ];
+
+                if @results > 10 { @incomplete.push: $call-id }
 
                 %(
                     cid => $parent.<id>,
@@ -1190,8 +1244,8 @@ class ProfilerWeb {
         }
     }
 
-    method !gc-stats-per-sequence() {
-        my $stats-per-sequence-q = $!dbh.prepare(q:to/STMT/);
+    method !gc-stats-per-sequence($dbh = $!dbh) {
+        my $stats-per-sequence-q = $dbh.prepare(q:to/STMT/);
             select
                 min(time) as min_time,
                 max(time) as max_time,
@@ -1206,21 +1260,23 @@ class ProfilerWeb {
                 group_concat(thread_id, ",") as participants,
                 sequence_num,
                 full,
-                freed_freshness.fresh_freed as fresh_freed,
-                freed_freshness.seen_freed as seen_freed
+                -- freed_freshness.fresh_freed as fresh_freed,
+                -- freed_freshness.seen_freed as seen_freed
+                0 as fresh_freed,
+                0 as seen_freed
 
             from gcs
-                inner join (
-                    select
-                        total(json_extract(t.extra_info, "$.managed_size") * da.nursery_fresh) as fresh_freed,
-                        total(json_extract(t.extra_info, "$.managed_size") * da.nursery_seen) as seen_freed,
-                        da.gc_seq_num as seq_num
-
-                    from deallocations da
-                        inner join types t on da.type_id = t.id
-
-                    group by da.gc_seq_num
-                ) freed_freshness on freed_freshness.seq_num = gcs.sequence_num
+                -- inner join (
+                --     select
+                --         total(json_extract(t.extra_info, "$.managed_size") * da.nursery_fresh) as fresh_freed,
+                --         total(json_extract(t.extra_info, "$.managed_size") * da.nursery_seen) as seen_freed,
+                --         da.gc_seq_num as seq_num
+                -- 
+                --     from deallocations da
+                --         inner join types t on da.type_id = t.id
+                -- 
+                --     group by da.gc_seq_num
+                -- ) freed_freshness on freed_freshness.seq_num = gcs.sequence_num
 
             group by sequence_num
             ;
