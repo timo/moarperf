@@ -122,11 +122,11 @@ export function RoutineFileInfo({routine}) {
         var withoutBeginning = routine.file.replace("CORE::v6", "");
         var coreVersion = withoutBeginning.substring(1, 2);
         withoutBeginning = withoutBeginning.substring(4);
-        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/master/src/core." + coreVersion + "/" + withoutBeginning + ".pm6#L" + routine.line}>
+        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/main/src/core." + coreVersion + "/" + withoutBeginning + "#L" + routine.line}>
             { routine.file }:{ routine.line }</a>
     }
     else if (routine.file.startsWith("CORE::")) {
-        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/master/src/core/" + routine.file.replace("CORE::", "") + ".pm6#L" + routine.line}>
+        link = <a target="_blank" href={"https://github.com/rakudo/rakudo/blob/main/src/core/" + routine.file.replace("CORE::", "") + "#L" + routine.line}>
             { routine.file }:{ routine.line }</a>
     }
     else {
